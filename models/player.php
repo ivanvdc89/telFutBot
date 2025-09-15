@@ -9,5 +9,22 @@ class Player extends Connection {
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
+
+    public function createPlayer($chatId) {
+        try {
+            $connection = parent::connect();
+
+            $sql = "INSERT INTO players (chat_id) VALUES (:chat_id)";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':chat_id', $chatId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $connection->lastInsertId();
+
+        } catch (PDOException $e) {
+            error_log("DB insert error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

@@ -52,8 +52,8 @@ if(isset($update->message->text)) {
                 $message = "Player $player[0]['name]";
             }
         }else{
-
-            $message = "No info.";
+            $playerID = $connection->createPlayer($chatId);
+            $message = "List of pot1 teams";
         }
 
         $telegram->sendMessage($chatId, $message);
