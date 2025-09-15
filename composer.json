@@ -2,6 +2,7 @@
     "require": {
         "telegram-bot/api": "^2.5",
         "ext-json": "*",
-        "ext-curl": "*"
+        "ext-curl": "*",
+        "ext-pdo": "*"
     }
 }
