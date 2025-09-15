@@ -63,7 +63,7 @@ if(isset($update->message->text)) {
                 if (count($remainingPots) == 0) {
                     $message = '';
                     foreach ($alreadyAddedTeams as $team) {
-                        $pot = (intval($team['competition']) % 4) ?: 4;
+                        $pot = (intval($team['competition']) % 4) == 0 ? 4 : (intval($team['competition']) % 4);
                         $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
                     }
                     $telegram->sendMessage($chatId, $message);
