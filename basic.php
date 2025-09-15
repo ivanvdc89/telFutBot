@@ -3,8 +3,8 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
-require_once("models/Player.php");
-require_once("models/Team.php");
+require_once("models/player.php");
+require_once("models/team.php");
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -20,8 +20,8 @@ if(isset($update->message->text)) {
     if ($text === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
             [['/rules', '/teams'], ['/settings']],
-            true, // resize
-            true  // one-time keyboard
+            true,
+            true
         );
         $telegram->sendMessage(
             $chatId,
