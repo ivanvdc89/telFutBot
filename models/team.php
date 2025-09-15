@@ -19,5 +19,33 @@ class Team extends Connection {
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
+
+    public function getTeamByName($name){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from teams where name=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1,$name);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
+    public function addPlayerTeam($playerId, $teamId) {
+        try {
+            $connection = parent::connect();
+
+            $sql = "INSERT INTO player_teams (player_id, team_id) VALUES (:player_id, :team_id)";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
+            $stmt->bindValue(':team_id', $teamId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $connection->lastInsertId();
+
+        } catch (PDOException $e) {
+            error_log("DB insert error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>
