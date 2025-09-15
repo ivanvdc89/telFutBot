@@ -52,7 +52,7 @@ if(isset($update->message->text)) {
             if (count($player)!=1) {
                 $message = "ERROR, avisa al admin";
             } else {
-
+                $message = "User already exists";
             }
         } else {
             $playerID  = $playersRepo->createPlayer($chatId);
