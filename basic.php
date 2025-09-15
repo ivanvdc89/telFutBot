@@ -137,7 +137,8 @@ if(isset($update->message->text)) {
                 $teamsRepo->addPlayerTeam($playerId, $newTeamId);
                 $telegram->sendMessage($chatId, "$args[1] team added");
 
-                $alreadyAddedPots[] = $newTeamPot;
+                $alreadyAddedPots[]      = $newTeamPot;
+                $alreadyAddedCountries[] = $newTeamCountry;
                 $remainingPots = array_diff($pots, $alreadyAddedPots);
                 if (count($remainingPots) == 0) {
                     $telegram->sendMessage($chatId, "You have selected all your teams!");
