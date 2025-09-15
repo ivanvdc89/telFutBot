@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 use TelegramBot\Api\BotApi;
+use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 
 $telegram = new BotApi('%TOKEN_ID');
 
@@ -13,24 +14,19 @@ if(isset($update->message->text)) {
     $text = $update->message->text;
 
     if ($text === '/start') {
-        $keyboard = new InlineKeyboardMarkup(
+        $keyboard = new InlineKeyboardMarkup([
             [
-                [
-                    [
-                        'text' => 'Regles del joc',
-                        'callback_data' => '/rules'
-                    ],
-                    [
-                        'text' => 'Equips',
-                        'callback_data' => '/teams'
-                    ]
-                ]
+                ['text' => 'Regles del joc', 'callback_data' => '/rules'],
+                ['text' => 'Equips', 'callback_data' => 'teams']
             ]
-        );
+        ]);
         $telegram->sendMessage(
-            chatId: $chatId,
-            text: "Accions disponibles actualment:",
-            replyMarkup: $keyboard
+            $chatId,
+            "Accions disponibles actualment:",
+            null,
+            false,
+            null,
+            $keyboard
         );
         exit;
     }
