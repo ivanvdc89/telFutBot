@@ -3,7 +3,7 @@
 include './vendor/autoload.php';
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
+use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 $telegram = new BotApi('%TOKEN_ID');
 
@@ -14,17 +14,16 @@ if(isset($update->message->text)) {
     $text = $update->message->text;
 
     if ($text === '/start') {
-        $keyboard = new InlineKeyboardMarkup([
-            [
-                ['text' => 'Regles del joc', 'callback_data' => '/rules'],
-                ['text' => 'Equips', 'callback_data' => 'teams']
-            ]
-        ]);
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/rules', '/teams'], ['/settings']],
+            true, // resize
+            true  // one-time keyboard
+        );
         $telegram->sendMessage(
             $chatId,
             "Accions disponibles actualment:",
-            null,
             false,
+            null,
             null,
             $keyboard
         );
@@ -39,10 +38,16 @@ if(isset($update->message->text)) {
     }
 
     elseif ($text === '/teams') {
+        $telegram->sendMessage($chatId, "Equips");
         exit;
     }
 
-    $telegram->sendMessage($chatId, "Per ara millor utilitzar els botons -> /start");
+    elseif ($text === '/settings') {
+        $telegram->sendMessage($chatId, "Configuració");
+        exit;
+    }
+
+    $telegram->sendMessage($chatId, "Comença utilitzant els botons -> /start");
 }
 
 ?>
