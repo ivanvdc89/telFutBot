@@ -12,8 +12,7 @@ if(isset($update->message->text)) {
     $chatId = $update->message->chat->id;
     $text = $update->message->text;
 
-    // Echo the received message back to the user
-    $telegram->sendMessage($chatId, "You said: " . $text);
+    $telegram->sendMessage($chatId, "Per ara millor utilitzar els botons -> /start");
 }
 
 ?>
