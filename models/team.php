@@ -9,5 +9,15 @@ class Team extends Connection {
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
+
+    public function getTeamsByPot($pot){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from teams where pot=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1,$pot);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
 }
 ?>
