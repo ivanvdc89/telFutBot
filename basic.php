@@ -2,6 +2,10 @@
 
 include './vendor/autoload.php';
 
+require_once("config/connection.php");
+require_once("models/Player.php");
+require_once("models/Team.php");
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -38,7 +42,21 @@ if(isset($update->message->text)) {
     }
 
     elseif ($text === '/teams') {
-        $telegram->sendMessage($chatId, "Equips");
+        $connection = new Player();
+        $player = $connection->getPlayerByChatId($chatId);
+        if(is_array($player)==true and count($player)>0){
+            if (count($player)!=1) {
+                $message = "ERROR, avisa al admin\n";
+            } else {
+                //$connectionTeams = new Team();
+                $message = "Player $player[0]['name]";
+            }
+        }else{
+
+            $message = "No info.";
+        }
+
+        $telegram->sendMessage($chatId, $message);
         exit;
     }
 
