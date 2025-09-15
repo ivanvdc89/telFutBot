@@ -51,37 +51,54 @@ if(isset($update->message->text)) {
         if (is_array($player) and count($player) > 0){
             if (count($player)!=1) {
                 $message = "ERROR, avisa al admin";
+                $telegram->sendMessage($chatId, $message);
+                exit;
             } else {
-                $message = "User already exists";
+                $playerId              = $player[0]['id'];
+                $alreadyAddedTeams     = $teamsRepo->getTeamsByPlayerId($playerId);
+                $alreadyAddedPots      = array_map(function($team) { return $team['pot']; }, $alreadyAddedTeams);
+                $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
+
+                $remainingPots = array_diff($pots, $alreadyAddedPots);
+                if (count($remainingPots) == 0) {
+                    $message = '';
+                    foreach ($alreadyAddedTeams as $team) {
+                        $pot = (intval($team['competition']) % 4) ?: 4;
+                        $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
+                    }
+                    $telegram->sendMessage($chatId, $message);
+                    exit;
+                }
+                $nextPot = min($remainingPots);
             }
         } else {
-            $playerID  = $playersRepo->createPlayer($chatId);
-            $pot1Teams = $teamsRepo->getTeamsByPot(1);
-            $rows = [];
-            $chunked = array_chunk($pot1Teams, 3);
-
-            foreach ($chunked as $chunk) {
-                $row = [];
-                foreach ($chunk as $team) {
-                    $row[] = '/add ' . $team['name'];
-                }
-                $rows[] = $row;
-            }
-
-            $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-
-            $telegram->sendMessage(
-                $chatId,
-                "Pot1 teams:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
+            $playerId = $playersRepo->createPlayer($chatId);
+            $nextPot = 1;
         }
 
-        $telegram->sendMessage($chatId, $message);
+        $nextPotTeams = $teamsRepo->getTeamsByPot($nextPot);
+        $rows         = [];
+        $row          = [];
+        foreach ($nextPotTeams as $team) {
+            if (!in_array($team['country'], $alreadyAddedCountries)) {
+                $row[] = '/add ' . $team['name'];
+            }
+            if(count($row) == 3) {
+                $rows[] = $row;
+                $row = [];
+            }
+        }
+
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
+        $telegram->sendMessage(
+            $chatId,
+            "Pot" . $nextPot . " teams:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
         exit;
     }
 
@@ -91,9 +108,9 @@ if(isset($update->message->text)) {
         $player      = $playersRepo->getPlayerByChatId($chatId);
 
         if (is_array($player) and count($player) == 0){
-            $playerID = $playersRepo->createPlayer($chatId);
+            $playerId = $playersRepo->createPlayer($chatId);
         } else {
-            $playerID = $player[0]['id'];
+            $playerId = $player[0]['id'];
         }
 
         if (isset($args[1])) {
@@ -102,7 +119,7 @@ if(isset($update->message->text)) {
                 $newTeamId             = $newTeam[0]['id'];
                 $newTeamPot            = $newTeam[0]['pot'];
                 $newTeamCountry        = $newTeam[0]['country'];
-                $alreadyAddedTeams     = $teamsRepo->getTeamsByPlayerId($playerID);
+                $alreadyAddedTeams     = $teamsRepo->getTeamsByPlayerId($playerId);
                 $alreadyAddedPots      = array_map(function($team) { return $team['pot']; }, $alreadyAddedTeams);
                 $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
 
@@ -114,7 +131,7 @@ if(isset($update->message->text)) {
                     $telegram->sendMessage($chatId, "ERROR, $newTeamCountry repeated");
                     exit;
                 }
-                $teamsRepo->addPlayerTeam($playerID, $newTeamId);
+                $teamsRepo->addPlayerTeam($playerId, $newTeamId);
                 $telegram->sendMessage($chatId, "$args[1] team added");
 
                 $alreadyAddedPots[] = $newTeamPot;
