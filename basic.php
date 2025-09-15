@@ -13,17 +13,14 @@ if(isset($update->message->text)) {
     $text = $update->message->text;
 
     if($text === '/rules') {
-        $replyMarkup = $telegram->sendPhoto($chatId, "https://example.com/rules.jpg", "Regles del joc", null, true);
+        $replyMarkup = $telegram->sendPhoto($chatId, "https://ko.ivanvdc.com/files/rules.jpg", "Regles del joc", null, true);
+        $replyMarkup = $telegram->sendPhoto($chatId, "https://ko.ivanvdc.com/files/cl.png", "Equips de la Champions", null, true);
+        $replyMarkup = $telegram->sendPhoto($chatId, "https://ko.ivanvdc.com/files/el.png", "Equips de la Europa League", null, true);
+        $replyMarkup = $telegram->sendPhoto($chatId, "https://ko.ivanvdc.com/files/cl.png", "Equips de la Conference League", null, true);
         exit;
     }
 
     if($text === '/teams') {
-        $keyboard = [
-            ['Option 1', 'Option 2'],
-            ['Option 3', 'Option 4']
-        ];
-        $replyMarkup = $telegram->sendPhoto($keyboard, true, true);
-        $telegram->sendMessage($chatId, "Benvingut! Tria una opció:", false, null, null, $replyMarkup);
         exit;
     }
 
