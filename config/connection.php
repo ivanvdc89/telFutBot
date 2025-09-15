@@ -6,7 +6,8 @@ class Connection{
         try{
             return $this->dbh = new PDO("mysql:host=localhost;dbname=fut_ko","myappuser","123ggg");
         }catch(Exception $e){
-            print "Error BD: ".$e;
+            print_r("Error BD: ". $e->getMessage());
+            error_log("Error BD: " . $e->getMessage());
             die();
         }
     }
