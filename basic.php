@@ -12,7 +12,11 @@ if(isset($update->message->text)) {
     $chatId = $update->message->chat->id;
     $text = $update->message->text;
 
-    if($text === '/rules') {
+    if ($text === '/start') {
+        $telegram->sendMessage($chatId, "Mostrar el menú");
+        exit;
+    }
+    elseif ($text === '/rules') {
         $replyMarkup = $telegram->sendPhoto($chatId, new CURLFile("files/rules.jpg"), "Regles del joc", null, true);
         $replyMarkup = $telegram->sendPhoto($chatId, new CURLFile("files/cl.png"), "Equips de la Champions", null, true);
         $replyMarkup = $telegram->sendPhoto($chatId, new CURLFile("files/el.png"), "Equips de la Europa League", null, true);
@@ -20,7 +24,7 @@ if(isset($update->message->text)) {
         exit;
     }
 
-    if($text === '/teams') {
+    elseif ($text === '/teams') {
         exit;
     }
 
