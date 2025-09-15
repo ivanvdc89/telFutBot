@@ -9,10 +9,13 @@ require_once("models/team.php");
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
+$pots           = [1,2,3,4,5,6,7,8,9,10,11,12];
+$potNumber      = [0,1,2,3,4,1,2,3,4,1,2,3,4];
+$potCompetition = ['X', 'CH', 'CH', 'CH', 'CH', 'EL', 'EL', 'EL', 'EL', 'CL', 'CL', 'CL', 'CL'];
+
 $telegram = new BotApi('%TOKEN_ID');
 
 $update = json_decode(file_get_contents('php://input'));
-$pots   = [1,2,3,4,5,6,7,8,9,10,11,12];
 
 if(isset($update->message->text)) {
     $chatId  = $update->message->chat->id;
@@ -63,7 +66,7 @@ if(isset($update->message->text)) {
                 if (count($remainingPots) == 0) {
                     $message = '';
                     foreach ($alreadyAddedTeams as $team) {
-                        $pot = (intval($team['competition']) % 4) == 0 ? 4 : (intval($team['competition']) % 4);
+                        $pot = $potNumber[$team['pot']];
                         $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
                     }
                     $telegram->sendMessage($chatId, $message);
@@ -96,7 +99,7 @@ if(isset($update->message->text)) {
 
         $telegram->sendMessage(
             $chatId,
-            "Pot" . $nextPot . " teams:",
+            $potCompetition[$nextPot] . " Pot " . $potNumber[$nextPot] . " teams:",
             false,
             null,
             null,
@@ -166,7 +169,7 @@ if(isset($update->message->text)) {
 
                 $telegram->sendMessage(
                     $chatId,
-                    "Pot" . $nextPot . " teams:",
+                    $potCompetition[$nextPot] . " Pot " . $potNumber[$nextPot] . " teams:",
                     false,
                     null,
                     null,
@@ -190,6 +193,5 @@ if(isset($update->message->text)) {
 
     $telegram->sendMessage($chatId, "Comença utilitzant els botons -> /start");
 }
-
 ?>
 
