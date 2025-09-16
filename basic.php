@@ -269,7 +269,7 @@ if(isset($update->message->text)) {
                         exit;
                     }
                     $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
-                    $message     = $player[0]['id'] . ':\n';
+                    $message     = $player[0]['name'] . ":\n";
                     foreach ($playerTeams as $team) {
                         $pot = $potNumber[$team['pot']];
                         $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
