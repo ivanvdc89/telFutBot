@@ -268,9 +268,8 @@ if(isset($update->message->text)) {
                         $telegram->sendMessage($chatId, "ERROR, player not found");
                         exit;
                     }
-                    $playerTeams = $teamsRepo->getTeamsByPlayerId($player['id']);
-
-                    $message = '';
+                    $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+                    $message     = '';
                     foreach ($playerTeams as $team) {
                         $pot = $potNumber[$team['pot']];
                         $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
