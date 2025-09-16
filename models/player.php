@@ -10,6 +10,16 @@ class Player extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getPlayerByName($name){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from players where name=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1,$name);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getAllPlayers(){
         $connection= parent::connect();
         parent::set_names();

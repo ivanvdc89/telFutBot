@@ -224,7 +224,7 @@ if(isset($update->message->text)) {
                     $teams     = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
                     $message   = '';
                     foreach ($teams as $team) {
-                        $message .= $team['name'] . " " . $team['total'] . "\n";
+                        $message .= $team['total'] . " " . $team['name'] . "\n";
                     }
                     $telegram->sendMessage($chatId, $message);
                     exit;
@@ -259,6 +259,24 @@ if(isset($update->message->text)) {
                     $keyboard
                 );
                 exit;
+            } elseif ($args[1] === 'pot') {
+                if (isset($args[2]) and is_numeric($args[2]) and $args[2] >= 1 and $args[2] <= 12) {
+                    $playersRepo = new Player();
+                    $teamsRepo   = new Team();
+                    $player      = $playersRepo->getPlayerByName($args[2]);
+                    $playerTeams = $teamsRepo->getTeamsByPlayerId($player['id']);
+
+                    $message = '';
+                    foreach ($playerTeams as $team) {
+                        $pot = $potNumber[$team['pot']];
+                        $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
+                    }
+                    $telegram->sendMessage($chatId, $message);
+                    exit;
+                } else {
+                    $telegram->sendMessage($chatId, "ERROR, player not found");
+                    exit;
+                }
             } else {
                 $telegram->sendMessage($chatId, "ERROR, data command not found");
             }
