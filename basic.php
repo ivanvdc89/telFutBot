@@ -51,7 +51,7 @@ if(isset($update->message->text)) {
         $playersRepo = new Player();
         $teamsRepo   = new Team();
         $player      = $playersRepo->getPlayerByChatId($chatId);
-        if (is_array($player) and count($player) > 0){
+        if (is_array($player) && count($player) > 0){
             if (count($player)!=1) {
                 $message = "ERROR, avisa al admin";
                 $telegram->sendMessage($chatId, $message);
@@ -113,7 +113,7 @@ if(isset($update->message->text)) {
         $teamsRepo   = new Team();
         $player      = $playersRepo->getPlayerByChatId($chatId);
 
-        if (is_array($player) and count($player) == 0){
+        if (is_array($player) && count($player) == 0){
             $playerId = $playersRepo->createPlayer($chatId);
         } else {
             $playerId = $player[0]['id'];
@@ -121,7 +121,7 @@ if(isset($update->message->text)) {
 
         if (isset($args[1])) {
             $newTeam = $teamsRepo->getTeamByName($args[1]);
-            if (is_array($newTeam) and count($newTeam) == 1){
+            if (is_array($newTeam) && count($newTeam) == 1){
                 $newTeamId             = $newTeam[0]['id'];
                 $newTeamPot            = $newTeam[0]['pot'];
                 $newTeamCountry        = $newTeam[0]['country'];
@@ -219,7 +219,7 @@ if(isset($update->message->text)) {
                 );
                 exit;
             } elseif ($args[1] === 'pot') {
-                if (isset($args[2]) and is_numeric($args[2]) and $args[2] >= 1 and $args[2] <= 12) {
+                if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
                     $teamsRepo = new Team();
                     $teams     = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
                     $message   = '';
@@ -259,11 +259,15 @@ if(isset($update->message->text)) {
                     $keyboard
                 );
                 exit;
-            } elseif ($args[1] === 'pot') {
-                if (isset($args[2]) and is_numeric($args[2]) and $args[2] >= 1 and $args[2] <= 12) {
+            } elseif ($args[1] === 'player') {
+                if (isset($args[2]) && is_string($args[2]) && strlen($args[2]) > 0) {
                     $playersRepo = new Player();
                     $teamsRepo   = new Team();
                     $player      = $playersRepo->getPlayerByName($args[2]);
+                    if (!is_array($player) || count($player) == 0) {
+                        $telegram->sendMessage($chatId, "ERROR, player not found");
+                        exit;
+                    }
                     $playerTeams = $teamsRepo->getTeamsByPlayerId($player['id']);
 
                     $message = '';
