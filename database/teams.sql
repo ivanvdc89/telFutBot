@@ -111,7 +111,7 @@ INSERT INTO teams (name, country, competition, pot) VALUES
     ('Breiðablik', 'Iceland', 'CL', 11),
     ('SigmaOlomouc', 'Czechia', 'CL', 11),
     ('Samsunspor', 'Turkey', 'CL', 11),
-    ('RakowCzęstochowa', 'Poland', 'CL', 12),
+    ('RakowCzestochowa', 'Poland', 'CL', 12),
     ('AEKLarnaca', 'Cyprus', 'CL', 12),
     ('Shkendija', 'North Macedonia', 'CL', 12),
     ('BKHacken', 'Sweden', 'CL', 12),

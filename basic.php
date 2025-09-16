@@ -25,7 +25,7 @@ if(isset($update->message->text)) {
 
     if ($command === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/rules', '/teams'], ['/settings']],
+            [['/rules', '/teams'], ['/data', '/settings']],
             true,
             true
         );
@@ -184,6 +184,86 @@ if(isset($update->message->text)) {
             $telegram->sendMessage($chatId, "ERROR, please send Add teamName");
             exit;
         }
+    }
+
+    elseif ($command === '/data') {
+        if(!isset($args[1])) {
+            $keyboard = new ReplyKeyboardMarkup(
+                [['/data pots', '/data players']], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Data disponible:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        } else {
+            if ($args[1] === 'pots') {
+                $keyboard = new ReplyKeyboardMarkup(
+                    [
+                        ['/data pot 1', '/data pot 2', '/data pot 3', '/data pot 4'],
+                        ['/data pot 5', '/data pot 6', '/data pot 7', '/data pot 8'],
+                        ['/data pot 9', '/data pot 10', '/data pot 11', '/data pot 12']
+                    ], true, true
+                );
+                $telegram->sendMessage(
+                    $chatId,
+                    "Pots disponibles:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            } elseif ($args[1] === 'pot') {
+                if (isset($args[2]) and is_numeric($args[2]) and $args[2] >= 1 and $args[2] <= 12) {
+                    $teamsRepo = new Team();
+                    $teams     = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
+                    $message   = '';
+                    foreach ($teams as $team) {
+                        $message .= $team['name'] . " " . $team['total'] . "\n";
+                    }
+                    $telegram->sendMessage($chatId, $message);
+                    exit;
+                } else {
+                    $telegram->sendMessage($chatId, "ERROR, pot number not found");
+                    exit;
+                }
+            } elseif ($args[1] === 'players') {
+                $playersRepo = new Player();
+                $players     = $playersRepo->getAllPlayers();
+
+                $rows = [];
+                $row  = [];
+                foreach ($players as $player) {
+                    $row[] = '/data player ' . $player['name'];
+                    if(count($row) == 3) {
+                        $rows[] = $row;
+                        $row = [];
+                    }
+                }
+                if (count($rows) != 0) {
+                    $rows[] = $row;
+                }
+
+                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+                $telegram->sendMessage(
+                    $chatId,
+                    "Jugadors participants:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            } else {
+                $telegram->sendMessage($chatId, "ERROR, data command not found");
+            }
+        }
+        exit;
     }
 
     elseif ($command === '/settings') {

@@ -10,6 +10,15 @@ class Player extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getAllPlayers(){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from players;";
+        $sql=$connection->prepare($sql);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function createPlayer($chatId) {
         try {
             $connection = parent::connect();

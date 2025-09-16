@@ -20,6 +20,16 @@ class Team extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getCountPlayerTeamsByPot($pot){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select count(*) as total, t.name as name from player_teams pt join teams t on pt.team_id = t.id where t.pot = ? group by pt.team_id;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1,$pot);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getTeamByName($name){
         $connection= parent::connect();
         parent::set_names();
