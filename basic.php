@@ -18,6 +18,10 @@ $telegram = new BotApi('%TOKEN_ID');
 
 $update = json_decode(file_get_contents('php://input'));
 
+$playersRepo       = new Player();
+$substitutionsRepo = new Substitution();
+$teamsRepo         = new Team();
+
 if(isset($update->message->text)) {
     $chatId  = $update->message->chat->id;
     $text    = $update->message->text;
@@ -49,9 +53,7 @@ if(isset($update->message->text)) {
     }
 
     elseif ($command === '/teams') {
-        $playersRepo = new Player();
-        $teamsRepo   = new Team();
-        $player      = $playersRepo->getPlayerByChatId($chatId);
+        $player = $playersRepo->getPlayerByChatId($chatId);
         if (is_array($player) && count($player) > 0){
             if (count($player)!=1) {
                 $message = "ERROR, avisa al admin";
@@ -110,9 +112,7 @@ if(isset($update->message->text)) {
     }
 
     elseif ($command === '/add') {
-        $playersRepo = new Player();
-        $teamsRepo   = new Team();
-        $player      = $playersRepo->getPlayerByChatId($chatId);
+        $player = $playersRepo->getPlayerByChatId($chatId);
 
         if (is_array($player) && count($player) == 0){
             $playerId = $playersRepo->createPlayer($chatId);
@@ -221,9 +221,8 @@ if(isset($update->message->text)) {
                 exit;
             } elseif ($args[1] === 'pot') {
                 if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
-                    $teamsRepo = new Team();
-                    $teams     = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
-                    $message   = '';
+                    $teams   = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
+                    $message = '';
                     foreach ($teams as $team) {
                         $message .= $team['total'] . " " . $team['name'] . "\n";
                     }
@@ -234,12 +233,10 @@ if(isset($update->message->text)) {
                     exit;
                 }
             } elseif ($args[1] === 'players') {
-                $playersRepo = new Player();
-                $players     = $playersRepo->getAllPlayers();
-
-                $rows  = [];
-                $row   = [];
-                $row[] = '/data player all';
+                $players = $playersRepo->getAllPlayers();
+                $rows    = [];
+                $row     = [];
+                $row[]   = '/data player all';
                 foreach ($players as $player) {
                     $row[] = '/data player ' . $player['name'];
                     if(count($row) == 3) {
@@ -263,8 +260,6 @@ if(isset($update->message->text)) {
                 exit;
             } elseif ($args[1] === 'player') {
                 if (isset($args[2]) && is_string($args[2]) && strlen($args[2]) > 0) {
-                    $playersRepo = new Player();
-                    $teamsRepo   = new Team();
                     if ($args[2] == 'all') {
                         $players = $playersRepo->getAllPlayers();
                         $message = 'Tots els jugadors:';
@@ -319,10 +314,7 @@ if(isset($update->message->text)) {
     }
 
     elseif ($command === '/substitution') {
-        $playersRepo       = new Player();
-        $substitutionsRepo = new Substitution();
-        $teamsRepo         = new Team();
-        $player            = $playersRepo->getPlayerByChatId($chatId);
+        $player = $playersRepo->getPlayerByChatId($chatId);
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
@@ -356,10 +348,7 @@ if(isset($update->message->text)) {
     }
 
     elseif ($command === '/out') {
-        $playersRepo       = new Player();
-        $substitutionsRepo = new Substitution();
-        $teamsRepo         = new Team();
-        $player            = $playersRepo->getPlayerByChatId($chatId);
+        $player = $playersRepo->getPlayerByChatId($chatId);
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
@@ -369,15 +358,21 @@ if(isset($update->message->text)) {
             exit;
         }
 
-        $oldTeam               = $teamsRepo->getTeamByName($args[1]);
+        $oldTeam = $teamsRepo->getTeamByName($args[1]);
         if (!is_array($oldTeam) || count($oldTeam) == 0) {
-            $telegram->sendMessage($chatId, "ERROR, team not found");
+            $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
             exit;
         }
-        $oldTeamId             = $oldTeam[0]['id'];
-        $oldTeamPot            = $oldTeam[0]['pot'];
-        $oldTeamCountry        = $oldTeam[0]['country'];
-        $playerTeams           = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $oldTeamId         = $oldTeam[0]['id'];
+        $oldTeamPot        = $oldTeam[0]['pot'];
+        $oldTeamCountry    = $oldTeam[0]['country'];
+        $playerTeams       = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $alreadyAddedTeams = array_map(function ($team) {return $team['id'];}, $playerTeams);
+        if (!in_array($oldTeamId, $alreadyAddedTeams)) {
+            $telegram->sendMessage($chatId, "ERROR, este equip no és teu");
+            exit;
+        }
+
         $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $playerTeams);
         $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeamCountry]);
         $possibleNewTeams      = $teamsRepo->getTeamsByPot($oldTeamPot);
@@ -414,6 +409,21 @@ if(isset($update->message->text)) {
             $keyboard
         );
         exit;
+    }
+
+    elseif ($command === '/in') {
+        $player = $playersRepo->getPlayerByChatId($chatId);
+
+        $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
+        if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
+            $message = "Ja tens una substitució pendent:\n";
+            $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
+            $telegram->sendMessage($chatId, $message);
+            exit;
+        }
+
+        $telegram->sendMessage($chatId, "IN " . $args[1]);
+
     }
 
     elseif ($command === '/settings') {
