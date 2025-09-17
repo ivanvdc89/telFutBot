@@ -94,7 +94,7 @@ if(isset($update->message->text)) {
                 $row = [];
             }
         }
-        if (count($rows) != 0) {
+        if (count($row) != 0) {
             $rows[] = $row;
         }
 
@@ -162,7 +162,7 @@ if(isset($update->message->text)) {
                         $row = [];
                     }
                 }
-                if (count($rows) != 0) {
+                if (count($row) != 0) {
                     $rows[] = $row;
                 }
 
@@ -244,7 +244,7 @@ if(isset($update->message->text)) {
                         $row = [];
                     }
                 }
-                if (count($rows) != 0) {
+                if (count($row) != 0) {
                     $rows[] = $row;
                 }
 
@@ -394,12 +394,11 @@ if(isset($update->message->text)) {
                 $row = [];
             }
         }
-        if (count($rows) != 0) {
+        if (count($row) != 0) {
             $rows[] = $row;
         }
 
         $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-
         $telegram->sendMessage(
             $chatId,
             "Nou equip:",
