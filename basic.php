@@ -476,7 +476,7 @@ if(isset($update->message->text)) {
 
         $substitutionsRepo->addSubstitution($player[0]['id'], $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
 
-        $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeam[0]['name'] . " -> " . $newTeam[0]['name']);
+        $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeam['name'] . " -> " . $newTeam[0]['name']);
         exit;
     }
 
