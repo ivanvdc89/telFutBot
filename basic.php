@@ -421,8 +421,43 @@ if(isset($update->message->text)) {
             exit;
         }
 
-        $telegram->sendMessage($chatId, "IN " . $args[1]);
+        $newTeam = $teamsRepo->getTeamByName($args[1]);
+        if (!is_array($newTeam) || count($newTeam) == 0) {
+            $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+            exit;
+        }
 
+        $newTeamId      = $newTeam[0]['id'];
+        $newTeamPot     = $newTeam[0]['pot'];
+        $newTeamCountry = $newTeam[0]['country'];
+        $playerTeams    = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+
+        $oldTeamCountry = $oldTeamId = null;
+        foreach ($playerTeams as $team) {
+            if ($team['pot'] == $newTeamPot) {
+                $oldTeamId      = $team['id'];
+                $oldTeamCountry = $team['country'];
+            }
+        }
+
+        $alreadyAddedTeams = array_map(function ($team) {return $team['id'];}, $playerTeams);
+        if (in_array($newTeamId, $alreadyAddedTeams)) {
+            $telegram->sendMessage($chatId, "ERROR, ja tens aquest equip");
+            exit;
+        }
+
+        $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $playerTeams);
+        $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeamCountry]);
+        if (in_array($newTeamCountry, $alreadyAddedCountries)) {
+            $telegram->sendMessage($chatId, "ERROR, ja tens un equip d'aquest país");
+            exit;
+        }
+
+        $competition = $newTeam[0]['competition'];
+        $substitutionsRepo->addSubstitution($player[0]['id'], $oldTeamId, $newTeamId, $competition);
+
+        $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeamId . " -> " . $newTeamId);
+        exit;
     }
 
     elseif ($command === '/settings') {
