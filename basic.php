@@ -427,36 +427,30 @@ if(isset($update->message->text)) {
             exit;
         }
 
-        $newTeamId      = $newTeam[0]['id'];
-        $newTeamPot     = $newTeam[0]['pot'];
-        $newTeamCountry = $newTeam[0]['country'];
-        $playerTeams    = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
-
-        $oldTeamCountry = $oldTeamId = null;
+        $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
         foreach ($playerTeams as $team) {
-            if ($team['pot'] == $newTeamPot) {
-                $oldTeamId      = $team['id'];
-                $oldTeamCountry = $team['country'];
+            if ($team['pot'] == $newTeam[0]['pot']) {
+                $oldTeam = $team;
+                break;
             }
         }
 
         $alreadyAddedTeams = array_map(function ($team) {return $team['id'];}, $playerTeams);
-        if (in_array($newTeamId, $alreadyAddedTeams)) {
+        if (in_array($newTeam[0]['id'], $alreadyAddedTeams)) {
             $telegram->sendMessage($chatId, "ERROR, ja tens aquest equip");
             exit;
         }
 
         $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $playerTeams);
-        $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeamCountry]);
-        if (in_array($newTeamCountry, $alreadyAddedCountries)) {
+        $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeam['country']]);
+        if (in_array($newTeam[0]['country'], $alreadyAddedCountries)) {
             $telegram->sendMessage($chatId, "ERROR, ja tens un equip d'aquest país");
             exit;
         }
 
-        $competition = $newTeam[0]['competition'];
-        $substitutionsRepo->addSubstitution($player[0]['id'], $oldTeamId, $newTeamId, $competition);
+        $substitutionsRepo->addSubstitution($player[0]['id'], $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
 
-        $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeamId . " -> " . $newTeamId);
+        $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeam[0]['name'] . " -> " . $newTeam[0]['name']);
         exit;
     }
 
