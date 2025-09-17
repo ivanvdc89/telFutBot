@@ -328,7 +328,7 @@ if(isset($update->message->text)) {
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
             $message = "Ja tens una substitució pendent:\n";
             $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
-            $telegram->sendMessage($chatId, "Configuració");
+            $telegram->sendMessage($chatId, $message);
             exit;
         }
 
@@ -336,7 +336,7 @@ if(isset($update->message->text)) {
         $rows        = [];
         $row         = [];
         foreach ($playerTeams as $team) {
-            $row[] = '/sub ' . $team['name'];
+            $row[] = '/out ' . $team['name'];
             if(count($row) == 3) {
                 $rows[] = $row;
                 $row = [];
@@ -355,8 +355,60 @@ if(isset($update->message->text)) {
         exit;
     }
 
-    elseif ($command === '/sub') {
-        $telegram->sendMessage($chatId, "SUBSTITUCIÓ " . $args[1]);
+    elseif ($command === '/out') {
+        $playersRepo       = new Player();
+        $substitutionsRepo = new Substitution();
+        $teamsRepo         = new Team();
+        $player            = $playersRepo->getPlayerByChatId($chatId);
+
+        $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
+        if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
+            $message = "Ja tens una substitució pendent:\n";
+            $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
+            $telegram->sendMessage($chatId, $message);
+            exit;
+        }
+
+        $oldTeam               = $teamsRepo->getTeamByName($args[1]);
+        if (!is_array($oldTeam) || count($oldTeam) == 0) {
+            $telegram->sendMessage($chatId, "ERROR, team not found");
+            exit;
+        }
+        $oldTeamId             = $oldTeam[0]['id'];
+        $oldTeamPot            = $oldTeam[0]['pot'];
+        $oldTeamCountry        = $oldTeam[0]['country'];
+        $playerTeams           = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $playerTeams);
+        $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeamCountry]);
+        $possibleNewTeams      = $teamsRepo->getTeamsByPot($oldTeamPot);
+        $possibleNewTeams      = array_filter($possibleNewTeams, function($team) use ($alreadyAddedCountries, $oldTeamId) {
+            return !in_array($team['country'], $alreadyAddedCountries) && $team['id'] != $oldTeamId;
+        });
+
+        if (count($possibleNewTeams) == 0) {
+            $telegram->sendMessage($chatId, "ERROR, no hi ha possibilitats de substitució");
+            exit;
+        }
+
+        $rows = [];
+        $row  = [];
+        foreach ($possibleNewTeams as $team) {
+            $row[] = '/in ' . $team['name'];
+            if(count($row) == 3) {
+                $rows[] = $row;
+                $row = [];
+            }
+        }
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
+        $telegram->sendMessage(
+            $chatId,
+            "Nou equip:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
         exit;
     }
 
