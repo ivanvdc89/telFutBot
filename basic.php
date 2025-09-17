@@ -236,8 +236,9 @@ if(isset($update->message->text)) {
                 $playersRepo = new Player();
                 $players     = $playersRepo->getAllPlayers();
 
-                $rows = [];
-                $row  = [];
+                $rows  = [];
+                $row   = [];
+                $row[] = '/data player all';
                 foreach ($players as $player) {
                     $row[] = '/data player ' . $player['name'];
                     if(count($row) == 3) {
@@ -263,7 +264,21 @@ if(isset($update->message->text)) {
                 if (isset($args[2]) && is_string($args[2]) && strlen($args[2]) > 0) {
                     $playersRepo = new Player();
                     $teamsRepo   = new Team();
-                    $player      = $playersRepo->getPlayerByName($args[2]);
+                    if ($args[2] == 'all') {
+                        $players = $playersRepo->getAllPlayers();
+                        $message = 'Tots els jugadors:';
+                        foreach ($players as $player) {
+                            $playerTeams = $teamsRepo->getTeamsByPlayerId($player['id']);
+                            $message     .= "\n\n" . $player['name'] . ":\n";
+                            foreach ($playerTeams as $team) {
+                                $pot = $potNumber[$team['pot']];
+                                $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
+                            }
+                        }
+                        $telegram->sendMessage($chatId, $message);
+                        exit;
+                    }
+                    $player = $playersRepo->getPlayerByName($args[2]);
                     if (!is_array($player) || count($player) == 0) {
                         $telegram->sendMessage($chatId, "ERROR, player not found");
                         exit;
