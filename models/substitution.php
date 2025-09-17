@@ -29,5 +29,15 @@ class Substitution extends Connection {
             return false;
         }
     }
+
+    public function removePendingSubstitution($id)
+    {
+        $connection = parent::connect();
+        parent::set_names();
+        $sql = "DELETE FROM substitutions WHERE id = ? AND pending = 1";
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue(1, $id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
 }
 ?>

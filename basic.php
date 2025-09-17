@@ -317,12 +317,32 @@ if(isset($update->message->text)) {
         $player = $playersRepo->getPlayerByChatId($chatId);
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
+
+        if($args[1] === 'remove') {
+            if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
+                $substitutionsRepo->removePendingSubstitution($pendingSubstitutions[0]['id']);
+                $telegram->sendMessage($chatId, "Substitució eliminada");
+            } else {
+                $telegram->sendMessage($chatId, "No tens cap substitució pendent");
+            }
+            exit;
+        }
+
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
             $oldTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['old_team_id']);
             $newTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['new_team_id']);
             $message = "Ja tens una substitució pendent:\n";
             $message .= $oldTeam[0]['name'] . " -> " . $newTeam[0]['name'] . "\n";
-            $telegram->sendMessage($chatId, $message);
+            $keyboard = new ReplyKeyboardMarkup([['/substitution remove', '/start']], true, true);
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                $keyboard
+            );
             exit;
         }
 
