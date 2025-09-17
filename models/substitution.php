@@ -1,5 +1,5 @@
 <?php
-class Substitutions extends Connection {
+class Substitution extends Connection {
     public function getPendingSubstitutionsByPlayerId($playerId){
         $connection= parent::connect();
         parent::set_names();

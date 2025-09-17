@@ -318,17 +318,44 @@ if(isset($update->message->text)) {
     }
 
     elseif ($command === '/substitution') {
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/substitution']], true, true
-        );
+        $playersRepo       = new Player();
+        $substitutionsRepo = new Substitution();
+        $teamsRepo         = new Team();
+        $player            = $playersRepo->getPlayerByChatId($chatId);
+
+        $pendingSubstitution = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
+        if (is_array($pendingSubstitution) && count($pendingSubstitution) > 0) {
+            $message = "Ja tens una substitució pendent:\n";
+            $message .= $pendingSubstitution[0]['old_team_id'] . " -> " . $pendingSubstitution[0]['new_team_id'] . "\n";
+            $telegram->sendMessage($chatId, "Configuració");
+            exit;
+        }
+
+        $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $rows        = [];
+        $row         = [];
+        foreach ($playerTeams as $team) {
+            $row[] = '/sub ' . $team['name'];
+            if(count($row) == 3) {
+                $rows[] = $row;
+                $row = [];
+            }
+        }
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
         $telegram->sendMessage(
             $chatId,
-            "Accions disponibles:",
+            "Els teus equips:",
             false,
             null,
             null,
             $keyboard
         );
+        exit;
+    }
+
+    elseif ($command === '/sub') {
+        $telegram->sendMessage($chatId, "SUBSTITUCIÓ " . $args[1]);
         exit;
     }
 
