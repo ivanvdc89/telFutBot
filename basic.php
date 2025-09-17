@@ -5,6 +5,7 @@ include './vendor/autoload.php';
 require_once("config/connection.php");
 require_once("models/player.php");
 require_once("models/team.php");
+require_once("models/substitution.php");
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -323,10 +324,10 @@ if(isset($update->message->text)) {
         $teamsRepo         = new Team();
         $player            = $playersRepo->getPlayerByChatId($chatId);
 
-        $pendingSubstitution = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
-        if (is_array($pendingSubstitution) && count($pendingSubstitution) > 0) {
+        $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
+        if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
             $message = "Ja tens una substitució pendent:\n";
-            $message .= $pendingSubstitution[0]['old_team_id'] . " -> " . $pendingSubstitution[0]['new_team_id'] . "\n";
+            $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
             $telegram->sendMessage($chatId, "Configuració");
             exit;
         }
