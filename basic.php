@@ -25,7 +25,7 @@ if(isset($update->message->text)) {
 
     if ($command === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/rules', '/teams'], ['/data', '/settings']],
+            [['/rules', '/teams', '/actions'], ['/data', '/settings']],
             true,
             true
         );
@@ -302,6 +302,36 @@ if(isset($update->message->text)) {
         exit;
     }
 
+    elseif ($command === '/actions') {
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/substitution']], true, true
+        );
+        $telegram->sendMessage(
+            $chatId,
+            "Accions disponibles:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
+    elseif ($command === '/substitution') {
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/substitution']], true, true
+        );
+        $telegram->sendMessage(
+            $chatId,
+            "Accions disponibles:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
     elseif ($command === '/settings') {
         $telegram->sendMessage($chatId, "Configuració");
         exit;
@@ -310,4 +340,3 @@ if(isset($update->message->text)) {
     $telegram->sendMessage($chatId, "Comença utilitzant els botons -> /start");
 }
 ?>
-
