@@ -399,6 +399,10 @@ if(isset($update->message->text)) {
                 $row = [];
             }
         }
+        if (count($rows) != 0) {
+            $rows[] = $row;
+        }
+
         $keyboard = new ReplyKeyboardMarkup($rows, true, true);
 
         $telegram->sendMessage(
