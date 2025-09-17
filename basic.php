@@ -352,8 +352,10 @@ if(isset($update->message->text)) {
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
+            $oldTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['old_team_id']);
+            $newTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['new_team_id']);
             $message = "Ja tens una substitució pendent:\n";
-            $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
+            $message .= $oldTeam[0]['name'] . " -> " . $newTeam[0]['name'] . "\n";
             $telegram->sendMessage($chatId, $message);
             exit;
         }
@@ -415,8 +417,10 @@ if(isset($update->message->text)) {
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
+            $oldTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['old_team_id']);
+            $newTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['new_team_id']);
             $message = "Ja tens una substitució pendent:\n";
-            $message .= $pendingSubstitutions[0]['old_team_id'] . " -> " . $pendingSubstitutions[0]['new_team_id'] . "\n";
+            $message .= $oldTeam[0]['name'] . " -> " . $newTeam[0]['name'] . "\n";
             $telegram->sendMessage($chatId, $message);
             exit;
         }

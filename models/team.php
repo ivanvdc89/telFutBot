@@ -57,5 +57,16 @@ class Team extends Connection {
             return false;
         }
     }
+
+    public function getTeamById($teamId)
+    {
+        $connection = parent::connect();
+        parent::set_names();
+        $sql = "select * from teams where id=?;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $teamId);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
 }
 ?>
