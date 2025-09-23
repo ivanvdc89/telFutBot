@@ -22,7 +22,7 @@ $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 
-if(isset($update->message->text)) {
+if(isset($update->message->text) && $update->message->chat->type !== "group") {
     $chatId  = $update->message->chat->id;
     $text    = $update->message->text;
     $args    = explode(" ", $text);
@@ -79,6 +79,7 @@ if(isset($update->message->text)) {
                 $nextPot = min($remainingPots);
             }
         } else {
+            //$message_sender = $update->message->from_user->first_name;
             $playerId = $playersRepo->createPlayer($chatId);
             $nextPot = 1;
         }
