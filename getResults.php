@@ -3,13 +3,16 @@ $pdo = new PDO('mysql:host=localhost;dbname=fut_ko;charset=utf8mb4', 'myappuser'
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $apiToken = "d64472bab24d104e00eed8e33ce7f7e12baa93d9";
-$url      = "https://api.soccerdataapi.com/livescores/?auth_token={$apiToken}";
+$leagueId = 2;
+$seasonId = 2025;
+
+$url = "https://api.soccerdataapi.com/matches/?auth_token=$apiToken&league_id=$leagueId&season_id=$seasonId";
 
 $ch = curl_init();
 curl_setopt_array($ch, [
     CURLOPT_URL => $url,
     CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_ENCODING => "gzip", // important
+    CURLOPT_ENCODING => "gzip",
     CURLOPT_HTTPHEADER => [
         "Accept-Encoding: gzip",
         "Content-Type: application/json"
@@ -29,8 +32,6 @@ if ($data === null) {
 if (!isset($data['data']) || !is_array($data['data'])) {
     die("Unexpected API format:\n" . print_r($data, true));
 }
-
-$matchesArray = $data['data'] ?? $data['livescores'] ?? [];
 
 $stmTeamRes = $pdo->prepare("
     INSERT INTO team_results (team_id, points, matchday, competition)
@@ -59,7 +60,6 @@ foreach ($data['data'] as $leagueEntry) {
 
         $matchDay = null;
         if (isset($m['round'])) {
-            // if round is numeric
             if (is_numeric($m['round'])) {
                 $matchDay = intval($m['round']);
             } else {
@@ -69,7 +69,6 @@ foreach ($data['data'] as $leagueEntry) {
             }
         }
         if ($matchDay === null) {
-            // fallback to 0 or skip
             $matchDay = 0;
         }
 
@@ -81,11 +80,9 @@ foreach ($data['data'] as $leagueEntry) {
         } elseif (stripos($leagueName, 'Conference League') !== false) {
             $competitionEnum = 'COL';
         } else {
-            // skip if competition not one of your ENUMs
             continue;
         }
 
-        // Determine points for the two teams
         if ($homeGoals > $awayGoals) {
             $pointsHome = 3;
             $pointsAway = 0;
