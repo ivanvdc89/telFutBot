@@ -1,6 +1,6 @@
 <?php
-class Point extends Connection {
-    public function addPoints(
+class TeamResult extends Connection {
+    public function addTeamPoints(
         int $playerId,
         int $matchDay,
         int $pot,
@@ -12,7 +12,7 @@ class Point extends Connection {
         try {
             $connection = parent::connect();
 
-            $sql = "INSERT INTO team_points (player_id, team_id) VALUES (:player_id, :team_id)";
+            $sql = "INSERT INTO team_points (player_id, match_day, pot, team_id, points, action, total) VALUES (:player_id, :match_day, :pot, :team_id, :points, :action, :total)";
             $stmt = $connection->prepare($sql);
             $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
             $stmt->bindValue(':match_day', $matchDay, PDO::PARAM_INT);
