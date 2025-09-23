@@ -4,11 +4,13 @@ include './vendor/autoload.php';
 
 require_once("config/connection.php");
 require_once("models/player.php");
-require_once("models/teamPoints.php");
+require_once("models/team.php");
+require_once("models/teamPoint.php");
+require_once("models/teamResult.php");
 
 $playersRepo    = new Player();
 $teamsRepo      = new Team();
-$teamResultRepo = new teamResult();
+$teamResultRepo = new TeamResult();
 $teamPointRepo  = new TeamPoint();
 
 $players = $playersRepo->getAllPlayers();
