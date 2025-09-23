@@ -6,5 +6,6 @@ CREATE TABLE substitutions (
     old_team_id INT NOT NULL,
     new_team_id INT NOT NULL,
     competition ENUM('CHL', 'EUL', 'COL') NOT NULL,
-    pending     TINYINT(1) NOT NULL DEFAULT 1
+    pending     TINYINT(1) NOT NULL DEFAULT 1,
+    points_cost INT DEFAULT 0
 );
