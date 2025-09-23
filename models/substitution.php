@@ -10,13 +10,14 @@ class Substitution extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
-    public function addSubstitution(int $playerId, int $oldTeamId, int $newTeamId, string $competition) {
+    public function addSubstitution(int $playerId, int $matchDay, int $oldTeamId, int $newTeamId, string $competition) {
         try {
             $connection = parent::connect();
 
-            $sql = "INSERT INTO substitutions (player_id, old_team_id, new_team_id, competition) VALUES (:player_id, :old_team_id, :new_team_id, :competition)";
+            $sql = "INSERT INTO substitutions (player_id, match_day, old_team_id, new_team_id, competition) VALUES (:player_id, :match_day, :old_team_id, :new_team_id, :competition)";
             $stmt = $connection->prepare($sql);
             $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
+            $stmt->bindValue(':match_day', $matchDay, PDO::PARAM_INT);
             $stmt->bindValue(':old_team_id', $oldTeamId, PDO::PARAM_INT);
             $stmt->bindValue(':new_team_id', $newTeamId, PDO::PARAM_INT);
             $stmt->bindValue(':competition', $competition);
