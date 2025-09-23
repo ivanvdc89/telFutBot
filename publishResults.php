@@ -5,7 +5,7 @@ include './vendor/autoload.php';
 require_once("config/connection.php");
 require_once("models/player.php");
 require_once("models/team.php");
-require_once("models/substitution.php");
+require_once("models/group.php");
 
 use TelegramBot\Api\BotApi;
 
