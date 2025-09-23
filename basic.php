@@ -12,7 +12,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 $pots           = [1,2,3,4,5,6,7,8,9,10,11,12];
 $potNumber      = [0,1,2,3,4,1,2,3,4,1,2,3,4];
-$potCompetition = ['X', 'CH', 'CH', 'CH', 'CH', 'EL', 'EL', 'EL', 'EL', 'CL', 'CL', 'CL', 'CL'];
+$potCompetition = ['X', 'CHL', 'CHL', 'CHL', 'CHL', 'EUL', 'EUL', 'EUL', 'EUL', 'COL', 'COL', 'COL', 'COL'];
 
 $telegram = new BotApi('%TOKEN_ID');
 
@@ -22,7 +22,7 @@ $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 
-if(isset($update->message->text)) {
+if(isset($update->message->text) && $update->message->chat->type !== "group") {
     $chatId  = $update->message->chat->id;
     $text    = $update->message->text;
     $args    = explode(" ", $text);
@@ -44,6 +44,7 @@ if(isset($update->message->text)) {
         );
         exit;
     }
+    
     elseif ($command === '/rules') {
         $telegram->sendPhoto($chatId, new CURLFile("files/rules.jpg"), "Regles del joc");
         $telegram->sendPhoto($chatId, new CURLFile("files/ch.png"), "Equips de la Champions");
@@ -78,6 +79,7 @@ if(isset($update->message->text)) {
                 $nextPot = min($remainingPots);
             }
         } else {
+            //$message_sender = $update->message->from_user->first_name;
             $playerId = $playersRepo->createPlayer($chatId);
             $nextPot = 1;
         }

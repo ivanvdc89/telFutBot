@@ -1,6 +1,6 @@
 <?php
 class Substitution extends Connection {
-    public function getPendingSubstitutionsByPlayerId($playerId){
+    public function getPendingSubstitutionsByPlayerId(int $playerId){
         $connection= parent::connect();
         parent::set_names();
         $sql="select * from substitutions where player_id=? and pending = 1;";
@@ -10,7 +10,7 @@ class Substitution extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
-    public function addSubstitution($playerId, $oldTeamId, $newTeamId, $competition) {
+    public function addSubstitution(int $playerId, int $oldTeamId, int $newTeamId, string $competition) {
         try {
             $connection = parent::connect();
 
@@ -19,7 +19,7 @@ class Substitution extends Connection {
             $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
             $stmt->bindValue(':old_team_id', $oldTeamId, PDO::PARAM_INT);
             $stmt->bindValue(':new_team_id', $newTeamId, PDO::PARAM_INT);
-            $stmt->bindValue(':competition', $competition, PDO::PARAM_INT);
+            $stmt->bindValue(':competition', $competition);
             $stmt->execute();
 
             return $connection->lastInsertId();
@@ -30,7 +30,7 @@ class Substitution extends Connection {
         }
     }
 
-    public function removePendingSubstitution($id)
+    public function removePendingSubstitution(int $id)
     {
         $connection = parent::connect();
         parent::set_names();
