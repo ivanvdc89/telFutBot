@@ -7,5 +7,5 @@ CREATE TABLE team_points (
     team_id INT DEFAULT NULL,
     points INT DEFAULT NULL,
     action VARCHAR(50) DEFAULT NULL,
-    total INT DEFAULT NULL,
+    total INT DEFAULT NULL
 );
