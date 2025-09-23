@@ -34,7 +34,7 @@ $matchesArray = $data['data'] ?? $data['livescores'] ?? [];
 
 $stmTeamRes = $pdo->prepare("
     INSERT INTO team_results (team_id, points, matchday, competition)
-    VALUES (:team_id, :points, :matchday, :competition)
+    VALUES (:team_id, :points, :match_day, :competition)
     ON DUPLICATE KEY UPDATE
        points = VALUES(points)
 ");
@@ -47,40 +47,30 @@ foreach ($data['data'] as $leagueEntry) {
             continue;
         }
 
-        // Parse needed fields
         $leagueName = $m['league']['name'] ?? '';
-        $dateStr   = ($m['date'] ?? '') . ' ' . ($m['time'] ?? '');
-        // Convert to DATETIME, adjust if needed; assuming date/time in known format
-
         $homeTeamId = $m['teams']['home']['id'] ?? null;
-        $homeTeamName = $m['teams']['home']['name'] ?? '';
         $awayTeamId = $m['teams']['away']['id'] ?? null;
-        $awayTeamName = $m['teams']['away']['name'] ?? '';
-
-        // Full-time goals
-        $homeGoals = $m['goals']['home_ft_goals'] ?? null;
-        $awayGoals = $m['goals']['away_ft_goals'] ?? null;
+        $homeGoals  = $m['goals']['home_ft_goals'] ?? null;
+        $awayGoals  = $m['goals']['away_ft_goals'] ?? null;
 
         if ($homeTeamId === null || $awayTeamId === null) {
             continue;
         }
 
-        // Determine matchday: this depends on the API data. If API has a “round” or “matchday” or “stage” info:
-        $matchday = null;
+        $matchDay = null;
         if (isset($m['round'])) {
             // if round is numeric
             if (is_numeric($m['round'])) {
-                $matchday = intval($m['round']);
+                $matchDay = intval($m['round']);
             } else {
-                // maybe "Group Stage - 3" etc → extract digits
                 if (preg_match('/(\d+)/', $m['round'], $mr)) {
-                    $matchday = intval($mr[1]);
+                    $matchDay = intval($mr[1]);
                 }
             }
         }
-        if ($matchday === null) {
+        if ($matchDay === null) {
             // fallback to 0 or skip
-            $matchday = 0;
+            $matchDay = 0;
         }
 
         $competitionEnum = null;
@@ -109,17 +99,17 @@ foreach ($data['data'] as $leagueEntry) {
 
         // Update team_results for home
         $stmTeamRes->execute([
-            ':team_id'     => $homeTeamId,
-            ':points'      => $pointsHome,
-            ':matchday'    => $matchday,
+            ':team_id'    => $homeTeamId,
+            ':points'     => $pointsHome,
+            ':match_day'  => $matchDay,
             ':competition'=> $competitionEnum
         ]);
 
         // Update team_results for away
         $stmTeamRes->execute([
-            ':team_id'     => $awayTeamId,
-            ':points'      => $pointsAway,
-            ':matchday'    => $matchday,
+            ':team_id'    => $awayTeamId,
+            ':points'     => $pointsAway,
+            ':match_day'  => $matchDay,
             ':competition'=> $competitionEnum
         ]);
     }
