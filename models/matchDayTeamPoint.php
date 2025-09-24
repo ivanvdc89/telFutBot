@@ -1,6 +1,6 @@
 <?php
 class MatchDayTeamPoint extends Connection {
-    public function addMatchDayTeamRPoint(
+    public function addMatchDayTeamPoint(
         int $playerId,
         int $matchDay,
         int $pot,
