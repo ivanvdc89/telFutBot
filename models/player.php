@@ -45,5 +45,15 @@ class Player extends Connection {
             return false;
         }
     }
+
+    public function getPlayerById($playerId) {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from players where id=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $playerId);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
 }
 ?>

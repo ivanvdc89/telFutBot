@@ -30,5 +30,17 @@ class MatchDayTeamPoint extends Connection {
             return false;
         }
     }
+
+    public function getAllMatchDayTeamPointsByPlayerIdAndMatchDay(int $player_id, int $matchDay): array
+    {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from match_day_team_points where player_id=? and match_day=? order by pot asc;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $player_id);
+        $sql->bindValue(2, $matchDay);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
 }
 ?>

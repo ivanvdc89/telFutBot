@@ -60,7 +60,7 @@ class MatchDayPlayerPoint extends Connection {
     {
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from match_day_player_points where match_day=? order by match_day_total desc;";
+        $sql="select * from match_day_player_points where match_day=? order by sum desc;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $matchDay);
         $sql->execute();
