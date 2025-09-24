@@ -19,9 +19,14 @@ $teamsRepo                = new Team();
 $matchDayPlayerPointsRepo = new MatchDayPlayerPoint();
 $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 
-$group       = $groupRepo->getGroup(1);
-$groupChatId = $group[0]['chat_id'];
-$message     = "Resultats:\n";
+$group          = $groupRepo->getGroup(1);
+$groupChatId    = $group[0]['chat_id'];
+$message        = "";
+$messageBests   = "";
+$bestCHLPoints  = 0;
+$bestEULPoints  = 0;
+$bestCOLPoints  = 0;
+$messageRanking = "";
 
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(1);
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
@@ -39,8 +44,24 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
             $message .=  "\nCOL:\n";
         }
         $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
-        $message .= "- " . $team[0]['name'] . "\t\t " . $allMatchDayTeamPoint['points'] . " pts\n";
+        $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+        if($allMatchDayTeamPoint['pot'] == 4) {
+            $message .= "-SUMA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
+            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+        }
+        if($allMatchDayTeamPoint['pot'] == 8) {
+            $message .= "-SUMA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
+            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+        }
+        if($allMatchDayTeamPoint['pot'] == 12) {
+            $message .= "-SUMA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
+            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+        }
     }
+    $message .= "-SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
+    $message .= "-TOTAL: " . $allMatchDayPlayerPoint['sum'] . " pts\n";
+
+    $telegram->sendMessage($groupChatId, $message);
+    $message = "";
 }
-$telegram->sendMessage($groupChatId, $message);
 
