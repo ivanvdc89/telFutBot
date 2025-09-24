@@ -11,10 +11,13 @@ use TelegramBot\Api\BotApi;
 
 $telegram = new BotApi('%TOKEN_ID');
 
-$groupRepo = new Group();
-$group = $groupRepo->getGroup(1);
+$groupRepo   = new Group();
+$playersRepo = new Player();
 
+$group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
+$message     = "Resultats:\n";
 
+$players = $playersRepo->getAllPlayers();
 $telegram->sendMessage($groupChatId, "Resultats");
 

@@ -1,13 +1,15 @@
 <?php
-$pdo = new PDO('mysql:host=localhost;dbname=fut_ko;charset=utf8mb4', 'myappuser', '123ggg');
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+//$pdo = new PDO('mysql:host=localhost;dbname=fut_ko;charset=utf8mb4', 'myappuser', '123ggg');
+//$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-$apiToken = "d64472bab24d104e00eed8e33ce7f7e12baa93d9";
-$leagueId = 2;
-$seasonId = 2025;
+$apiToken = "%API_TOKEN";
+const CHAMPIONS_LEAGUE_ID = 310;
+const EUROPE_LEAGUE_ID = 326;
+const CONFERENCE_LEAGUE_ID = 198;
 
-$url = "https://api.soccerdataapi.com/matches/?auth_token=$apiToken&league_id=$leagueId&season_id=$seasonId";
+$VALID_LEAGUES_IDS = [CHAMPIONS_LEAGUE_ID, EUROPE_LEAGUE_ID, CONFERENCE_LEAGUE_ID];
 
+$url = "https://api.soccerdataapi.com/livescores/?auth_token=$apiToken";
 $ch = curl_init();
 curl_setopt_array($ch, [
     CURLOPT_URL => $url,
@@ -29,88 +31,93 @@ if ($data === null) {
     die("Invalid JSON response: " . $response);
 }
 
-if (!isset($data['data']) || !is_array($data['data'])) {
+if (!isset($data['results']) || !is_array($data['results'])) {
     die("Unexpected API format:\n" . print_r($data, true));
 }
 
+/*
 $stmTeamRes = $pdo->prepare("
     INSERT INTO team_results (team_id, points, matchday, competition)
     VALUES (:team_id, :points, :match_day, :competition)
     ON DUPLICATE KEY UPDATE
        points = VALUES(points)
 ");
+*/
 
-foreach ($data['data'] as $leagueEntry) {
-    $matches = $leagueEntry['matches'] ?? [];
+$ids = [];
+foreach ($data['results'] as $result) {
+    if (!in_array($result['league_id'], $VALID_LEAGUES_IDS)) {
+        $ids[] = $result['league_name'];
+        continue;
+    }
 
-    foreach ($matches as $m) {
-        if (!isset($m['status']) || strtolower($m['status']) !== 'finished') {
-            continue;
-        }
+    if (!isset($result['status']) || strtolower($result['status']) !== 'finished') {
+        continue;
+    }
 
-        $leagueName = $m['league']['name'] ?? '';
-        $homeTeamId = $m['teams']['home']['id'] ?? null;
-        $awayTeamId = $m['teams']['away']['id'] ?? null;
-        $homeGoals  = $m['goals']['home_ft_goals'] ?? null;
-        $awayGoals  = $m['goals']['away_ft_goals'] ?? null;
+    $leagueName = $result['league']['name'] ?? '';
+    $homeTeamId = $result['teams']['home']['id'] ?? null;
+    $awayTeamId = $result['teams']['away']['id'] ?? null;
+    $homeGoals  = $result['goals']['home_ft_goals'] ?? null;
+    $awayGoals  = $result['goals']['away_ft_goals'] ?? null;
 
-        if ($homeTeamId === null || $awayTeamId === null) {
-            continue;
-        }
+    if ($homeTeamId === null || $awayTeamId === null) {
+        continue;
+    }
 
-        $matchDay = null;
-        if (isset($m['round'])) {
-            if (is_numeric($m['round'])) {
-                $matchDay = intval($m['round']);
-            } else {
-                if (preg_match('/(\d+)/', $m['round'], $mr)) {
-                    $matchDay = intval($mr[1]);
-                }
+    $matchDay = null;
+    if (isset($result['round'])) {
+        if (is_numeric($result['round'])) {
+            $matchDay = intval($result['round']);
+        } else {
+            if (preg_match('/(\d+)/', $result['round'], $mr)) {
+                $matchDay = intval($mr[1]);
             }
         }
-        if ($matchDay === null) {
-            $matchDay = 0;
-        }
-
-        $competitionEnum = null;
-        if (stripos($leagueName, 'Champions League') !== false) {
-            $competitionEnum = 'CHL';
-        } elseif (stripos($leagueName, 'Europa League') !== false) {
-            $competitionEnum = 'EUL';
-        } elseif (stripos($leagueName, 'Conference League') !== false) {
-            $competitionEnum = 'COL';
-        } else {
-            continue;
-        }
-
-        if ($homeGoals > $awayGoals) {
-            $pointsHome = 3;
-            $pointsAway = 0;
-        } elseif ($homeGoals < $awayGoals) {
-            $pointsHome = 0;
-            $pointsAway = 3;
-        } else {
-            $pointsHome = 1;
-            $pointsAway = 1;
-        }
-
-        // Update team_results for home
-        $stmTeamRes->execute([
-            ':team_id'    => $homeTeamId,
-            ':points'     => $pointsHome,
-            ':match_day'  => $matchDay,
-            ':competition'=> $competitionEnum
-        ]);
-
-        // Update team_results for away
-        $stmTeamRes->execute([
-            ':team_id'    => $awayTeamId,
-            ':points'     => $pointsAway,
-            ':match_day'  => $matchDay,
-            ':competition'=> $competitionEnum
-        ]);
     }
+    if ($matchDay === null) {
+        $matchDay = 0;
+    }
+
+    $competitionEnum = null;
+    if (stripos($leagueName, 'Champions League') !== false) {
+        $competitionEnum = 'CHL';
+    } elseif (stripos($leagueName, 'Europa League') !== false) {
+        $competitionEnum = 'EUL';
+    } elseif (stripos($leagueName, 'Conference League') !== false) {
+        $competitionEnum = 'COL';
+    } else {
+        continue;
+    }
+
+    if ($homeGoals > $awayGoals) {
+        $pointsHome = 3;
+        $pointsAway = 0;
+    } elseif ($homeGoals < $awayGoals) {
+        $pointsHome = 0;
+        $pointsAway = 3;
+    } else {
+        $pointsHome = 1;
+        $pointsAway = 1;
+    }
+
+    // Update team_results for home
+    print_r([
+        ':team_id'    => $homeTeamId,
+        ':points'     => $pointsHome,
+        ':match_day'  => $matchDay,
+        ':competition'=> $competitionEnum
+    ]);
+
+    // Update team_results for away
+    print_r([
+        ':team_id'    => $awayTeamId,
+        ':points'     => $pointsAway,
+        ':match_day'  => $matchDay,
+        ':competition'=> $competitionEnum
+    ]);
 }
 
+print_r($ids);
 echo "Live matches & team results updated.\n";
 

@@ -22,7 +22,7 @@ $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 
-if(isset($update->message->text) && $update->message->chat->type !== "group") {
+if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
     $text    = $update->message->text;
     $args    = explode(" ", $text);
