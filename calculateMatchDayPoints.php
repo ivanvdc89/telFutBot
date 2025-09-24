@@ -54,13 +54,17 @@ foreach ($players as $player) {
         $chlPoints,
         '',
         $chlPoints,
+        $chlPoints,
         $eulPoints,
         '',
+        $eulPoints,
         $eulPoints,
         $colPoints,
         '',
         $colPoints,
+        $colPoints,
         '',
+        $eulPoints + $chlPoints + $colPoints,
         $eulPoints + $chlPoints + $colPoints
     );
 }
