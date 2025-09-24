@@ -11,7 +11,7 @@ require_once("models/matchDayTeamPoint.php");
 
 use TelegramBot\Api\BotApi;
 
-$telegram = new BotApi('8363817321:AAGIQ7mQ_hTZgXduSiuYKdAEAQyeMS-bAHY');
+$telegram = new BotApi('%TOKEN_ID');
 
 $groupRepo                = new Group();
 $playersRepo              = new Player();
@@ -22,6 +22,7 @@ $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
 $message        = "";
+$order          = 1;
 $messageBests   = "";
 $bestCHLPoints  = 0;
 $bestEULPoints  = 0;
@@ -31,7 +32,7 @@ $messageRanking = "";
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(1);
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
-    $message .= $player[0]['name'] . ":\n";
+    $message .= $order . "º =>" . $player[0]['name'] . ":\n";
     $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 1);
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         if($allMatchDayTeamPoint['pot'] == 1) {
@@ -46,22 +47,23 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
         $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
         if($allMatchDayTeamPoint['pot'] == 4) {
-            $message .= "-SUMA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
-            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+            $message .= "- SUMA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 8) {
-            $message .= "-SUMA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
-            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+            $message .= "- SUMA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 12) {
-            $message .= "-SUMA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
-            $message .= "-TOTAL: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+            $message .= "- SUMA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
         }
     }
-    $message .= "-SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
-    $message .= "-TOTAL: " . $allMatchDayPlayerPoint['sum'] . " pts\n";
+    $message .= "\n- SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
+    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['sum'] . " pts\n";
 
     $telegram->sendMessage($groupChatId, $message);
     $message = "";
+    $order++;
 }
 
