@@ -38,7 +38,7 @@ foreach ($players as $player) {
         if($teamResult[0]['competition'] === "COL"){
             $colPoints += $teamResult[0]['points'];
         }
-        $matchDayTeamPointRepo->addMatchDayTeamRPoint(
+        $matchDayTeamPointRepo->addMatchDayTeamPoint(
             $playerId,
             1,
             $pot,
