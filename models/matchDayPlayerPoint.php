@@ -19,7 +19,11 @@ class MatchDayPlayerPoint extends Connection {
         try {
             $connection = parent::connect();
 
-            $sql = "INSERT INTO match_day_player_points (player_id, match_day, pot, team_id, points, action, total) VALUES (:player_id, :match_day, :pot, :team_id, :points, :action, :total)";
+            $sql = "INSERT INTO match_day_player_points (
+                        player_id, match_day, chl_points, chl_action, chl_total, eul_points, eul_action, eul_total, col_points, col_action, col_total, match_day_action, match_day_total
+                    ) VALUES (
+                        :player_id, :match_day, :chl_points, :chl_action, :chl_total, :eul_points, :eul_action, :eul_total, :col_points, :col_action, :col_total, :match_day_action, :match_day_total
+                    )";
             $stmt = $connection->prepare($sql);
             $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
             $stmt->bindValue(':match_day', $matchDay, PDO::PARAM_INT);
