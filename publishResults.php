@@ -27,12 +27,13 @@ $messageBests   = "";
 $bestCHLPoints  = 0;
 $bestEULPoints  = 0;
 $bestCOLPoints  = 0;
-$messageRanking = "";
+$messageRanking = "Classificació:\n";
 
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(1);
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
     $message .= $order . "º =>" . $player[0]['name'] . ":\n";
+    $messageRanking .= $order . "º =>" . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['sum'] . "\n";
     $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 1);
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         if($allMatchDayTeamPoint['pot'] == 1) {
@@ -47,15 +48,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
         $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
         if($allMatchDayTeamPoint['pot'] == 4) {
-            $message .= "- SUMA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 8) {
-            $message .= "- SUMA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 12) {
-            $message .= "- SUMA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
         }
     }
@@ -67,3 +68,4 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $order++;
 }
 
+$telegram->sendMessage($groupChatId, $messageRanking);
