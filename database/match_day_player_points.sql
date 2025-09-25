@@ -17,5 +17,5 @@ CREATE TABLE match_day_player_points (
     col_total INT DEFAULT NULL,
     match_day_action VARCHAR(50) DEFAULT NULL,
     match_day_total INT DEFAULT NULL,
-    sum INT DEFAULT NULL
+    total INT DEFAULT NULL
 );
