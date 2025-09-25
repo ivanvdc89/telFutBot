@@ -40,7 +40,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     if($allMatchDayPlayerPoint['chl_total'] > $bestCHLPoints) {
         $bestCHLPoints   = $allMatchDayPlayerPoint['chl_total'];
         $messageBestsCHL = "Millor CHL (" . $bestCHLPoints . "pts):\n" . $player[0]['name'] . "\n";
-    } elseif ($allMatchDayPlayerPoint['chl_total'] === $bestEULPoints) {
+    } elseif ($allMatchDayPlayerPoint['chl_total'] === $bestCHLPoints) {
         $messageBestsCHL .= $player[0]['name'] . "\n";
     }
 
