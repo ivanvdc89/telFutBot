@@ -23,7 +23,9 @@ $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
 $message        = "";
 $order          = 1;
-$messageBests   = "";
+$messageBestsCHL = "";
+$messageBestsEUL = "";
+$messageBestsCOL = "";
 $bestCHLPoints  = 0;
 $bestEULPoints  = 0;
 $bestCOLPoints  = 0;
@@ -33,7 +35,27 @@ $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
     $message .= $order . "º =>" . $player[0]['name'] . ":\n";
-    $messageRanking .= $order . "º =>" . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['sum'] . "\n";
+    $messageRanking .= $order . "º " . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['sum'] . "\n";
+
+    if($allMatchDayPlayerPoint['chl_points'] > $bestCHLPoints) {
+        $bestCHLPoints = $allMatchDayPlayerPoint['chl_points'];
+        $messageBestsCHL = "Millor CHL ( " . $bestCHLPoints . "pts):\n" . $player[0]['name'] . "\n";
+    } elseif ($allMatchDayPlayerPoint['chl_points'] == $bestEULPoints) {
+        $messageBestsCHL .= $player[0]['name'] . "\n";
+    }
+    if($allMatchDayPlayerPoint['eul_points'] > $bestEULPoints) {
+        $bestEULPoints   = $allMatchDayPlayerPoint['eul_points'];
+        $messageBestsEUL = "Millor EUL ( " . $bestEULPoints . "pts):\n" . $player[0]['name'] . "\n";
+    } elseif ($allMatchDayPlayerPoint['eul_points'] == $bestEULPoints) {
+        $messageBestsEUL .= $player[0]['name'] . "\n";
+    }
+    if($allMatchDayPlayerPoint['col_points'] > $bestCOLPoints) {
+        $bestCOLPoints   = $allMatchDayPlayerPoint['col_points'];
+        $messageBestsCOL = "Millor COL ( " . $bestCOLPoints . "pts):\n" . $player[0]['name'] . "\n";
+    } elseif ($allMatchDayPlayerPoint['col_points'] == $bestCOLPoints) {
+        $messageBestsCOL .= $player[0]['name'] . "\n";
+    }
+
     $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 1);
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         if($allMatchDayTeamPoint['pot'] == 1) {
@@ -69,3 +91,4 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 }
 
 $telegram->sendMessage($groupChatId, $messageRanking);
+$telegram->sendMessage($groupChatId, $messageBestsCHL . "\n" . $messageBestsEUL . "\n" . $messageBestsCOL);
