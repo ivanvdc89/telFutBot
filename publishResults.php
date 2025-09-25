@@ -38,21 +38,23 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $messageRanking .= $order . "º " . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['total'] . "\n";
 
     if($allMatchDayPlayerPoint['chl_total'] > $bestCHLPoints) {
-        $bestCHLPoints = $allMatchDayPlayerPoint['chl_total'];
+        $bestCHLPoints   = $allMatchDayPlayerPoint['chl_total'];
         $messageBestsCHL = "Millor CHL (" . $bestCHLPoints . "pts):\n" . $player[0]['name'] . "\n";
-    } elseif ($allMatchDayPlayerPoint['chl_total'] == $bestEULPoints) {
+    } elseif ($allMatchDayPlayerPoint['chl_total'] === $bestEULPoints) {
         $messageBestsCHL .= $player[0]['name'] . "\n";
     }
+
     if($allMatchDayPlayerPoint['eul_total'] > $bestEULPoints) {
         $bestEULPoints   = $allMatchDayPlayerPoint['eul_total'];
         $messageBestsEUL = "Millor EUL (" . $bestEULPoints . "pts):\n" . $player[0]['name'] . "\n";
-    } elseif ($allMatchDayPlayerPoint['eul_total'] == $bestEULPoints) {
+    } elseif ($allMatchDayPlayerPoint['eul_total'] === $bestEULPoints) {
         $messageBestsEUL .= $player[0]['name'] . "\n";
     }
+
     if($allMatchDayPlayerPoint['col_total'] > $bestCOLPoints) {
         $bestCOLPoints   = $allMatchDayPlayerPoint['col_total'];
         $messageBestsCOL = "Millor COL (" . $bestCOLPoints . "pts):\n" . $player[0]['name'] . "\n";
-    } elseif ($allMatchDayPlayerPoint['col_total'] == $bestCOLPoints) {
+    } elseif ($allMatchDayPlayerPoint['col_total'] === $bestCOLPoints) {
         $messageBestsCOL .= $player[0]['name'] . "\n";
     }
 
