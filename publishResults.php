@@ -35,7 +35,7 @@ $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
     $message .= $order . "º =>" . $player[0]['name'] . ":\n";
-    $messageRanking .= $order . "º " . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['sum'] . "\n";
+    $messageRanking .= $order . "º " . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['total'] . "\n";
 
     if($allMatchDayPlayerPoint['chl_total'] > $bestCHLPoints) {
         $bestCHLPoints = $allMatchDayPlayerPoint['chl_total'];
@@ -70,20 +70,20 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
         $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
         if($allMatchDayTeamPoint['pot'] == 4) {
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 8) {
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
         }
         if($allMatchDayTeamPoint['pot'] == 12) {
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
         }
     }
     $message .= "\n- SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
-    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['sum'] . " pts\n";
+    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['total'] . " pts\n";
 
     $telegram->sendMessage($groupChatId, $message);
     $message = "";
