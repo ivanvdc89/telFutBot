@@ -26,9 +26,9 @@ $order          = 1;
 $messageBestsCHL = "";
 $messageBestsEUL = "";
 $messageBestsCOL = "";
-$bestCHLPoints  = 0;
-$bestEULPoints  = 0;
-$bestCOLPoints  = 0;
+$bestCHLPoints  = -1;
+$bestEULPoints  = -1;
+$bestCOLPoints  = -1;
 $messageRanking = "Classificació:\n";
 
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(1);
@@ -39,19 +39,19 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 
     if($allMatchDayPlayerPoint['chl_points'] > $bestCHLPoints) {
         $bestCHLPoints = $allMatchDayPlayerPoint['chl_points'];
-        $messageBestsCHL = "Millor CHL ( " . $bestCHLPoints . "pts):\n" . $player[0]['name'] . "\n";
+        $messageBestsCHL = "Millor CHL (" . $bestCHLPoints . "pts):\n" . $player[0]['name'] . "\n";
     } elseif ($allMatchDayPlayerPoint['chl_points'] == $bestEULPoints) {
         $messageBestsCHL .= $player[0]['name'] . "\n";
     }
     if($allMatchDayPlayerPoint['eul_points'] > $bestEULPoints) {
         $bestEULPoints   = $allMatchDayPlayerPoint['eul_points'];
-        $messageBestsEUL = "Millor EUL ( " . $bestEULPoints . "pts):\n" . $player[0]['name'] . "\n";
+        $messageBestsEUL = "Millor EUL (" . $bestEULPoints . "pts):\n" . $player[0]['name'] . "\n";
     } elseif ($allMatchDayPlayerPoint['eul_points'] == $bestEULPoints) {
         $messageBestsEUL .= $player[0]['name'] . "\n";
     }
     if($allMatchDayPlayerPoint['col_points'] > $bestCOLPoints) {
         $bestCOLPoints   = $allMatchDayPlayerPoint['col_points'];
-        $messageBestsCOL = "Millor COL ( " . $bestCOLPoints . "pts):\n" . $player[0]['name'] . "\n";
+        $messageBestsCOL = "Millor COL (" . $bestCOLPoints . "pts):\n" . $player[0]['name'] . "\n";
     } elseif ($allMatchDayPlayerPoint['col_points'] == $bestCOLPoints) {
         $messageBestsCOL .= $player[0]['name'] . "\n";
     }
