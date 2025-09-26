@@ -436,7 +436,7 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
 
         if (is_array($actions) && count($actions) == 0) {
             if ($args[1] === 'ON') {
-                $badDayList[]=$args[1];
+                $badDayList[]=$args[2];
                 $actionsRepo->addAction($player[0]['id'], 2, 'badDay', json_encode($badDayList));
                 $butCHL = '/badDay ' . in_array('CHL', $badDayList) ? 'OFF' :'ON' . ' CHL';
                 $butEUL = '/badDay ' . in_array('EUL', $badDayList) ? 'OFF' :'ON' . ' EUL';
@@ -461,24 +461,10 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
         } elseif (count($actions) == 1) {
             $badDayList = json_decode($actions[0]['data'], true);
             if ($args[1] === 'ON') {
-                if ($args[2] === 'CHL') {
-                    $badDayList[]='CHL';
-                    $badDayList = array_unique($badDayList);
-                } elseif ($args[2] === 'EUL') {
-                    $badDayList[]='EUL';
-                    $badDayList = array_unique($badDayList);
-                } elseif ($args[2] === 'COL') {
-                    $badDayList[]='COL';
-                    $badDayList = array_unique($badDayList);
-                }
+                $badDayList[]=$args[2];
+                $badDayList = array_unique($badDayList);
             } elseif ($args[1] === 'OFF') {
-                if ($args[2] === 'CHL') {
-                    $badDayList = array_diff($badDayList, ['CHL']);
-                } elseif ($args[2] === 'EUL') {
-                    $badDayList = array_diff($badDayList, ['EUL']);
-                } elseif ($args[2] === 'COL') {
-                    $badDayList = array_diff($badDayList, ['COL']);
-                }
+                $badDayList = array_diff($badDayList, [$args[2]]);
             }
 
             $actionsRepo->updateAction($actions[0]['id'], json_encode($badDayList));
