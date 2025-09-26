@@ -21,6 +21,7 @@ $update = json_decode(file_get_contents('php://input'));
 $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
+$actionsRepo       = new Action();
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -359,7 +360,7 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
 
     elseif ($command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitution']], true, true
+            [['/substitution', '/badDay']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -420,6 +421,40 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
         $telegram->sendMessage(
             $chatId,
             "Els teus equips:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
+    elseif ($command === '/badDay') {
+        $player  = $playersRepo->getPlayerByChatId($chatId);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id']);
+
+        if (is_array($actions) && count($actions) == 0) {
+            $keyboard = new ReplyKeyboardMarkup(
+                [['/badDay ON CHL', '/badDay ON EUL', '/badDay ON COL']], true, true
+            );
+
+            $telegram->sendMessage(
+                $chatId,
+                "#malDia activar ON o desactivar OFF:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/badDay ON CHL', '/badDay ON EUL', '/badDay ON COL']], true, true
+        );
+        $telegram->sendMessage(
+            $chatId,
+            "#malDia activar ON o desactivar OFF:",
             false,
             null,
             null,
