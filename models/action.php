@@ -29,5 +29,20 @@ class Action extends Connection {
             return false;
         }
     }
+
+    public function updateAction(int $id, string $data) {
+        try {
+            $connection = parent::connect();
+
+            $sql = "UPDATE actions set data=:data where id=:id";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+            $stmt->bindValue(':data', $data, PDO::PARAM_STR);
+            $stmt->execute();
+        } catch (PDOException $e) {
+            error_log("DB insert error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>
