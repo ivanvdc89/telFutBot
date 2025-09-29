@@ -438,9 +438,9 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
             if ($args[1] === 'ON') {
                 $badDayList[]=$args[2];
                 $actionsRepo->addAction($player[0]['id'], 2, 'badDay', json_encode($badDayList));
-                $butCHL = '/badDay ' . in_array('CHL', $badDayList) ? 'OFF' :'ON' . ' CHL';
-                $butEUL = '/badDay ' . in_array('EUL', $badDayList) ? 'OFF' :'ON' . ' EUL';
-                $butCOL = '/badDay ' . in_array('COL', $badDayList) ? 'OFF' :'ON' . ' COL';
+                $butCHL = '/badDay ' . (in_array('CHL', $badDayList) ? 'OFF' : 'ON') . ' CHL';
+                $butEUL = '/badDay ' . (in_array('EUL', $badDayList) ? 'OFF' : 'ON') . ' EUL';
+                $butCOL = '/badDay ' . (in_array('COL', $badDayList) ? 'OFF' : 'ON') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
@@ -469,9 +469,9 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
 
             $actionsRepo->updateAction($actions[0]['id'], json_encode($badDayList));
 
-            $butCHL = '/badDay ' . in_array('CHL', $badDayList) ? 'OFF' :'ON' . ' CHL';
-            $butEUL = '/badDay ' . in_array('EUL', $badDayList) ? 'OFF' :'ON' . ' EUL';
-            $butCOL = '/badDay ' . in_array('COL', $badDayList) ? 'OFF' :'ON' . ' COL';
+            $butCHL = '/badDay ' . (in_array('CHL', $badDayList) ? 'OFF' : 'ON') . ' CHL';
+            $butEUL = '/badDay ' . (in_array('EUL', $badDayList) ? 'OFF' : 'ON') . ' EUL';
+            $butCOL = '/badDay ' . (in_array('COL', $badDayList) ? 'OFF' : 'ON') . ' COL';
             $keyboard = new ReplyKeyboardMarkup([
                 [$butCHL, $butEUL, $butCOL]
             ], true, true);
