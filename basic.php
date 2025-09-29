@@ -476,9 +476,14 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
                 [$butCHL, $butEUL, $butCOL]
             ], true, true);
 
+            $message = "Actualment tens el #malDia:\n" .
+                "- Champions League: " . (in_array('CHL', $badDayList) ? "activat\n" : "desactivat\n") .
+                "- Europa League: " . (in_array('EUL', $badDayList) ? "activat\n" : "desactivat\n") .
+                "- Conference League: " . (in_array('COL', $badDayList) ? "activat\n" : "desactivat\n");
+
             $telegram->sendMessage(
                 $chatId,
-                "#malDia activar ON o desactivar OFF:",
+                $message . "\nActivar ON o desactivar OFF:",
                 false,
                 null,
                 null,
