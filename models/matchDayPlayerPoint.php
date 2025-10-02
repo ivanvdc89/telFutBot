@@ -75,7 +75,7 @@ class MatchDayPlayerPoint extends Connection {
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
         $sql->execute();
-        return $sql->fetchAll(pdo::FETCH_ASSOC);
+        return $sql->fetchAll(pdo::FETCH_ASSOC)[0];
     }
 }
 ?>
