@@ -26,7 +26,7 @@ foreach ($players as $player) {
     $colPoints    = 0;
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
-        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id']);
+        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id'], 2);
         if (count($teamResult) == 0) {
             continue;
         }
@@ -41,7 +41,7 @@ foreach ($players as $player) {
         }
         $matchDayTeamPointRepo->addMatchDayTeamPoint(
             $playerId,
-            1,
+            2,
             $pot,
             $team['id'],
             $teamResult[0]['points'],
@@ -51,7 +51,7 @@ foreach ($players as $player) {
     }
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
-        1,
+        2,
         $chlPoints,
         '',
         $chlPoints,

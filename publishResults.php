@@ -31,7 +31,7 @@ $bestEULPoints  = -1;
 $bestCOLPoints  = -1;
 $messageRanking = "Classificació:\n";
 
-$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(1);
+$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(2);
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
     $message .= $order . "º =>" . $player[0]['name'] . ":\n";
@@ -58,7 +58,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         $messageBestsCOL .= $player[0]['name'] . "\n";
     }
 
-    $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 1);
+    $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 2);
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         if($allMatchDayTeamPoint['pot'] == 1) {
             $message .=  "CHL:\n";
