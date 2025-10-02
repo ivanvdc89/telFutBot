@@ -18,11 +18,12 @@ $teamResultRepo          = new TeamResult();
 $players = $playersRepo->getAllPlayers();
 
 foreach ($players as $player) {
-    $playerId    = $player['id'];
-    $playerTeams = $teamsRepo->getTeamsByPlayerId($player['id']);
-    $chlPoints   = 0;
-    $eulPoints   = 0;
-    $colPoints   = 0;
+    $playerId     = $player['id'];
+    $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
+    $playerTeams  = $teamsRepo->getTeamsByPlayerId($player['id']);
+    $chlPoints    = 0;
+    $eulPoints    = 0;
+    $colPoints    = 0;
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
         $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id']);
@@ -54,17 +55,17 @@ foreach ($players as $player) {
         $chlPoints,
         '',
         $chlPoints,
-        $chlPoints,
+        $chlPoints + $lastMatchDay['chl_total'],
         $eulPoints,
         '',
         $eulPoints,
-        $eulPoints,
+        $eulPoints + $lastMatchDay['eul_total'],
         $colPoints,
         '',
         $colPoints,
-        $colPoints,
+        $colPoints + $lastMatchDay['col_total'],
         '',
         $eulPoints + $chlPoints + $colPoints,
-        $eulPoints + $chlPoints + $colPoints
+        $chlPoints + $lastMatchDay['chl_total'] + $eulPoints + $lastMatchDay['eul_total'] + $colPoints + $lastMatchDay['col_total']
     );
 }

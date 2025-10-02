@@ -19,8 +19,6 @@ $actionsRepo = new Action();
 
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
-$message     = "Han activat el #malDia:\n
-Marc:\n
-CHL\n";
+$message     = "";
 
 $telegram->sendMessage($groupChatId, $message);
