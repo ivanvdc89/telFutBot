@@ -74,7 +74,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         if($allMatchDayTeamPoint['pot'] == 4) {
             if(!is_null($allMatchDayPlayerPoint['chl_action']) && $allMatchDayPlayerPoint['chl_action'] != '') {
                 $actionInfo = json_decode($allMatchDayPlayerPoint['chl_action'], true);
-                $message .= "- " . $actionInfo['type'] . " activated: " . $actionInfo['result'] . " -> " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+                $message .= "- " . $actionInfo['type'] . " activat: " . $actionInfo['result'] . " -> " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
             }
             $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";

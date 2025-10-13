@@ -107,6 +107,31 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Europa League i dic que faré 1 pu
 Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 8 punts:
 -Si faig 8 o menys punts -> Sumaré 16 - 8 = 8 punts
 -Si faig més de 8 punts, per exemple 16 -> Sumaré els punts -4 = 12");
+
+                $telegram->sendMessage($chatId, "Norma #socElMillor:
+-Se use en cada competició de forma individual i independent (se pot activar en les 3 competicions, 2, 1 o cap).
+-Entre tots els que s'activen la norma a cada competició, se li sumarà 3 (o 4 en COL) punts al jugador o jugadors que sumen més punts i a la resta se'ls restarà 3 (o 4 en COL) punts.
+-Si només seu active 1 jugador, directament sume 3 punts més.
+-Només té efectes per a la jornada que s'active.
+
+Exemple, si 3 s'activen el #socElMillor en Champions:
+-Els que no s'han activat sumen els punts normals
+-Si 3 s'han activat:
+  -Jugador A: 10 punts (ha sigut el millor entre els que s'han activat) + 3 = 13 punts
+  -Jugador B: 10 punts (ha sigut el millor entre els que s'han activat) + 3 = 13 punts
+  -Jugador C: 8 punts (no ha fet el màxim) - 3 = 5 punts");
+
+                $telegram->sendMessage($chatId, "Norma #guanyarOMorir:
+-Se use en cada competició de forma individual i independent (se pot activar en les 3 competicions, 2, 1 o cap).
+-Per cada victòria sumes un punt més als punts que han fet els 4 equips.
+-Per cada empat o derrota restes un punt als punts que han fet els 4 equips.
+-Només té efectes per a la jornada que s'active.
+
+Exemples, si t'actives el #guanyarOMorir en Champions:
+-Si guanyen 2, 1 empat i 1 derrota => 7 punts + 2 - 2 = 7 punts
+-Si guanyen tots => 12 + 4 = 16 punts
+-Si perden tots => 0 - 4 = -4 punts
+-Si empten tots => 4 - 4 = 0 punts");
                 exit;
             }
         }
