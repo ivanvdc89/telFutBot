@@ -459,7 +459,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $activated = true;
         $matchDay = 3;
         $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
 
         if (is_array($actions) && count($actions) == 0) {
             if (!$activated) {
@@ -546,7 +546,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $activated = true;
         $matchDay = 3;
         $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
 
         if (is_array($actions) && count($actions) == 0) {
             if (!$activated) {
