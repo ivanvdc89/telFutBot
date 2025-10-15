@@ -111,7 +111,7 @@ Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 
                 $telegram->sendMessage($chatId, "Norma #socElMillor:
 -Se use en cada competició de forma individual i independent (se pot activar en les 3 competicions, 2, 1 o cap).
 -Entre tots els que s'activen la norma a cada competició, se li sumarà 3 (o 4 en COL) punts al jugador o jugadors que sumen més punts i a la resta se'ls restarà 3 (o 4 en COL) punts.
--Si només seu active 1 jugador, directament sume 3 punts més.
+-Si només seu active 1 jugador, directament sume 3 (o 4 en COL) punts més.
 -Només té efectes per a la jornada que s'active.
 
 Exemple, si 3 s'activen el #socElMillor en Champions:
@@ -386,7 +386,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitution', '/badDay']], true, true
+            [['/substitution', '/badDay', '/iAmTheBest']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -456,9 +456,10 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/badDay') {
-        $activated = false;
+        $activated = true;
+        $matchDay = 3;
         $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id']);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay);
 
         if (is_array($actions) && count($actions) == 0) {
             if (!$activated) {
@@ -468,7 +469,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             if ($args[1] === 'ON') {
                 $badDayList[]=$args[2];
-                $actionsRepo->addAction($player[0]['id'], 2, 'badDay', json_encode($badDayList));
+                $actionsRepo->addAction($player[0]['id'], $matchDay, 'badDay', json_encode($badDayList));
                 $butCHL = '/badDay ' . (in_array('CHL', $badDayList) ? 'OFF' : 'ON') . ' CHL';
                 $butEUL = '/badDay ' . (in_array('EUL', $badDayList) ? 'OFF' : 'ON') . ' EUL';
                 $butCOL = '/badDay ' . (in_array('COL', $badDayList) ? 'OFF' : 'ON') . ' COL';
@@ -533,6 +534,93 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $telegram->sendMessage(
             $chatId,
             "#malDia activar ON o desactivar OFF:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
+    elseif ($command === '/iAmTheBest') {
+        $activated = true;
+        $matchDay = 3;
+        $player  = $playersRepo->getPlayerByChatId($chatId);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay);
+
+        if (is_array($actions) && count($actions) == 0) {
+            if (!$activated) {
+                $telegram->sendMessage($chatId, "No disponible");
+                exit;
+            }
+
+            if ($args[1] === 'ON') {
+                $iAmTheBestList[]=$args[2];
+                $actionsRepo->addAction($player[0]['id'], $matchDay, 'iAmTheBest', json_encode($iAmTheBestList));
+                $butCHL = '/iAmTheBest ' . (in_array('CHL', $iAmTheBestList) ? 'OFF' : 'ON') . ' CHL';
+                $butEUL = '/iAmTheBest ' . (in_array('EUL', $iAmTheBestList) ? 'OFF' : 'ON') . ' EUL';
+                $butCOL = '/iAmTheBest ' . (in_array('COL', $iAmTheBestList) ? 'OFF' : 'ON') . ' COL';
+                $keyboard = new ReplyKeyboardMarkup([
+                    [$butCHL, $butEUL, $butCOL]
+                ], true, true);
+            } else {
+                $keyboard =
+                    new ReplyKeyboardMarkup([['/iAmTheBest ON CHL', '/iAmTheBest ON EUL', '/iAmTheBest ON COL']], true, true);
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                "#socElMillor activar ON o desactivar OFF:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        } elseif (count($actions) == 1) {
+            $iAmTheBestList = json_decode($actions[0]['data'], true);
+            $messageClosure = "";
+            if ($activated) {
+                if ($args[1] === 'ON') {
+                    $iAmTheBestList[] = $args[2];
+                    $iAmTheBestList   = array_unique($iAmTheBestList);
+                } elseif ($args[1] === 'OFF') {
+                    $iAmTheBestList = array_diff($iAmTheBestList, [$args[2]]);
+                }
+                $actionsRepo->updateAction($actions[0]['id'], json_encode($iAmTheBestList));
+
+                $butCHL = '/iAmTheBest ' . (in_array('CHL', $iAmTheBestList) ? 'OFF' : 'ON') . ' CHL';
+                $butEUL = '/iAmTheBest ' . (in_array('EUL', $iAmTheBestList) ? 'OFF' : 'ON') . ' EUL';
+                $butCOL = '/iAmTheBest ' . (in_array('COL', $iAmTheBestList) ? 'OFF' : 'ON') . ' COL';
+                $keyboard = new ReplyKeyboardMarkup([
+                    [$butCHL, $butEUL, $butCOL]
+                ], true, true);
+
+                $messageClosure = "\nActivar ON o desactivar OFF:";
+            }
+
+            $message = "Actualment tens el #socElMillor:\n" .
+                "- Champions League: " . (in_array('CHL', $iAmTheBestList) ? "activat\n" : "desactivat\n") .
+                "- Europa League: " . (in_array('EUL', $iAmTheBestList) ? "activat\n" : "desactivat\n") .
+                "- Conference League: " . (in_array('COL', $iAmTheBestList) ? "activat\n" : "desactivat\n");
+
+            $telegram->sendMessage(
+                $chatId,
+                $message . $messageClosure,
+                false,
+                null,
+                null,
+                $keyboard ?? null
+            );
+            exit;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/iAmTheBest ON CHL', '/iAmTheBest ON EUL', '/iAmTheBest ON COL']], true, true
+        );
+        $telegram->sendMessage(
+            $chatId,
+            "#socElMillor activar ON o desactivar OFF:",
             false,
             null,
             null,

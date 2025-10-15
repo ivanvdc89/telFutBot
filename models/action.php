@@ -1,11 +1,12 @@
 <?php
 class Action extends Connection {
-    public function getActionsByPlayerId(int $playerId){
+    public function getActionsByPlayerId(int $playerId, int $matchDay){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where player_id=?;";
+        $sql="select * from actions where player_id=? and match_day=?;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
+        $sql->bindValue(2, $matchDay);
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
