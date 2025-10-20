@@ -456,8 +456,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/badDay') {
-        $activated = true;
-        $matchDay = 3;
+        $activated = false;
+        $matchDay = 4;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
 
@@ -543,8 +543,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/iAmTheBest') {
-        $activated = true;
-        $matchDay = 3;
+        $activated = false;
+        $matchDay = 4;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
 
@@ -734,7 +734,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             exit;
         }
 
-        $substitutionsRepo->addSubstitution($player[0]['id'], 3, $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
+        $substitutionsRepo->addSubstitution($player[0]['id'], 4, $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
 
         $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeam['name'] . " -> " . $newTeam[0]['name']);
         exit;

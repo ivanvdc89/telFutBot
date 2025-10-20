@@ -10,6 +10,16 @@ class Substitution extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getPendingSubstitutionsByMatchDay(int $matchDay){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from substitutions where match_day=? and pending = 1;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $matchDay);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function addSubstitution(int $playerId, int $matchDay, int $oldTeamId, int $newTeamId, string $competition) {
         try {
             $connection = parent::connect();
@@ -36,6 +46,16 @@ class Substitution extends Connection {
         $connection = parent::connect();
         parent::set_names();
         $sql = "DELETE FROM substitutions WHERE id = ? AND pending = 1";
+        $stmt = $connection->prepare($sql);
+        $stmt->bindValue(1, $id, PDO::PARAM_INT);
+        return $stmt->execute();
+    }
+
+    public function markSubstitutionAsExecuted(int $id)
+    {
+        $connection = parent::connect();
+        parent::set_names();
+        $sql = "UPDATE substitutions set pending = 0 WHERE id = ? AND pending = 1";
         $stmt = $connection->prepare($sql);
         $stmt->bindValue(1, $id, PDO::PARAM_INT);
         return $stmt->execute();

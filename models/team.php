@@ -58,6 +58,25 @@ class Team extends Connection {
         }
     }
 
+    public function changePlayerTeam($playerId, $oldTeamId, $newTeamId) {
+        try {
+            $connection = parent::connect();
+
+            $sql = "UPDATE player_teams set team_id = :new_team_id where player_id = :player_id and team_id = :old_team_id";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
+            $stmt->bindValue(':old_team_id', $oldTeamId, PDO::PARAM_INT);
+            $stmt->bindValue(':new_team_id', $newTeamId, PDO::PARAM_INT);
+            $stmt->execute();
+
+            return $connection->lastInsertId();
+
+        } catch (PDOException $e) {
+            error_log("DB update error: " . $e->getMessage());
+            return false;
+        }
+    }
+
     public function getTeamById($teamId)
     {
         $connection = parent::connect();
