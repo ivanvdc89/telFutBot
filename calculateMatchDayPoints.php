@@ -91,6 +91,40 @@ foreach ($players as $player) {
         }
     }
 
+    $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'iAmTheBest');
+    foreach ($actions as $action) {
+        $actionData = json_decode($action['data'], true);
+        foreach ($actionData as $competition) {
+            if ($competition === "CHL") {
+                if ($chlPoints >= 9) {
+                    $chlAction            = '{"type":"socElMillor","result":"OK"}';
+                    $chlPointsAfterAction += 3;
+                } else {
+                    $chlAction            = '{"type":"socElMillor","result":"KO"}';
+                    $chlPointsAfterAction -= 3;
+                }
+            }
+            if ($competition === "EUL") {
+                if ($eulPoints >= 9) {
+                    $eulAction = '{"type":"socElMillor","result":"OK"}';
+                    $eulPointsAfterAction += 3;
+                } else {
+                    $eulAction = '{"type":"socElMillor","result":"KO"}';
+                    $eulPointsAfterAction -= 3;
+                }
+            }
+            if ($competition === "COL") {
+                if ($colPoints >= 9) {
+                    $colAction = '{"type":"socElMillor","result":"OK"}';
+                    $colPointsAfterAction += 3;
+                } else {
+                    $colAction = '{"type":"socElMillor","result":"KO"}';
+                    $colPointsAfterAction -= 3;
+                }
+            }
+        }
+    }
+
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
         $matchDay,
