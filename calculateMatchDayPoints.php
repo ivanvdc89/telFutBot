@@ -8,6 +8,7 @@ require_once("models/team.php");
 require_once("models/matchDayTeamPoint.php");
 require_once("models/matchDayPlayerPoint.php");
 require_once("models/teamResult.php");
+require_once("models/action.php");
 
 $playersRepo             = new Player();
 $teamsRepo               = new Team();
@@ -114,12 +115,12 @@ foreach ($players as $player) {
                 }
             }
             if ($competition === "COL") {
-                if ($colPoints >= 9) {
+                if ($colPoints >= 12) {
                     $colAction = '{"type":"socElMillor","result":"OK"}';
-                    $colPointsAfterAction += 3;
+                    $colPointsAfterAction += 4;
                 } else {
                     $colAction = '{"type":"socElMillor","result":"KO"}';
-                    $colPointsAfterAction -= 3;
+                    $colPointsAfterAction -= 4;
                 }
             }
         }
