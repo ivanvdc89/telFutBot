@@ -21,6 +21,7 @@ $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 
 $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
+$matchDay       = 3;
 $message        = "";
 $order          = 1;
 $messageBestsCHL = "";
@@ -29,9 +30,9 @@ $messageBestsCOL = "";
 $bestCHLPoints  = -1;
 $bestEULPoints  = -1;
 $bestCOLPoints  = -1;
-$messageRanking = "Classificació:\n";
+$messageRanking = "Classificació general:\n";
 
-$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints(2);
+$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints($matchDay);
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
     $message .= $order . "º =>" . $player[0]['name'] . ":\n";
@@ -58,7 +59,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         $messageBestsCOL .= $player[0]['name'] . "\n";
     }
 
-    $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], 2);
+    $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], $matchDay);
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         if($allMatchDayTeamPoint['pot'] == 1) {
             $message .=  "CHL:\n";
@@ -104,5 +105,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $order++;
 }
 
+$messageMatchDayRanking  = "Classificació jornada:\n";
+$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints($matchDay);
+$order = 1;
+foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
+    $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
+    $messageMatchDayRanking .= $order . "º " . $player[0]['name'] . ": " . $allMatchDayPlayerPoint['match_day_total'] . "\n";
+    $order++;
+}
+
 $telegram->sendMessage($groupChatId, $messageRanking);
+$telegram->sendMessage($groupChatId, $messageMatchDayRanking);
 $telegram->sendMessage($groupChatId, $messageBestsCHL . "\n" . $messageBestsEUL . "\n" . $messageBestsCOL);

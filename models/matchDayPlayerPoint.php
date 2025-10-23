@@ -67,6 +67,17 @@ class MatchDayPlayerPoint extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getMatchDayRanking(int $matchDay): array
+    {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from match_day_player_points where match_day=? order by match_day_total desc;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $matchDay);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getLastMatchDayByPlayer(int $playerId): array
     {
         $connection= parent::connect();

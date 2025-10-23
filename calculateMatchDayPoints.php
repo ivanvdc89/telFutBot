@@ -14,6 +14,8 @@ $teamsRepo               = new Team();
 $matchDayTeamPointRepo   = new MatchDayTeamPoint();
 $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
+$actionsRepo             = new Action();
+$matchDay                = 3;
 
 $players = $playersRepo->getAllPlayers();
 
@@ -26,7 +28,7 @@ foreach ($players as $player) {
     $colPoints    = 0;
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
-        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id'], 2);
+        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id'], $matchDay);
         if (count($teamResult) == 0) {
             continue;
         }
@@ -41,7 +43,7 @@ foreach ($players as $player) {
         }
         $matchDayTeamPointRepo->addMatchDayTeamPoint(
             $playerId,
-            2,
+            $matchDay,
             $pot,
             $team['id'],
             $teamResult[0]['points'],
@@ -49,23 +51,63 @@ foreach ($players as $player) {
             $teamResult[0]['points']
         );
     }
+    $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'badDay');
+    $chlPointsAfterAction = $chlPoints;
+    $eulPointsAfterAction = $eulPoints;
+    $colPointsAfterAction = $colPoints;
+    $chlAction = '';
+    $eulAction = '';
+    $colAction = '';
+    if (isset($actions[0])) {
+        $actionData = json_decode($actions[0]['data'], true);
+        foreach ($actionData as $competition) {
+            if ($competition === "CHL") {
+                if ($chlPoints > 5) {
+                    $chlAction = '{"type":"malDia","result":"KO"}';
+                    $chlPointsAfterAction = 2;
+                } else {
+                    $chlAction = '{"type":"malDia","result":"OK"}';
+                    $chlPointsAfterAction = 9;
+                }
+            }
+            if ($competition === "EUL") {
+                if ($eulPoints > 5) {
+                    $eulAction = '{"type":"malDia","result":"KO"}';
+                    $eulPointsAfterAction = 2;
+                } else {
+                    $eulAction = '{"type":"malDia","result":"OK"}';
+                    $eulPointsAfterAction = 9;
+                }
+            }
+            if ($competition === "COL") {
+                if ($colPoints > 6) {
+                    $colAction = '{"type":"malDia","result":"KO"}';
+                    $colPointsAfterAction = 2;
+                } else {
+                    $colAction = '{"type":"malDia","result":"OK"}';
+                    $colPointsAfterAction = 12;
+                }
+            }
+        }
+    }
+
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
-        2,
+        $matchDay,
         $chlPoints,
-        '',
-        $chlPoints,
-        $chlPoints + $lastMatchDay['chl_total'],
+        $chlAction,
+        $chlPointsAfterAction,
+        $chlPointsAfterAction + $lastMatchDay['chl_total'],
         $eulPoints,
-        '',
-        $eulPoints,
-        $eulPoints + $lastMatchDay['eul_total'],
+        $eulAction,
+        $eulPointsAfterAction,
+        $eulPointsAfterAction + $lastMatchDay['eul_total'],
         $colPoints,
+        $colAction,
+        $colPointsAfterAction,
+        $colPointsAfterAction + $lastMatchDay['col_total'],
         '',
-        $colPoints,
-        $colPoints + $lastMatchDay['col_total'],
-        '',
-        $eulPoints + $chlPoints + $colPoints,
-        $chlPoints + $lastMatchDay['chl_total'] + $eulPoints + $lastMatchDay['eul_total'] + $colPoints + $lastMatchDay['col_total']
+        $chlPointsAfterAction + $eulPointsAfterAction + $colPointsAfterAction,
+        $lastMatchDay['total'] + $chlPointsAfterAction + $eulPointsAfterAction + $colPointsAfterAction
     );
 }
