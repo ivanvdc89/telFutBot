@@ -106,7 +106,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 }
 
 $messageMatchDayRanking  = "Classificació jornada:\n";
-$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints($matchDay);
+$allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getMatchDayRanking($matchDay);
 $order = 1;
 foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     $player = $playersRepo->getPlayerById($allMatchDayPlayerPoint['player_id']);
