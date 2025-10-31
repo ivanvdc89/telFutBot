@@ -386,7 +386,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitution', '/badDay', '/iAmTheBest']], true, true
+            [['/substitution', '/badDay'], ['/winOrDie', '/iAmTheBest']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -456,7 +456,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/badDay') {
-        $activated = false;
+        $activated = true;
         $matchDay = 4;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
@@ -543,7 +543,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/iAmTheBest') {
-        $activated = false;
+        $activated = true;
         $matchDay = 4;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
@@ -621,6 +621,93 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $telegram->sendMessage(
             $chatId,
             "#socElMillor activar ON o desactivar OFF:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
+    elseif ($command === '/winOrDie') {
+        $activated = true;
+        $matchDay = 4;
+        $player  = $playersRepo->getPlayerByChatId($chatId);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'winOrDie');
+
+        if (is_array($actions) && count($actions) == 0) {
+            if (!$activated) {
+                $telegram->sendMessage($chatId, "No disponible");
+                exit;
+            }
+
+            if ($args[1] === 'ON') {
+                $winOrDietList[]=$args[2];
+                $actionsRepo->addAction($player[0]['id'], $matchDay, 'winOrDie', json_encode($winOrDietList));
+                $butCHL = '/winOrDie ' . (in_array('CHL', $winOrDietList) ? 'OFF' : 'ON') . ' CHL';
+                $butEUL = '/winOrDie ' . (in_array('EUL', $winOrDietList) ? 'OFF' : 'ON') . ' EUL';
+                $butCOL = '/winOrDie ' . (in_array('COL', $winOrDietList) ? 'OFF' : 'ON') . ' COL';
+                $keyboard = new ReplyKeyboardMarkup([
+                    [$butCHL, $butEUL, $butCOL]
+                ], true, true);
+            } else {
+                $keyboard =
+                    new ReplyKeyboardMarkup([['/winOrDie ON CHL', '/winOrDie ON EUL', '/winOrDie ON COL']], true, true);
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                "#guanyarOMorir activar ON o desactivar OFF:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        } elseif (count($actions) == 1) {
+            $winOrDietList = json_decode($actions[0]['data'], true);
+            $messageClosure = "";
+            if ($activated) {
+                if ($args[1] === 'ON') {
+                    $winOrDietList[] = $args[2];
+                    $winOrDietList   = array_unique($winOrDietList);
+                } elseif ($args[1] === 'OFF') {
+                    $winOrDietList = array_diff($winOrDietList, [$args[2]]);
+                }
+                $actionsRepo->updateAction($actions[0]['id'], json_encode($winOrDietList));
+
+                $butCHL = '/winOrDie ' . (in_array('CHL', $winOrDietList) ? 'OFF' : 'ON') . ' CHL';
+                $butEUL = '/winOrDie ' . (in_array('EUL', $winOrDietList) ? 'OFF' : 'ON') . ' EUL';
+                $butCOL = '/winOrDie ' . (in_array('COL', $winOrDietList) ? 'OFF' : 'ON') . ' COL';
+                $keyboard = new ReplyKeyboardMarkup([
+                    [$butCHL, $butEUL, $butCOL]
+                ], true, true);
+
+                $messageClosure = "\nActivar ON o desactivar OFF:";
+            }
+
+            $message = "Actualment tens el #guanyarOMorir:\n" .
+                       "- Champions League: " . (in_array('CHL', $winOrDietList) ? "activat\n" : "desactivat\n") .
+                       "- Europa League: " . (in_array('EUL', $winOrDietList) ? "activat\n" : "desactivat\n") .
+                       "- Conference League: " . (in_array('COL', $winOrDietList) ? "activat\n" : "desactivat\n");
+
+            $telegram->sendMessage(
+                $chatId,
+                $message . $messageClosure,
+                false,
+                null,
+                null,
+                $keyboard ?? null
+            );
+            exit;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup(
+            [['/winOrDie ON CHL', '/winOrDie ON EUL', '/winOrDie ON COL']], true, true
+        );
+        $telegram->sendMessage(
+            $chatId,
+            "#guanyarOMorir activar ON o desactivar OFF:",
             false,
             null,
             null,
