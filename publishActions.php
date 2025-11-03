@@ -26,6 +26,7 @@ $allActions   = $actionsRepo->getActionsByMatchDay($matchDay);
 $actionsTexts = [
     'badDay' => 'malDia',
     'iAmTheBest' => 'socElMillor',
+    'winOrDie' => 'guanyarOMorir',
 ];
 foreach ($allActions as $action) {
     $player = $playersRepo->getPlayerById($action['player_id']);
