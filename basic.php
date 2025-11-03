@@ -24,6 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
+$matchDay = 5;
+
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
     $text    = $update->message->text;
@@ -456,8 +458,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/badDay') {
-        $activated = true;
-        $matchDay = 4;
+        $activated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
 
@@ -543,8 +544,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/iAmTheBest') {
-        $activated = true;
-        $matchDay = 4;
+        $activated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
 
@@ -630,8 +630,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/winOrDie') {
-        $activated = true;
-        $matchDay = 4;
+        $activated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'winOrDie');
 
