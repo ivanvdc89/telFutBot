@@ -181,15 +181,15 @@ foreach ($players as $player) {
     foreach ($substitutions as $substitution) {
         $pointsCost = 0 - $substitution['points_cost'];
         if ($substitution['competition'] === "CHL") {
-            $chlAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $chlAction[]          = ["type" => "substitució", "result" => $pointsCost];
             $chlPointsAfterAction += $pointsCost;
         }
         if ($substitution['competition'] === "EUL") {
-            $eulAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $eulAction[]          = ["type" => "substitució", "result" => $pointsCost];
             $eulPointsAfterAction += $pointsCost;
         }
         if ($substitution['competition'] === "COL") {
-            $colAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $colAction[]          = ["type" => "substitució", "result" => $pointsCost];
             $colPointsAfterAction += $pointsCost;
         }
     }
