@@ -9,6 +9,7 @@ require_once("models/matchDayTeamPoint.php");
 require_once("models/matchDayPlayerPoint.php");
 require_once("models/teamResult.php");
 require_once("models/action.php");
+require_once("models/substitution.php");
 
 $playersRepo             = new Player();
 $teamsRepo               = new Team();
@@ -19,8 +20,6 @@ $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
 $matchDay                = 4;
 
-$players = $playersRepo->getAllPlayers();
-
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
     'CHL' => [],
@@ -30,13 +29,14 @@ $players = [
 foreach ($actions as $action) {
     $actionData = json_decode($action['data'], true);
     foreach ($actionData as $competition) {
-        $players[$competition][] = $actionData['player_id'];
+        $players[$competition][] = $action['player_id'];
     }
 }
 $bestCHL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['CHL'], 'CHL');
 $bestEUL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['EUL'], 'EUL');
 $bestCOL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['COL'], 'COL');
 
+$players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
     $playerId     = $player['id'];
     $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
