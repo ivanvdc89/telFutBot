@@ -12,6 +12,17 @@ class Action extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    public function getActions(int $matchDay, string $type){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from actions where match_day=? and type=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $matchDay);
+        $sql->bindValue(2, $type);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getActionsByMatchDay(int $matchDay){
         $connection= parent::connect();
         parent::set_names();

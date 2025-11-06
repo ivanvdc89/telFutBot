@@ -16,31 +16,60 @@ $matchDayTeamPointRepo   = new MatchDayTeamPoint();
 $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
-$matchDay                = 3;
+$substitutionsRepo       = new Substitution();
+$matchDay                = 4;
 
 $players = $playersRepo->getAllPlayers();
+
+$actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
+$players = [
+    'CHL' => [],
+    'EUL' => [],
+    'COL' => [],
+];
+foreach ($actions as $action) {
+    $actionData = json_decode($action['data'], true);
+    foreach ($actionData as $competition) {
+        $players[$competition][] = $actionData['player_id'];
+    }
+}
+$bestCHL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['CHL'], 'CHL');
+$bestEUL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['EUL'], 'EUL');
+$bestCOL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['COL'], 'COL');
 
 foreach ($players as $player) {
     $playerId     = $player['id'];
     $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
     $playerTeams  = $teamsRepo->getTeamsByPlayerId($player['id']);
     $chlPoints    = 0;
+    $chlWins      = 0;
     $eulPoints    = 0;
+    $eulWins      = 0;
     $colPoints    = 0;
+    $colWins      = 0;
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
-        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchday($team['id'], $matchDay);
+        $teamResult = $teamResultRepo->getResultByTeamIdAndMatchDay($team['id'], $matchDay);
         if (count($teamResult) == 0) {
             continue;
         }
         if($teamResult[0]['competition'] === "CHL"){
             $chlPoints += $teamResult[0]['points'];
+            if($teamResult[0]['points'] > 2) {
+                $chlWins++;
+            }
         }
         if($teamResult[0]['competition'] === "EUL"){
             $eulPoints += $teamResult[0]['points'];
+            if($teamResult[0]['points'] > 2) {
+                $eulWins++;
+            }
         }
         if($teamResult[0]['competition'] === "COL"){
             $colPoints += $teamResult[0]['points'];
+            if($teamResult[0]['points'] > 2) {
+                $colWins++;
+            }
         }
         $matchDayTeamPointRepo->addMatchDayTeamPoint(
             $playerId,
@@ -56,36 +85,36 @@ foreach ($players as $player) {
     $chlPointsAfterAction = $chlPoints;
     $eulPointsAfterAction = $eulPoints;
     $colPointsAfterAction = $colPoints;
-    $chlAction = '';
-    $eulAction = '';
-    $colAction = '';
+    $chlAction = [];
+    $eulAction = [];
+    $colAction = [];
     if (isset($actions[0])) {
         $actionData = json_decode($actions[0]['data'], true);
         foreach ($actionData as $competition) {
             if ($competition === "CHL") {
                 if ($chlPoints > 5) {
-                    $chlAction = '{"type":"malDia","result":"KO"}';
+                    $chlAction[] = ["type" => "malDia", "result" => "KO"];
                     $chlPointsAfterAction = 2;
                 } else {
-                    $chlAction = '{"type":"malDia","result":"OK"}';
+                    $chlAction[] = ["type" => "malDia", "result" => "OK"];
                     $chlPointsAfterAction = 9;
                 }
             }
             if ($competition === "EUL") {
                 if ($eulPoints > 5) {
-                    $eulAction = '{"type":"malDia","result":"KO"}';
+                    $eulAction[] = ["type" => "malDia", "result" => "KO"];;
                     $eulPointsAfterAction = 2;
                 } else {
-                    $eulAction = '{"type":"malDia","result":"OK"}';
+                    $eulAction[] = ["type" => "malDia", "result" => "OK"];
                     $eulPointsAfterAction = 9;
                 }
             }
             if ($competition === "COL") {
                 if ($colPoints > 6) {
-                    $colAction = '{"type":"malDia","result":"KO"}';
+                    $colAction[] = ["type" => "malDia", "result" => "KO"];;
                     $colPointsAfterAction = 2;
                 } else {
-                    $colAction = '{"type":"malDia","result":"OK"}';
+                    $colAction[] = ["type" => "malDia", "result" => "OK"];
                     $colPointsAfterAction = 12;
                 }
             }
@@ -97,32 +126,71 @@ foreach ($players as $player) {
         $actionData = json_decode($action['data'], true);
         foreach ($actionData as $competition) {
             if ($competition === "CHL") {
-                if ($chlPoints >= 9) {
-                    $chlAction            = '{"type":"socElMillor","result":"OK"}';
+                if ($chlPoints >= $bestCHL) {
+                    $chlAction[]          = ["type" => "socElMillor", "result" => "OK"];
                     $chlPointsAfterAction += 3;
                 } else {
-                    $chlAction            = '{"type":"socElMillor","result":"KO"}';
+                    $chlAction[]          = ["type" => "socElMillor", "result" => "KO"];
                     $chlPointsAfterAction -= 3;
                 }
             }
             if ($competition === "EUL") {
-                if ($eulPoints >= 9) {
-                    $eulAction = '{"type":"socElMillor","result":"OK"}';
+                if ($eulPoints >= $bestEUL) {
+                    $eulAction[]          = ["type" => "socElMillor", "result" => "OK"];
                     $eulPointsAfterAction += 3;
                 } else {
-                    $eulAction = '{"type":"socElMillor","result":"KO"}';
+                    $eulAction[]          = ["type" => "socElMillor", "result" => "KO"];
                     $eulPointsAfterAction -= 3;
                 }
             }
             if ($competition === "COL") {
-                if ($colPoints >= 12) {
-                    $colAction = '{"type":"socElMillor","result":"OK"}';
+                if ($colPoints >= $bestCOL) {
+                    $colAction[]          = ["type" => "socElMillor", "result" => "OK"];
                     $colPointsAfterAction += 4;
                 } else {
-                    $colAction = '{"type":"socElMillor","result":"KO"}';
+                    $colAction[]          = ["type" => "socElMillor", "result" => "KO"];
                     $colPointsAfterAction -= 4;
                 }
             }
+        }
+    }
+
+    $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'winOrDie');
+    foreach ($actions as $action) {
+        $actionData = json_decode($action['data'], true);
+        foreach ($actionData as $competition) {
+            if ($competition === "CHL") {
+                $result               = -4 + $chlWins * 2;
+                $chlAction[]          = ["type" => "guanyarOMorir", "result" => $result];
+                $chlPointsAfterAction += $result;
+            }
+            if ($competition === "EUL") {
+                $result               = -4 + $eulWins * 2;
+                $eulAction[]          = ["type" => "guanyarOMorir", "result" => $result];
+                $eulPointsAfterAction += $result;
+            }
+            if ($competition === "COL") {
+                $result               = -4 + $colWins * 2;
+                $colAction[]          = ["type" => "guanyarOMorir", "result" => $result];
+                $colPointsAfterAction += $result;
+            }
+        }
+    }
+
+    $substitutions = $substitutionsRepo->getMatchDaySubstitutionsByPlayerId($matchDay, $playerId);
+    foreach ($substitutions as $substitution) {
+        $pointsCost = 0 - $substitution['points_cost'];
+        if ($substitution['competition'] === "CHL") {
+            $chlAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $chlPointsAfterAction += $pointsCost;
+        }
+        if ($substitution['competition'] === "EUL") {
+            $eulAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $eulPointsAfterAction += $pointsCost;
+        }
+        if ($substitution['competition'] === "COL") {
+            $colAction[]          = ["type" => "substitution", "result" => $pointsCost];
+            $colPointsAfterAction += $pointsCost;
         }
     }
 
@@ -130,15 +198,15 @@ foreach ($players as $player) {
         $playerId,
         $matchDay,
         $chlPoints,
-        $chlAction,
+        json_encode($chlAction),
         $chlPointsAfterAction,
         $chlPointsAfterAction + $lastMatchDay['chl_total'],
         $eulPoints,
-        $eulAction,
+        json_encode($eulAction),
         $eulPointsAfterAction,
         $eulPointsAfterAction + $lastMatchDay['eul_total'],
         $colPoints,
-        $colAction,
+        json_encode($colAction),
         $colPointsAfterAction,
         $colPointsAfterAction + $lastMatchDay['col_total'],
         '',
