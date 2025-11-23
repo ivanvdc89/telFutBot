@@ -484,6 +484,60 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             null,
             null
         );
+
+        if ($doubleOrNothingData['max'] == count($doubleOrNothingData['teams'])) {
+            exit;
+        }
+
+        if(!isset($args[1])) {
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/dobleORes pot 1', '/dobleORes pot 2', '/dobleORes pot 3', '/dobleORes pot 4'],
+                    ['/dobleORes pot 5', '/dobleORes pot 6', '/dobleORes pot 7', '/dobleORes pot 8'],
+                    ['/dobleORes pot 9', '/dobleORes pot 10', '/dobleORes pot 11', '/dobleORes pot 12']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Pots disponibles:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        } elseif ($args[1] == 'pot') {
+            if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
+                $teams   = $teamsRepo->getTeamsByPot($args[2]);
+                $rows    = [];
+                $row     = [];
+                foreach ($teams as $team) {
+                    $row[] = '/dobleORes vote ' . $team['name'];
+                    if(count($row) == 3) {
+                        $rows[] = $row;
+                        $row = [];
+                    }
+                }
+                if (count($row) != 0) {
+                    $rows[] = $row;
+                }
+
+                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
+                $telegram->sendMessage(
+                    $chatId,
+                    "Equips del pot " . $args[2] . ":",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            } else {
+                $telegram->sendMessage($chatId, "ERROR, pot invàlid");
+                exit;
+            }
+        }
         exit;
     }
 
