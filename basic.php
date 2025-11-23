@@ -825,7 +825,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             exit;
         }
 
-        $substitutionsRepo->addSubstitution($player[0]['id'], 4, $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
+        $substitutionsRepo->addSubstitution($player[0]['id'], $matchDay, $oldTeam['id'], $newTeam[0]['id'], $newTeam[0]['competition']);
 
         $telegram->sendMessage($chatId, "Substitució guardada: " . $oldTeam['name'] . " -> " . $newTeam[0]['name']);
         exit;
