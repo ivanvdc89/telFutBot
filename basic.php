@@ -462,6 +462,22 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         exit;
     }
 
+    elseif ($command === '/dobleORes') {
+        $activated = true;
+        $player    = $playersRepo->getPlayerByChatId($chatId);
+        $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'doubleOrNothing');
+        if (!$activated || (is_array($actions) && count($actions) == 0)) {
+            $telegram->sendMessage($chatId, "No disponible");
+            exit;
+        }
+        $doubleOrNothingData = json_decode($actions[0]['data'], true);
+        $doubleOrNothingData['teams'] = [];
+        $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
+
+        $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
+                   "Els teus vots: " . json_encode($doubleOrNothingData['teams']) . "\n";
+    }
+
     elseif ($command === '/malDia') {
         $activated = true;
         $player  = $playersRepo->getPlayerByChatId($chatId);
