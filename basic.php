@@ -473,7 +473,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $doubleOrNothingData = json_decode($actions[0]['data'], true);
 
         $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
-                   "Els teus vots: " . json_encode($doubleOrNothingData['teams']) . "\n";
+                   "Equipts votats: " . $doubleOrNothingData['teams'] . "\n";
+
+        foreach ($doubleOrNothingData['teams'] as $team) {
+            $teamInfo = $teamsRepo->getTeamById($team);
+            $message .= "- " . $teamInfo[0]['name'] . "\n";
+        }
 
         $telegram->sendMessage(
             $chatId,
