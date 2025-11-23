@@ -32,7 +32,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
     $args    = explode(" ", $text);
     $command = $args[0];
 
-    if ($command === '/inici') {
+    if ($command === '/inici' || $command === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
             [['/normes', '/equips', '/accions'], ['/data', '/configuració']],
             true,
@@ -40,7 +40,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
         );
         $telegram->sendMessage(
             $chatId,
-            "Accions disponibles actualment:",
+            "Que vols fer?",
             false,
             null,
             null,
@@ -49,7 +49,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
         exit;
     }
     
-    elseif ($command === '/normes') {
+    elseif ($command === '/normes' || $command === '/rules') {
         if(!isset($args[1])) {
             $keyboard = new ReplyKeyboardMarkup(
                 [['/normes bàsiques', '/normes accions']], true, true
@@ -145,7 +145,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
     }
 
-    elseif ($command === '/equips') {
+    elseif ($command === '/equips' || $command === '/teams') {
         $player = $playersRepo->getPlayerByChatId($chatId);
         if (is_array($player) && count($player) > 0){
             if (count($player)!=1) {
@@ -391,7 +391,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         exit;
     }
 
-    elseif ($command === '/accions') {
+    elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
             [['/substitució', '/malDia', '/dobleORes'], ['/guanyarOMorir', '/socElMillor']], true, true
         );
@@ -831,7 +831,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         exit;
     }
 
-    elseif ($command === '/configuració') {
+    elseif ($command === '/configuració' || $command === '/settings') {
         $telegram->sendMessage($chatId, "Configuració");
         exit;
     }
