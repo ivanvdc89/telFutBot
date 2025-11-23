@@ -471,7 +471,6 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             exit;
         }
         $doubleOrNothingData = json_decode($actions[0]['data'], true);
-        //$actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
 
         $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
                    "Els teus vots: " . json_encode($doubleOrNothingData['teams']) . "\n";
@@ -486,6 +485,19 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         );
 
         if ($doubleOrNothingData['max'] == count($doubleOrNothingData['teams'])) {
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/dobleORes borrar', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Pots disponibles:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
             exit;
         }
 
@@ -512,7 +524,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $rows    = [];
                 $row     = [];
                 foreach ($teams as $team) {
-                    $row[] = '/dobleORes vote ' . $team['name'];
+                    $row[] = '/dobleORes vot ' . $team['name'];
                     if(count($row) == 3) {
                         $rows[] = $row;
                         $row = [];
@@ -537,7 +549,19 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $telegram->sendMessage($chatId, "ERROR, pot invàlid");
                 exit;
             }
+        } elseif ($args[1] == 'vot') {
+            $team = $teamsRepo->getTeamByName($args[2]);
+            if (!is_array($team) || count($team) == 0) {
+                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                exit;
+            }
+            $doubleOrNothingData['teams'][] = $team[0]['id'];
+            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
+        } elseif ($args[1] == 'borrar') {
+            $doubleOrNothingData['teams'] = [];
+            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
         }
+
         exit;
     }
 
