@@ -492,7 +492,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             );
             $telegram->sendMessage(
                 $chatId,
-                "Pots disponibles:",
+                "Ja tens tots els vots fets",
                 false,
                 null,
                 null,
@@ -557,12 +557,41 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             }
             $doubleOrNothingData['teams'][] = $team[0]['id'];
             $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
+
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/dobleORes', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Vot guardat",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+
         } elseif ($args[1] == 'borrar') {
             $doubleOrNothingData['teams'] = [];
             $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
-        }
 
-        exit;
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/dobleORes', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Vots borrats",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
     }
 
     elseif ($command === '/malDia') {
