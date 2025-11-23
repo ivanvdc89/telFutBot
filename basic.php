@@ -476,6 +476,16 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
         $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
                    "Els teus vots: " . json_encode($doubleOrNothingData['teams']) . "\n";
+
+        $telegram->sendMessage(
+            $chatId,
+            $message,
+            false,
+            null,
+            null,
+            null
+        );
+        exit;
     }
 
     elseif ($command === '/malDia') {
