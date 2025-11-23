@@ -472,24 +472,24 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
         $doubleOrNothingData = json_decode($actions[0]['data'], true);
 
-        $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
-                   "Equipts votats: " . $doubleOrNothingData['teams'] . "\n";
-
-        foreach ($doubleOrNothingData['teams'] as $team) {
-            $teamInfo = $teamsRepo->getTeamById($team);
-            $message .= "- " . $teamInfo[0]['name'] . "\n";
-        }
-
-        $telegram->sendMessage(
-            $chatId,
-            $message,
-            false,
-            null,
-            null,
-            null
-        );
-
         if ($doubleOrNothingData['max'] == count($doubleOrNothingData['teams'])) {
+            $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
+                       "Equipts votats:\n";
+
+            foreach ($doubleOrNothingData['teams'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                null
+            );
+
             $keyboard = new ReplyKeyboardMarkup(
                 [
                     ['/dobleORes borrar', '/inici']
@@ -575,6 +575,23 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 null,
                 null,
                 $keyboard
+            );
+
+            $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
+                       "Equipts votats:\n";
+
+            foreach ($doubleOrNothingData['teams'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                null
             );
             exit;
 
