@@ -472,6 +472,26 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
         $doubleOrNothingData = json_decode($actions[0]['data'], true);
 
+        if ($args[1] == 'borrar') {
+            $doubleOrNothingData['teams'] = [];
+            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
+
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/dobleORes', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Vots borrats",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
         if ($doubleOrNothingData['max'] == count($doubleOrNothingData['teams'])) {
             $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
                        "Equipts votats:\n";
@@ -595,24 +615,6 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             );
             exit;
 
-        } elseif ($args[1] == 'borrar') {
-            $doubleOrNothingData['teams'] = [];
-            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/dobleORes', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Vots borrats",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
         }
     }
 
