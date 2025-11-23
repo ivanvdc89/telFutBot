@@ -471,6 +471,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             exit;
         }
         $doubleOrNothingData = json_decode($actions[0]['data'], true);
+        $doubleOrNothingData = [];
+        $doubleOrNothingData['max'] = 2;
         $doubleOrNothingData['teams'] = [];
         $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
 
