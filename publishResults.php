@@ -81,7 +81,6 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 foreach ($actionInfo as $action) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
-                $message .= "- Resultat després d'accions: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
             }
             $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
@@ -95,7 +94,6 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 foreach ($actionInfo as $action) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
-                $message .= "- Resultat després d'accions: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
             }
             $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
@@ -109,7 +107,6 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 foreach ($actionInfo as $action) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
-                $message .= "- Resultat després d'accions: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
             }
             $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
             $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
