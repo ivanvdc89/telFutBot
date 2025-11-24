@@ -52,7 +52,9 @@ foreach ($allActions as $action) {
             $team = $teamsRepo->getTeamById($teamId);
             $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a " . $team[0]['name'] . "\n";
         }
-        $message .= "\n";
+        if(count($doubleOrNothingData['teams']) > 0) {
+            $message .= "\n";
+        }
     } else {
         $competitions = json_decode($action['data'], true);
         foreach ($competitions as $competition) {
