@@ -25,6 +25,7 @@ $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
 $matchDay = 5;
+$actionsActivated = false;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -463,10 +464,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/dobleORes') {
-        $activated = true;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'doubleOrNothing');
-        if (!$activated || (is_array($actions) && count($actions) == 0)) {
+        if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
             $telegram->sendMessage($chatId, "No disponible");
             exit;
         }
@@ -619,12 +619,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/malDia') {
-        $activated = true;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
 
         if (is_array($actions) && count($actions) == 0) {
-            if (!$activated) {
+            if (!$actionsActivated) {
                 $telegram->sendMessage($chatId, "No disponible");
                 exit;
             }
@@ -655,7 +654,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         } elseif (count($actions) == 1) {
             $badDayList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
-            if ($activated) {
+            if ($actionsActivated) {
                 if ($args[1] === 'ON') {
                     $badDayList[] = $args[2];
                     $badDayList   = array_unique($badDayList);
@@ -705,12 +704,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/socElMillor') {
-        $activated = true;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
 
         if (is_array($actions) && count($actions) == 0) {
-            if (!$activated) {
+            if (!$actionsActivated) {
                 $telegram->sendMessage($chatId, "No disponible");
                 exit;
             }
@@ -741,7 +739,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         } elseif (count($actions) == 1) {
             $iAmTheBestList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
-            if ($activated) {
+            if ($actionsActivated) {
                 if ($args[1] === 'ON') {
                     $iAmTheBestList[] = $args[2];
                     $iAmTheBestList   = array_unique($iAmTheBestList);
@@ -791,12 +789,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/guanyarOMorir') {
-        $activated = true;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'winOrDie');
 
         if (is_array($actions) && count($actions) == 0) {
-            if (!$activated) {
+            if (!$actionsActivated) {
                 $telegram->sendMessage($chatId, "No disponible");
                 exit;
             }
@@ -827,7 +824,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         } elseif (count($actions) == 1) {
             $winOrDietList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
-            if ($activated) {
+            if ($actionsActivated) {
                 if ($args[1] === 'ON') {
                     $winOrDietList[] = $args[2];
                     $winOrDietList   = array_unique($winOrDietList);
