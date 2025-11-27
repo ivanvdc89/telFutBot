@@ -71,7 +71,11 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
             $message .=  "\nCOL:\n";
         }
         $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
-        $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+        if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
+            $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
+        } else {
+            $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+        }
         if($allMatchDayTeamPoint['pot'] == 4) {
             if(!is_null($allMatchDayPlayerPoint['chl_action'])
                && $allMatchDayPlayerPoint['chl_action'] != '[]'
