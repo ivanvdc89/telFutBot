@@ -18,7 +18,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 4;
+$matchDay                = 5;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
@@ -32,9 +32,12 @@ foreach ($actions as $action) {
         $players[$competition][] = $action['player_id'];
     }
 }
-$bestCHL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['CHL'], 'CHL');
-$bestEUL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['EUL'], 'EUL');
-$bestCOL = $teamResultRepo->getBestByCompetitionAndMatchday($matchDay, $players['COL'], 'COL');
+$bestCHL = 9; // TODO: must be calculated dinamically
+$bestEUL = 13; // TODO: must be calculated dinamically
+$bestCOL = 10; // TODO: must be calculated dinamically
+
+$nothingTeams = [2, 49, 98];
+$doubleTeams  = [4, 38, 88];
 
 $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
@@ -53,34 +56,48 @@ foreach ($players as $player) {
         if (count($teamResult) == 0) {
             continue;
         }
+
+        $action = [];
+        $totalPoints = $teamResult[0]['points'];
+        if (in_array($team['id'], $nothingTeams) ) {
+            $action = ["type" => "dobleORes", "result" => "Res"];
+            $totalPoints = 0;
+        }
+        if (in_array($team['id'], $doubleTeams) ) {
+            $action = ["type" => "dobleORes", "result" => "Doble"];
+            $totalPoints = 2 * $teamResult[0]['points'];
+        }
+
         if($teamResult[0]['competition'] === "CHL"){
-            $chlPoints += $teamResult[0]['points'];
+            $chlPoints += $totalPoints;
             if($teamResult[0]['points'] > 2) {
                 $chlWins++;
             }
         }
         if($teamResult[0]['competition'] === "EUL"){
-            $eulPoints += $teamResult[0]['points'];
+            $eulPoints += $totalPoints;
             if($teamResult[0]['points'] > 2) {
                 $eulWins++;
             }
         }
         if($teamResult[0]['competition'] === "COL"){
-            $colPoints += $teamResult[0]['points'];
+            $colPoints += $totalPoints;
             if($teamResult[0]['points'] > 2) {
                 $colWins++;
             }
         }
+
         $matchDayTeamPointRepo->addMatchDayTeamPoint(
             $playerId,
             $matchDay,
             $pot,
             $team['id'],
             $teamResult[0]['points'],
-            '',
-            $teamResult[0]['points']
+            empty($action) ? '' : json_encode($action),
+            $totalPoints
         );
     }
+
     $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'badDay');
     $chlPointsAfterAction = $chlPoints;
     $eulPointsAfterAction = $eulPoints;
