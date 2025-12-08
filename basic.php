@@ -672,7 +672,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             }
 
             $message .= "\nEscuts:\n";
-            foreach ($kosAndShieldsData['kos'] as $team) {
+            foreach ($kosAndShieldsData['shields'] as $team) {
                 $teamInfo = $teamsRepo->getTeamById($team);
                 $message .= "- " . $teamInfo[0]['name'] . "\n";
             }
@@ -817,7 +817,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             }
 
             $message .= "\nEscuts:\n";
-            foreach ($kosAndShieldsData['kos'] as $team) {
+            foreach ($kosAndShieldsData['shields'] as $team) {
                 $teamInfo = $teamsRepo->getTeamById($team);
                 $message .= "- " . $teamInfo[0]['name'] . "\n";
             }
@@ -873,6 +873,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $row         = [];
                 foreach ($playerTeams as $team) {
                     if (in_array($team['id'], $kosAndShieldsData['shields'])) {
+                        continue;
+                    }
+                    if ($team['competition'] !== $args[2]) {
                         continue;
                     }
                     $row[] = '/kos escut ' . $team['name'];
@@ -934,7 +937,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 }
 
                 $message .= "\nEscuts:\n";
-                foreach ($kosAndShieldsData['kos'] as $team) {
+                foreach ($kosAndShieldsData['shields'] as $team) {
                     $teamInfo = $teamsRepo->getTeamById($team);
                     $message  .= "- " . $teamInfo[0]['name'] . "\n";
                 }
