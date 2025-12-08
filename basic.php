@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 5;
-$actionsActivated = false;
+$matchDay = 6;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -141,6 +141,14 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 -L'equip més votat de cada competició no sumarà cap punt, el segon més votat de cada competició sumarà doble (0, 2 o 6/8 depenent del seu resultat).
 -Tots els vots valen igual. Se pot donar més d'un vot a un equip. Si hi ha empat entre equips (encara que sigue a 0 vots), l'ordre serà el de la classificació.
 -Depenent dels punts en la general tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots");
+
+                $telegram->sendMessage($chatId, "Norma #kosAmbEscuts:
+-Hi ha una votació per a boicotejar equips, els 4 més votats no sumaran punts independenment del resultat del seu partit.
+-Tots els vots de boicot valen igual. Se pot donar més d'un vot a un equip. Si hi ha empat entre equips, el que ha està millor en la classificació serà l'equip boicotejat.
+-Depenent de la nostra posició tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4.
+-Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre.
+-Amb només un escut l'equip ja està totalment protegit i sumarà punts.
+-No cal posar més d'un escut al mateix equip.");
                 exit;
             }
         }
@@ -319,6 +327,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                     $message = '';
                     foreach ($teams as $team) {
                         $message .= $team['total'] . " " . $team['name'] . "\n";
+                        $players = $teamsRepo->getPlayersByTeam($team['id']);
+                        foreach ($players as $player) {
+                            $message .= "   - " . $player['name'] . "\n";
+                        }
+                        $message .= "\n";
                     }
                     $telegram->sendMessage($chatId, $message);
                     exit;
@@ -394,7 +407,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/malDia', '/dobleORes'], ['/guanyarOMorir', '/socElMillor']], true, true
+            [['/substitució', '/kosAmbEscuts', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -464,6 +477,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/dobleORes') {
+        $actionsActivated = false;
+
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'doubleOrNothing');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
@@ -618,6 +633,325 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
     }
 
+    elseif ($command === '/kosAmbEscuts') {
+        $player    = $playersRepo->getPlayerByChatId($chatId);
+        $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
+        if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
+            $telegram->sendMessage($chatId, "No disponible");
+            exit;
+        }
+        $kosAndShieldsData = json_decode($actions[0]['data'], true);
+
+        if ($args[1] == 'borrar') {
+            $kosAndShieldsData['kos'] = [];
+            $kosAndShieldsData['shields'] = [];
+            $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
+
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/kosAmbEscuts', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Vots i escuts borrats",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
+        if ($kosAndShieldsData['max'] == count($kosAndShieldsData['kos']) && $kosAndShieldsData['max'] == count($kosAndShieldsData['shields'])) {
+            $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" .
+                       "Equipts votats:\n";
+            foreach ($kosAndShieldsData['kos'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $message .= "\nEscuts:\n";
+            foreach ($kosAndShieldsData['kos'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                null
+            );
+
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/kosAmbEscuts borrar', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Ja tens tots els vots fets",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
+        if(!isset($args[1])) {
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/kosAmbEscuts ko_pot 1', '/kosAmbEscuts ko_pot 2', '/kosAmbEscuts ko_pot 3', '/kosAmbEscuts ko_pot 4'],
+                    ['/kosAmbEscuts ko_pot 5', '/kosAmbEscuts ko_pot 6', '/kosAmbEscuts ko_pot 7', '/kosAmbEscuts ko_pot 8'],
+                    ['/kosAmbEscuts ko_pot 9', '/kosAmbEscuts ko_pot 10', '/kosAmbEscuts ko_pot 11', '/kosAmbEscuts ko_pot 12'],
+                    ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Pots disponibles:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+        elseif ($args[1] == 'ko_pot') {
+            if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
+                $keyboard = new ReplyKeyboardMarkup(
+                    [
+                        ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                    ], true, true
+                );
+                $telegram->sendMessage(
+                    $chatId,
+                    "Ja has fet el màxim de vots de kos, ara pots posar escuts si vols:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
+            if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
+                $teams   = $teamsRepo->getTeamsByPot($args[2]);
+                $rows    = [];
+                $row     = [];
+                foreach ($teams as $team) {
+                    $row[] = '/kosAmbEscuts ko_vot ' . $team['name'];
+                    if(count($row) == 3) {
+                        $rows[] = $row;
+                        $row = [];
+                    }
+                }
+                if (count($row) != 0) {
+                    $rows[] = $row;
+                }
+
+                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
+                $telegram->sendMessage(
+                    $chatId,
+                    "Equips del pot " . $args[2] . ":",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            } else {
+                $telegram->sendMessage($chatId, "ERROR, pot invàlid");
+                exit;
+            }
+        }
+        elseif ($args[1] == 'ko_vot') {
+            if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
+                $keyboard = new ReplyKeyboardMarkup(
+                    [
+                        ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                    ], true, true
+                );
+                $telegram->sendMessage(
+                    $chatId,
+                    "Ja has fet el màxim de vots de kos, ara pots posar escuts si vols:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
+            $team = $teamsRepo->getTeamByName($args[2]);
+            if (!is_array($team) || count($team) == 0) {
+                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                exit;
+            }
+            $kosAndShieldsData['kos'][] = $team[0]['id'];
+            $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
+
+            $keyboard = new ReplyKeyboardMarkup(
+                [
+                    ['/kosAmbEscuts', '/inici']
+                ], true, true
+            );
+            $telegram->sendMessage(
+                $chatId,
+                "Vot guardat",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+
+            $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" .
+                       "Equipts votats:\n";
+
+            foreach ($kosAndShieldsData['kos'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $message .= "\nEscuts:\n";
+            foreach ($kosAndShieldsData['kos'] as $team) {
+                $teamInfo = $teamsRepo->getTeamById($team);
+                $message .= "- " . $teamInfo[0]['name'] . "\n";
+            }
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                null
+            );
+            exit;
+        }
+        elseif ($args[1] == 'escut') {
+            if ($kosAndShieldsData['max'] == count($kosAndShieldsData['shields'])) {
+                $keyboard = new ReplyKeyboardMarkup(
+                    [
+                        [
+                            '/kosAmbEscuts ko_pot 1',
+                            '/kosAmbEscuts ko_pot 2',
+                            '/kosAmbEscuts ko_pot 3',
+                            '/kosAmbEscuts ko_pot 4'
+                        ],
+                        [
+                            '/kosAmbEscuts ko_pot 5',
+                            '/kosAmbEscuts ko_pot 6',
+                            '/kosAmbEscuts ko_pot 7',
+                            '/kosAmbEscuts ko_pot 8'
+                        ],
+                        [
+                            '/kosAmbEscuts ko_pot 9',
+                            '/kosAmbEscuts ko_pot 10',
+                            '/kosAmbEscuts ko_pot 11',
+                            '/kosAmbEscuts ko_pot 12'
+                        ]
+                    ], true, true
+                );
+                $telegram->sendMessage(
+                    $chatId,
+                    "Ja has posat el màxim d'escuts, ara pots votat els kos si vols:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
+
+            if (isset($args[2]) && in_array($args[2], ['CHL', 'EUL', 'COL'])) {
+                $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+                $rows        = [];
+                $row         = [];
+                foreach ($playerTeams as $team) {
+                    if (in_array($team['id'], $kosAndShieldsData['shields'])) {
+                        continue;
+                    }
+                    $row[] = '/kosAmbEscuts escut ' . $team['name'];
+                    if (count($row) == 3) {
+                        $rows[] = $row;
+                        $row    = [];
+                    }
+                }
+                if (count($row) != 0) {
+                    $rows[] = $row;
+                }
+
+                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+
+                $telegram->sendMessage(
+                    $chatId,
+                    "Els teus equips per a posar escut:",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
+            elseif (isset($args[2])) {
+                $team = $teamsRepo->getTeamByName($args[2]);
+                if (!is_array($team) || count($team) == 0) {
+                    $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                    exit;
+                }
+
+                if (in_array($args[2], $kosAndShieldsData['shields'])) {
+                    $telegram->sendMessage($chatId, "ERROR, l'equip ja té l'escut activat");
+                    exit;
+                }
+
+                $kosAndShieldsData['shields'][] = $team[0]['id'];
+                $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
+
+                $keyboard = new ReplyKeyboardMarkup(
+                    [
+                        ['/kosAmbEscuts', '/inici']
+                    ], true, true
+                );
+                $telegram->sendMessage(
+                    $chatId,
+                    "Escut guardat",
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+
+                $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" . "Equipts votats:\n";
+
+                foreach ($kosAndShieldsData['kos'] as $team) {
+                    $teamInfo = $teamsRepo->getTeamById($team);
+                    $message  .= "- " . $teamInfo[0]['name'] . "\n";
+                }
+
+                $message .= "\nEscuts:\n";
+                foreach ($kosAndShieldsData['kos'] as $team) {
+                    $teamInfo = $teamsRepo->getTeamById($team);
+                    $message  .= "- " . $teamInfo[0]['name'] . "\n";
+                }
+
+                $telegram->sendMessage(
+                    $chatId,
+                    $message,
+                    false,
+                    null,
+                    null,
+                    null
+                );
+                exit;
+            }
+        }
+    }
+
     elseif ($command === '/malDia') {
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
@@ -628,23 +962,23 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 exit;
             }
 
-            if ($args[1] === 'ON') {
+            if ($args[1] === 'Activar') {
                 $badDayList[]=$args[2];
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'badDay', json_encode($badDayList));
-                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/malDia ON CHL', '/malDia ON EUL', '/malDia ON COL']], true, true);
+                    new ReplyKeyboardMarkup([['/malDia Activar CHL', '/malDia Activar EUL', '/malDia Activar COL']], true, true);
             }
 
             $telegram->sendMessage(
                 $chatId,
-                "#malDia activar ON o desactivar OFF:",
+                "#malDia activar o desactivar:",
                 false,
                 null,
                 null,
@@ -655,22 +989,22 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             $badDayList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
             if ($actionsActivated) {
-                if ($args[1] === 'ON') {
+                if ($args[1] === 'Activar') {
                     $badDayList[] = $args[2];
                     $badDayList   = array_unique($badDayList);
-                } elseif ($args[1] === 'OFF') {
+                } elseif ($args[1] === 'Desactivar') {
                     $badDayList = array_diff($badDayList, [$args[2]]);
                 }
                 $actionsRepo->updateAction($actions[0]['id'], json_encode($badDayList));
 
-                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
 
-                $messageClosure = "\nActivar ON o desactivar OFF:";
+                $messageClosure = "\nActivar o desactivar:";
             }
 
             $message = "Actualment tens el #malDia:\n" .
@@ -690,11 +1024,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/malDia ON CHL', '/malDia ON EUL', '/malDia ON COL']], true, true
+            [['/malDia Activar CHL', '/malDia Activar EUL', '/malDia Activar COL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
-            "#malDia activar ON o desactivar OFF:",
+            "#malDia activar o desactivar:",
             false,
             null,
             null,
@@ -713,23 +1047,23 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 exit;
             }
 
-            if ($args[1] === 'ON') {
+            if ($args[1] === 'Activar') {
                 $iAmTheBestList[]=$args[2];
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'iAmTheBest', json_encode($iAmTheBestList));
-                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/socElMillor ON CHL', '/socElMillor ON EUL', '/socElMillor ON COL']], true, true);
+                    new ReplyKeyboardMarkup([['/socElMillor Activar CHL', '/socElMillor Activar EUL', '/socElMillor Activar COL']], true, true);
             }
 
             $telegram->sendMessage(
                 $chatId,
-                "#socElMillor activar ON o desactivar OFF:",
+                "#socElMillor activar o desactivar:",
                 false,
                 null,
                 null,
@@ -740,22 +1074,22 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             $iAmTheBestList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
             if ($actionsActivated) {
-                if ($args[1] === 'ON') {
+                if ($args[1] === 'Activar') {
                     $iAmTheBestList[] = $args[2];
                     $iAmTheBestList   = array_unique($iAmTheBestList);
-                } elseif ($args[1] === 'OFF') {
+                } elseif ($args[1] === 'Desactivar') {
                     $iAmTheBestList = array_diff($iAmTheBestList, [$args[2]]);
                 }
                 $actionsRepo->updateAction($actions[0]['id'], json_encode($iAmTheBestList));
 
-                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
 
-                $messageClosure = "\nActivar ON o desactivar OFF:";
+                $messageClosure = "\nActivar o desactivar:";
             }
 
             $message = "Actualment tens el #socElMillor:\n" .
@@ -775,11 +1109,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/socElMillor ON CHL', '/socElMillor ON EUL', '/socElMillor ON COL']], true, true
+            [['/socElMillor Activar CHL', '/socElMillor Activar EUL', '/socElMillor Activar COL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
-            "#socElMillor activar ON o desactivar OFF:",
+            "#socElMillor activar o desactivar:",
             false,
             null,
             null,
@@ -798,23 +1132,23 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 exit;
             }
 
-            if ($args[1] === 'ON') {
+            if ($args[1] === 'Activar') {
                 $winOrDietList[]=$args[2];
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'winOrDie', json_encode($winOrDietList));
-                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/guanyarOMorir ON CHL', '/guanyarOMorir ON EUL', '/guanyarOMorir ON COL']], true, true);
+                    new ReplyKeyboardMarkup([['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']], true, true);
             }
 
             $telegram->sendMessage(
                 $chatId,
-                "#guanyarOMorir activar ON o desactivar OFF:",
+                "#guanyarOMorir activar o desactivar:",
                 false,
                 null,
                 null,
@@ -825,22 +1159,22 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             $winOrDietList = json_decode($actions[0]['data'], true);
             $messageClosure = "";
             if ($actionsActivated) {
-                if ($args[1] === 'ON') {
+                if ($args[1] === 'Activar') {
                     $winOrDietList[] = $args[2];
                     $winOrDietList   = array_unique($winOrDietList);
-                } elseif ($args[1] === 'OFF') {
+                } elseif ($args[1] === 'Desactivar') {
                     $winOrDietList = array_diff($winOrDietList, [$args[2]]);
                 }
                 $actionsRepo->updateAction($actions[0]['id'], json_encode($winOrDietList));
 
-                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'OFF' : 'ON') . ' CHL';
-                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'OFF' : 'ON') . ' EUL';
-                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'OFF' : 'ON') . ' COL';
+                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
+                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
+                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
                     [$butCHL, $butEUL, $butCOL]
                 ], true, true);
 
-                $messageClosure = "\nActivar ON o desactivar OFF:";
+                $messageClosure = "\nActivar o desactivar:";
             }
 
             $message = "Actualment tens el #guanyarOMorir:\n" .
@@ -860,11 +1194,11 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/guanyarOMorir ON CHL', '/guanyarOMorir ON EUL', '/guanyarOMorir ON COL']], true, true
+            [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
-            "#guanyarOMorir activar ON o desactivar OFF:",
+            "#guanyarOMorir activar o desactivar:",
             false,
             null,
             null,

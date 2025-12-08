@@ -23,9 +23,19 @@ class Team extends Connection {
     public function getCountPlayerTeamsByPot($pot){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select count(*) as total, t.name as name from player_teams pt join teams t on pt.team_id = t.id where t.pot = ? group by pt.team_id;";
+        $sql="select count(*) as total, t.name as name, t.id as id from player_teams pt join teams t on pt.team_id = t.id where t.pot = ? group by pt.team_id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1,$pot);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
+    public function getPlayersByTeam($teamId){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select p.name as name from player_teams pt join players p on pt.player_id = p.id where pt.team_id = ?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $teamId);
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
