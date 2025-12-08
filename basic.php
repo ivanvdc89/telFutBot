@@ -407,7 +407,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/kosAmbEscuts', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
+            [['/substitució', '/kos', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -633,7 +633,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
     }
 
-    elseif ($command === '/kosAmbEscuts') {
+    elseif ($command === '/kos') {
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
@@ -649,7 +649,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $keyboard = new ReplyKeyboardMarkup(
                 [
-                    ['/kosAmbEscuts', '/inici']
+                    ['/kos', '/inici']
                 ], true, true
             );
             $telegram->sendMessage(
@@ -688,7 +688,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $keyboard = new ReplyKeyboardMarkup(
                 [
-                    ['/kosAmbEscuts borrar', '/inici']
+                    ['/kos borrar', '/inici']
                 ], true, true
             );
             $telegram->sendMessage(
@@ -705,10 +705,10 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         if(!isset($args[1])) {
             $keyboard = new ReplyKeyboardMarkup(
                 [
-                    ['/kosAmbEscuts ko_pot 1', '/kosAmbEscuts ko_pot 2', '/kosAmbEscuts ko_pot 3', '/kosAmbEscuts ko_pot 4'],
-                    ['/kosAmbEscuts ko_pot 5', '/kosAmbEscuts ko_pot 6', '/kosAmbEscuts ko_pot 7', '/kosAmbEscuts ko_pot 8'],
-                    ['/kosAmbEscuts ko_pot 9', '/kosAmbEscuts ko_pot 10', '/kosAmbEscuts ko_pot 11', '/kosAmbEscuts ko_pot 12'],
-                    ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                    ['/kos ko_pot 1', '/kos ko_pot 2', '/kos ko_pot 3', '/kos ko_pot 4'],
+                    ['/kos ko_pot 5', '/kos ko_pot 6', '/kos ko_pot 7', '/kos ko_pot 8'],
+                    ['/kos ko_pot 9', '/kos ko_pot 10', '/kos ko_pot 11', '/kos ko_pot 12'],
+                    ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
                 ], true, true
             );
             $telegram->sendMessage(
@@ -725,7 +725,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
                 $keyboard = new ReplyKeyboardMarkup(
                     [
-                        ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                        ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
                     ], true, true
                 );
                 $telegram->sendMessage(
@@ -743,7 +743,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $rows    = [];
                 $row     = [];
                 foreach ($teams as $team) {
-                    $row[] = '/kosAmbEscuts ko_vot ' . $team['name'];
+                    $row[] = '/kos ko_vot ' . $team['name'];
                     if(count($row) == 3) {
                         $rows[] = $row;
                         $row = [];
@@ -773,7 +773,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
                 $keyboard = new ReplyKeyboardMarkup(
                     [
-                        ['/kosAmbEscuts escut CHL', '/kosAmbEscuts escut EUL', '/kosAmbEscuts escut COL', '/kosAmbEscuts']
+                        ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
                     ], true, true
                 );
                 $telegram->sendMessage(
@@ -796,7 +796,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $keyboard = new ReplyKeyboardMarkup(
                 [
-                    ['/kosAmbEscuts', '/inici']
+                    ['/kos', '/inici']
                 ], true, true
             );
             $telegram->sendMessage(
@@ -837,22 +837,22 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $keyboard = new ReplyKeyboardMarkup(
                     [
                         [
-                            '/kosAmbEscuts ko_pot 1',
-                            '/kosAmbEscuts ko_pot 2',
-                            '/kosAmbEscuts ko_pot 3',
-                            '/kosAmbEscuts ko_pot 4'
+                            '/kos ko_pot 1',
+                            '/kos ko_pot 2',
+                            '/kos ko_pot 3',
+                            '/kos ko_pot 4'
                         ],
                         [
-                            '/kosAmbEscuts ko_pot 5',
-                            '/kosAmbEscuts ko_pot 6',
-                            '/kosAmbEscuts ko_pot 7',
-                            '/kosAmbEscuts ko_pot 8'
+                            '/kos ko_pot 5',
+                            '/kos ko_pot 6',
+                            '/kos ko_pot 7',
+                            '/kos ko_pot 8'
                         ],
                         [
-                            '/kosAmbEscuts ko_pot 9',
-                            '/kosAmbEscuts ko_pot 10',
-                            '/kosAmbEscuts ko_pot 11',
-                            '/kosAmbEscuts ko_pot 12'
+                            '/kos ko_pot 9',
+                            '/kos ko_pot 10',
+                            '/kos ko_pot 11',
+                            '/kos ko_pot 12'
                         ]
                     ], true, true
                 );
@@ -875,7 +875,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                     if (in_array($team['id'], $kosAndShieldsData['shields'])) {
                         continue;
                     }
-                    $row[] = '/kosAmbEscuts escut ' . $team['name'];
+                    $row[] = '/kos escut ' . $team['name'];
                     if (count($row) == 3) {
                         $rows[] = $row;
                         $row    = [];
@@ -914,7 +914,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
                 $keyboard = new ReplyKeyboardMarkup(
                     [
-                        ['/kosAmbEscuts', '/inici']
+                        ['/kos', '/inici']
                     ], true, true
                 );
                 $telegram->sendMessage(
