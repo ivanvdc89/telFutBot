@@ -153,7 +153,7 @@ if ($doubleOrNothingActive) {
 }
 
 if ($kosAndShieldsActive) {
-    arsort($sumKos);
+    asort($sumKos);
     $numKos = 4;
     $message .= "\n" . $kosMessage . "\n";
     foreach ($sumKos as $teamId) {
