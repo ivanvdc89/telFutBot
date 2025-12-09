@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 5;
+$matchDay    = 6;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -28,8 +28,10 @@ $actionsTexts = [
     'iAmTheBest' => 'socElMillor',
     'winOrDie' => 'guanyarOMorir',
     'doubleOrNothing' => 'dobleORes',
+    'kosAndShields' => 'kosAmbEscuts',
 ];
 
+$doubleOrNothingActive = false;
 $sumVotes = [
     4 => 2,
     10 => 1,
@@ -37,6 +39,14 @@ $sumVotes = [
     57 => 1,
     98 => 2,
     88 => 1,
+];
+
+$kosAndShieldsActive = true;
+$sumKos = [
+    10 => 4,
+    98 => 3,
+    86 => 2,
+    1 => 1
 ];
 
 foreach ($allActions as $action) {
@@ -49,10 +59,26 @@ foreach ($allActions as $action) {
             } else {
                 $sumVotes[$teamId] = 10;
             }
-            $team = $teamsRepo->getTeamById($teamId);
-            $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a " . $team[0]['name'] . "\n";
+            $team    = $teamsRepo->getTeamById($teamId);
+            $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
+                        . $team[0]['name'] . "\n";
         }
-        if(count($doubleOrNothingData['teams']) > 0) {
+        if (count($doubleOrNothingData['teams']) > 0) {
+            $message .= "\n";
+        }
+    } elseif ($action['type'] == 'kosAndShields') {
+        $kosAndShieldsData = json_decode($action['data'], true);
+        foreach ($kosAndShieldsData['teams'] as $teamId) {
+            if (isset($sumVotes[$teamId])) {
+                $sumKos[$teamId] = $sumKos[$teamId] + 10;
+            } else {
+                $sumKos[$teamId] = 10;
+            }
+            $team    = $teamsRepo->getTeamById($teamId);
+            $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
+                        . $team[0]['name'] . "\n";
+        }
+        if (count($kosAndShieldsData['teams']) > 0) {
             $message .= "\n";
         }
     } else {
@@ -63,55 +89,66 @@ foreach ($allActions as $action) {
     }
 }
 
-$maxCHL = 0;
-$teamMaxCHL = 0;
-$max2CHL = 0;
-$teamMax2CHL = 0;
-$maxEUL = 0;
-$teamMaxEUL = 0;
-$max2EUL = 0;
-$teamMax2EUL = 0;
-$maxCOL = 0;
-$teamMaxCOL = 0;
-$max2COL = 0;
-$teamMax2COL = 0;
-arsort($sumVotes);
-foreach ($sumVotes as $teamId => $votes) {
-    $team = $teamsRepo->getTeamById($teamId);
-    if ($team[0]['competition'] == 'CHL') {
-        if ($votes > $maxCHL) {
-            $maxCHL = $votes;
-            $teamMaxCHL = $team[0];
-        } elseif ($votes > $max2CHL) {
-            $max2CHL = $votes;
-            $teamMax2CHL = $team[0];
+if ($doubleOrNothingActive) {
+    $maxCHL      = 0;
+    $teamMaxCHL  = 0;
+    $max2CHL     = 0;
+    $teamMax2CHL = 0;
+    $maxEUL      = 0;
+    $teamMaxEUL  = 0;
+    $max2EUL     = 0;
+    $teamMax2EUL = 0;
+    $maxCOL      = 0;
+    $teamMaxCOL  = 0;
+    $max2COL     = 0;
+    $teamMax2COL = 0;
+    arsort($sumVotes);
+    foreach ($sumVotes as $teamId => $votes) {
+        $team = $teamsRepo->getTeamById($teamId);
+        if ($team[0]['competition'] == 'CHL') {
+            if ($votes > $maxCHL) {
+                $maxCHL     = $votes;
+                $teamMaxCHL = $team[0];
+            } elseif ($votes > $max2CHL) {
+                $max2CHL     = $votes;
+                $teamMax2CHL = $team[0];
+            }
+        }
+        if ($team[0]['competition'] == 'EUL') {
+            if ($votes > $maxEUL) {
+                $maxEUL     = $votes;
+                $teamMaxEUL = $team[0];
+            } elseif ($votes > $max2EUL) {
+                $max2EUL     = $votes;
+                $teamMax2EUL = $team[0];
+            }
+        }
+        if ($team[0]['competition'] == 'COL') {
+            if ($votes > $maxCOL) {
+                $maxCOL     = $votes;
+                $teamMaxCOL = $team[0];
+            } elseif ($votes > $max2COL) {
+                $max2COL     = $votes;
+                $teamMax2COL = $team[0];
+            }
         }
     }
-    if ($team[0]['competition'] == 'EUL') {
-        if ($votes > $maxEUL) {
-            $maxEUL = $votes;
-            $teamMaxEUL = $team[0];
-        } elseif ($votes > $max2EUL) {
-            $max2EUL = $votes;
-            $teamMax2EUL = $team[0];
-        }
-    }
-    if ($team[0]['competition'] == 'COL') {
-        if ($votes > $maxCOL) {
-            $maxCOL = $votes;
-            $teamMaxCOL = $team[0];
-        } elseif ($votes > $max2COL) {
-            $max2COL = $votes;
-            $teamMax2COL = $team[0];
-        }
+    $message .= "\n";
+    $message .= "-Res CHL: " . $teamMaxCHL['name'] . "\n";
+    $message .= "-Doble CHL: " . $teamMax2CHL['name'] . "\n";
+    $message .= "-Res EUL: " . $teamMaxEUL['name'] . "\n";
+    $message .= "-Doble EUL: " . $teamMax2EUL['name'] . "\n";
+    $message .= "-Res COL: " . $teamMaxCOL['name'] . "\n";
+    $message .= "-Doble COL: " . $teamMax2COL['name'] . "\n";
+}
+
+if ($kosAndShieldsActive) {
+    arsort($sumKos);
+    $message .= "\n";
+    foreach ($sumKos as $teamId) {
+        $team = $teamsRepo->getTeamById($teamId);
+        $message .= "-Equip KO: " . $team['name'] . "\n";
     }
 }
-$message .= "\n";
-$message .= "-Res CHL: " . $teamMaxCHL['name'] . "\n";
-$message .= "-Doble CHL: " . $teamMax2CHL['name'] . "\n";
-$message .= "-Res EUL: " . $teamMaxEUL['name'] . "\n";
-$message .= "-Doble EUL: " . $teamMax2EUL['name'] . "\n";
-$message .= "-Res COL: " . $teamMaxCOL['name'] . "\n";
-$message .= "-Doble COL: " . $teamMax2COL['name'] . "\n";
 
 $telegram->sendMessage($groupChatId, $message);
