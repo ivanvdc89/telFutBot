@@ -43,7 +43,8 @@ $sumVotes = [
 ];
 
 $kosAndShieldsActive = true;
-$kosAndShieldsMessage = "";
+$kosMessage = "";
+$shieldsMessage = "";
 $sumKos = [
     10 => 4,
     98 => 3,
@@ -77,11 +78,18 @@ foreach ($allActions as $action) {
                 $sumKos[$teamId] = 10;
             }
             $team    = $teamsRepo->getTeamById($teamId);
-            $kosAndShieldsMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
-                        . $team[0]['name'] . "\n";
+            $kosMessage .= "-" . $player[0]['name'] . ": 1 vot de KO a " . $team[0]['name'] . "\n";
         }
         if (count($kosAndShieldsData['kos']) > 0) {
-            $kosAndShieldsData .= "\n";
+            $kosMessage .= "\n";
+        }
+
+        foreach ($kosAndShieldsData['shields'] as $teamId) {
+            $team    = $teamsRepo->getTeamById($teamId);
+            $shieldsMessage .= "-" . $player[0]['name'] . ": 1 escut a " . $team[0]['name'] . "\n";
+        }
+        if (count($kosAndShieldsData['shields']) > 0) {
+            $shieldsMessage .= "\n";
         }
     } else {
         $competitions = json_decode($action['data'], true);
@@ -147,7 +155,7 @@ if ($doubleOrNothingActive) {
 if ($kosAndShieldsActive) {
     arsort($sumKos);
     $numKos = 4;
-    $message .= "\n" . $kosAndShieldsMessage . "\n";
+    $message .= "\n" . $kosMessage . "\n";
     foreach ($sumKos as $teamId) {
         $team = $teamsRepo->getTeamById($teamId);
         $message .= "-Equip KO: " . $team[0]['name'] . "\n";
@@ -155,6 +163,7 @@ if ($kosAndShieldsActive) {
             break;
         }
     }
+    $message .= "\n" . $shieldsMessage . "\n";
 }
 
 $telegram->sendMessage($groupChatId, $message);
