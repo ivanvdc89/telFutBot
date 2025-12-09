@@ -72,7 +72,7 @@ foreach ($allActions as $action) {
     } elseif ($action['type'] == 'kosAndShields') {
         $kosAndShieldsData = json_decode($action['data'], true);
         foreach ($kosAndShieldsData['kos'] as $teamId) {
-            if (isset($sumVotes[$teamId])) {
+            if (isset($sumKos[$teamId])) {
                 $sumKos[$teamId] = $sumKos[$teamId] + 10;
             } else {
                 $sumKos[$teamId] = 10;
