@@ -32,6 +32,7 @@ $actionsTexts = [
 ];
 
 $doubleOrNothingActive = false;
+$doubleOrNothingMessage = "";
 $sumVotes = [
     4 => 2,
     10 => 1,
@@ -42,6 +43,7 @@ $sumVotes = [
 ];
 
 $kosAndShieldsActive = true;
+$kosAndShieldsMessage = "";
 $sumKos = [
     10 => 4,
     98 => 3,
@@ -60,11 +62,11 @@ foreach ($allActions as $action) {
                 $sumVotes[$teamId] = 10;
             }
             $team    = $teamsRepo->getTeamById($teamId);
-            $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
+            $doubleOrNothingMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
                         . $team[0]['name'] . "\n";
         }
         if (count($doubleOrNothingData['teams']) > 0) {
-            $message .= "\n";
+            $doubleOrNothingMessage .= "\n";
         }
     } elseif ($action['type'] == 'kosAndShields') {
         $kosAndShieldsData = json_decode($action['data'], true);
@@ -75,11 +77,11 @@ foreach ($allActions as $action) {
                 $sumKos[$teamId] = 10;
             }
             $team    = $teamsRepo->getTeamById($teamId);
-            $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
+            $kosAndShieldsMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
                         . $team[0]['name'] . "\n";
         }
         if (count($kosAndShieldsData['kos']) > 0) {
-            $message .= "\n";
+            $kosAndShieldsData .= "\n";
         }
     } else {
         $competitions = json_decode($action['data'], true);
@@ -133,7 +135,7 @@ if ($doubleOrNothingActive) {
             }
         }
     }
-    $message .= "\n";
+    $message .= "\n" . $doubleOrNothingMessage . "\n";
     $message .= "-Res CHL: " . $teamMaxCHL['name'] . "\n";
     $message .= "-Doble CHL: " . $teamMax2CHL['name'] . "\n";
     $message .= "-Res EUL: " . $teamMaxEUL['name'] . "\n";
@@ -145,7 +147,7 @@ if ($doubleOrNothingActive) {
 if ($kosAndShieldsActive) {
     arsort($sumKos);
     $numKos = 4;
-    $message .= "\n";
+    $message .= "\n" . $kosAndShieldsMessage . "\n";
     foreach ($sumKos as $teamId) {
         $team = $teamsRepo->getTeamById($teamId);
         $message .= "-Equip KO: " . $team[0]['name'] . "\n";
