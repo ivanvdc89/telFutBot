@@ -158,7 +158,7 @@ if ($doubleOrNothingActive) {
 if ($kosAndShieldsActive) {
     arsort($sumKos);
     $numKos = 4;
-    $message .= "\n" . $kosMessage . "\n";
+    $message .= $kosMessage . "\n Amb més vots de KO:\n";
     foreach ($sumKos as $teamId => $votes) {
         $team = $teamsRepo->getTeamById($teamId);
         $message .= "-Equip KO: " . $team[0]['name'] . "\n";
