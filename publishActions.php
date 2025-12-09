@@ -68,7 +68,7 @@ foreach ($allActions as $action) {
         }
     } elseif ($action['type'] == 'kosAndShields') {
         $kosAndShieldsData = json_decode($action['data'], true);
-        foreach ($kosAndShieldsData['teams'] as $teamId) {
+        foreach ($kosAndShieldsData['kos'] as $teamId) {
             if (isset($sumVotes[$teamId])) {
                 $sumKos[$teamId] = $sumKos[$teamId] + 10;
             } else {
@@ -78,7 +78,7 @@ foreach ($allActions as $action) {
             $message .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
                         . $team[0]['name'] . "\n";
         }
-        if (count($kosAndShieldsData['teams']) > 0) {
+        if (count($kosAndShieldsData['kos']) > 0) {
             $message .= "\n";
         }
     } else {
