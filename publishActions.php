@@ -144,10 +144,14 @@ if ($doubleOrNothingActive) {
 
 if ($kosAndShieldsActive) {
     arsort($sumKos);
+    $numKos = 4;
     $message .= "\n";
     foreach ($sumKos as $teamId) {
         $team = $teamsRepo->getTeamById($teamId);
-        $message .= "-Equip KO: " . $team['name'] . "\n";
+        $message .= "-Equip KO: " . $team[0]['name'] . "\n";
+        if(--$numKos == 0) {
+            break;
+        }
     }
 }
 
