@@ -46,10 +46,13 @@ $kosAndShieldsActive = true;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
-    10 => 4,
-    98 => 3,
-    86 => 2,
-    1 => 1
+    10 => 7,
+    98 => 6,
+    86 => 5,
+    1 => 4,
+    4 => 3,
+    38 => 2,
+    22 => 1
 ];
 
 foreach ($allActions as $action) {
@@ -153,7 +156,7 @@ if ($doubleOrNothingActive) {
 }
 
 if ($kosAndShieldsActive) {
-    asort($sumKos);
+    arsort($sumKos);
     $numKos = 4;
     $message .= "\n" . $kosMessage . "\n";
     foreach ($sumKos as $teamId => $votes) {
