@@ -6,13 +6,6 @@ require_once("config/connection.php");
 require_once("models/team.php");
 require_once("models/teamResult.php");
 
-function getTeamId($teamName) {
-    $teamsRepo = new Team();
-    $team      = $teamsRepo->getTeamByName($teamName);
-
-    return $team ? (int)$team[0]['id'] : null;
-}
-
 function normalize($str) {
     // remove accents
     $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
@@ -67,8 +60,8 @@ function processMatch($line, $matchday, $competition) {
     $awayTeam  = trim($m[4]);
 
     // remove country names from teams, keep last word groups
-    $homeTeamClean = preg_replace('/\b(France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $homeTeam);
-    $awayTeamClean = preg_replace('/\b(France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $awayTeam);
+    $homeTeamClean = preg_replace('/\b(Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $homeTeam);
+    $awayTeamClean = preg_replace('/\b(Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $awayTeam);
 
     $homeTeamClean = trim($homeTeamClean);
     $awayTeamClean = trim($awayTeamClean);
@@ -102,16 +95,31 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Tottenham Hotspur England	3–0	Czech Republic Slavia Prague
+Young Boys Switzerland	1–0	France Lille
+Midtjylland Denmark	1–0	Belgium Genk
+Utrecht Netherlands	1–2	England Nottingham Forest
+Ferencváros Hungary	2–1	Scotland Rangers
+Dinamo Zagreb Croatia	1–3	Spain Real Betis
+Nice France	0–1	Portugal Braga
+Ludogorets Razgrad Bulgaria	3–3	Greece PAOK
+Sturm Graz Austria	0–1	Serbia Red Star Belgrade
+Celtic Scotland	0–3	Italy Roma
+Porto Portugal	2–1	Sweden Malmö FF
+Basel Switzerland	1–2	England Aston Villa
+FCSB Romania	4–3	Netherlands Feyenoord
+Lyon France	2–1	Netherlands Go Ahead Eagles
+Panathinaikos Greece	0–0	Czech Republic Viktoria Plzeň
+Celta Vigo Spain	1–2	Italy Bologna
+SC Freiburg Germany	1–0	Austria Red Bull Salzburg
+Brann Norway	0–4	Turkey Fenerbahçe
 TEXT;
 
 // SETTINGS
 $matchday    = 6;
-$competition = "CHL";
+$competition = "EUL";
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
         processMatch(trim($line), $matchday, $competition);
 }
-
 ?>

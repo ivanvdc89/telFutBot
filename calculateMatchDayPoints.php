@@ -18,7 +18,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 5;
+$matchDay                = 6;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
@@ -32,12 +32,14 @@ foreach ($actions as $action) {
         $players[$competition][] = $action['player_id'];
     }
 }
-$bestCHL = 9; // TODO: must be calculated dinamically
-$bestEUL = 13; // TODO: must be calculated dinamically
-$bestCOL = 10; // TODO: must be calculated dinamically
 
-$nothingTeams = [2, 49, 98];
-$doubleTeams  = [4, 38, 88];
+$bestCHL = 5; // TODO: must be calculated dinamically
+$bestEUL = 5; // TODO: must be calculated dinamically
+$bestCOL = 5; // TODO: must be calculated dinamically
+
+$nothingTeams = [];
+$doubleTeams  = [];
+$koTeams      = [1, 4, 10, 49];
 
 $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
@@ -50,6 +52,16 @@ foreach ($players as $player) {
     $eulWins      = 0;
     $colPoints    = 0;
     $colWins      = 0;
+
+    $shieldTeams = [];
+    $actions     = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'kosAndShields');
+    if(count($actions) > 0) {
+        $kosAndShieldsData = json_decode($actions[0]['data'], true);
+        foreach ($kosAndShieldsData['shields'] as $team) {
+            $shieldTeams[] = $team;
+        }
+    }
+
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
         $teamResult = $teamResultRepo->getResultByTeamIdAndMatchDay($team['id'], $matchDay);
@@ -66,6 +78,15 @@ foreach ($players as $player) {
         if (in_array($team['id'], $doubleTeams) ) {
             $action = ["type" => "dobleORes", "result" => "Doble"];
             $totalPoints = 2 * $teamResult[0]['points'];
+        }
+        if (in_array($team['id'], $koTeams) ) {
+            if (in_array($team['id'], $shieldTeams) ) {
+                $action = ["type" => "kosAmbEscuts", "result" => "Escut"];
+                $totalPoints = $teamResult[0]['points'];
+            } else {
+                $action = ["type" => "kosAmbEscuts", "result" => "KO"];
+                $totalPoints = 0;
+            }
         }
 
         if($teamResult[0]['competition'] === "CHL"){
