@@ -102,24 +102,7 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Kairat Kazakhstan	0–1	Greece Olympiacos
-Bayern Munich Germany	3–1	Portugal Sporting CP
-Monaco France	1–0	Turkey Galatasaray
-Atalanta Italy	2–1	England Chelsea
-Barcelona Spain	2–1	Germany Eintracht Frankfurt
-Inter Milan Italy	0–1	England Liverpool
-PSV Eindhoven Netherlands	2–3	Spain Atlético Madrid
-Union Saint-Gilloise Belgium	2–3	France Marseille
 Tottenham Hotspur England	3–0	Czech Republic Slavia Prague
-Qarabağ Azerbaijan	2–4	Netherlands Ajax
-Villarreal Spain	2–3	Denmark Copenhagen
-Athletic Bilbao Spain	0–0	France Paris Saint-Germain
-Bayer Leverkusen Germany	2–2	England Newcastle United
-Borussia Dortmund Germany	2–2	Norway Bodø/Glimt
-Club Brugge Belgium	0–3	England Arsenal
-Juventus Italy	2–0	Cyprus Pafos
-Real Madrid Spain	1–2	England Manchester City
-Benfica Portugal	2–0	Italy Napoli
 TEXT;
 
 // SETTINGS
