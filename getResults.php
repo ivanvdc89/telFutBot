@@ -13,28 +13,69 @@ function getTeamId($teamName) {
     return $team ? (int)$team[0]['id'] : null;
 }
 
+function normalize($str) {
+    // remove accents
+    $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
+    // lower, remove non-alpha chars, collapse spaces
+    $str = strtolower($str);
+    $str = preg_replace('/[^a-z0-9 ]/i', ' ', $str);
+    $str = preg_replace('/\s+/', ' ', $str);
+    return trim($str);
+}
+
+function findTeamId($name, $teams) {
+    $clean = normalize($name);
+
+    $bestId = null;
+    $bestScore = 0;
+
+    foreach ($teams as $t) {
+        $tClean = normalize($t["name"]);
+
+        // similarity score (0–100)
+        similar_text($clean, $tClean, $pct);
+
+        // also check levenshtein distance
+        $lev = levenshtein($clean, $tClean);
+        $levScore = max(0, 100 - $lev * 5);
+
+        // combined score
+        $score = ($pct * 0.7) + ($levScore * 0.3);
+
+        if ($score > $bestScore) {
+            $bestScore = $score;
+            $bestId = $t["id"];
+        }
+    }
+
+    // threshold avoids wrong matches
+    return ($bestScore >= 45) ? $bestId : null;
+}
+
 // Converts single match line to SQL inserts
 function processMatch($line, $matchday, $competition) {
-    // Split by score using regex
-    if (!preg_match('/^(.*?)\s+(\d+)[–-](\d+)\s+(.*)$/u', $line, $m)) {
-        echo "Cannot parse line: $line\n";
+    if (!preg_match('/(.+?)\s+(\d+)[–-](\d+)\s+(.+)/u', $line, $m)) {
+        echo "INVALID LINE: $line\n";
         return;
     }
 
-    $homeTeamRaw = trim($m[1]);
-    $homeGoals   = (int)$m[2];
-    $awayGoals   = (int)$m[3];
-    $awayTeamRaw = trim($m[4]);
+    $homeTeam  = trim($m[1]);
+    $homeGoals = (int)$m[2];
+    $awayGoals = (int)$m[3];
+    $awayTeam  = trim($m[4]);
 
-    // Extract only team name (first token before country)
-    $homeTeam   = strtok($homeTeamRaw, " ");
-    $awayTeam   = strtok($awayTeamRaw, " ");
+    // remove country names from teams, keep last word groups
+    $homeTeamClean = preg_replace('/\b(France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech.*|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $homeTeam);
+    $awayTeamClean = preg_replace('/\b(France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech.*|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $awayTeam);
 
-    $homeId = getTeamId($homeTeam);
-    $awayId = getTeamId($awayTeam);
+    $homeTeamClean = trim($homeTeamClean);
+    $awayTeamClean = trim($awayTeamClean);
+
+    $homeId = findTeamId($homeTeamClean);
+    $awayId = findTeamId($awayTeamClean);
 
     if (!$homeId || !$awayId) {
-        echo "❌ Missing team ID: $homeTeam or $awayTeam\n";
+        echo "❌ Missing team ID: $homeTeamClean or $awayTeamClean\n";
         return;
     }
 
