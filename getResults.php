@@ -60,8 +60,8 @@ function processMatch($line, $matchday, $competition) {
     $awayTeam  = trim($m[4]);
 
     // remove country names from teams, keep last word groups
-    $homeTeamClean = preg_replace('/\b(Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $homeTeam);
-    $awayTeamClean = preg_replace('/\b(Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $awayTeam);
+    $homeTeamClean = preg_replace('/\b(Kosovo|Bosnia and Herzegovina|Republic of Ireland|Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $homeTeam);
+    $awayTeamClean = preg_replace('/\b(Kosovo|Bosnia and Herzegovina|Republic of Ireland|Norway|Serbia|Bulgaria|Portugal|Scotland|Hungary|Belgium|Denmark|France|Netherlands|Ireland|Malta|Gibraltar|Bosnia.*|Sweden|Poland|Switzerland|Cyprus|Ukraine|Austria|Czech Republic|Slovenia|Romania|Germany|Slovakia|Spain|Armenia|Italy|Greece|Iceland|Turkey|North Macedonia|Croatia|Finland|England)\b/i', '', $awayTeam);
 
     $homeTeamClean = trim($homeTeamClean);
     $awayTeamClean = trim($awayTeamClean);
@@ -76,9 +76,9 @@ function processMatch($line, $matchday, $competition) {
 
     // Points
     if ($homeGoals > $awayGoals) {
-        $homePts = 3; $awayPts = 0;
+        $homePts = 4; $awayPts = 0;
     } elseif ($awayGoals > $homeGoals) {
-        $homePts = 0; $awayPts = 3;
+        $homePts = 0; $awayPts = 4;
     } else {
         $homePts = 1; $awayPts = 1;
     }
@@ -95,28 +95,29 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Young Boys Switzerland	1–0	France Lille
-Midtjylland Denmark	1–0	Belgium Genk
-Utrecht Netherlands	1–2	England Nottingham Forest
-Ferencváros Hungary	2–1	Scotland Rangers
-Dinamo Zagreb Croatia	1–3	Spain Real Betis
-Nice France	0–1	Portugal Braga
-Ludogorets Razgrad Bulgaria	3–3	Greece PAOK
-Sturm Graz Austria	0–1	Serbia Red Star Belgrade
-Celtic Scotland	0–3	Italy Roma
-Porto Portugal	2–1	Sweden Malmö FF
-Basel Switzerland	1–2	England Aston Villa
-FCSB Romania	4–3	Netherlands Feyenoord
-Lyon France	2–1	Netherlands Go Ahead Eagles
-Panathinaikos Greece	0–0	Czech Republic Viktoria Plzeň
-Celta Vigo Spain	1–2	Italy Bologna
-SC Freiburg Germany	1–0	Austria Red Bull Salzburg
-Brann Norway	0–4	Turkey Fenerbahçe
+Fiorentina Italy	2–1	Ukraine Dynamo Kyiv
+BK Häcken Sweden	1–1	Cyprus AEK Larnaca
+Breiðablik Iceland	3–1	Republic of Ireland Shamrock Rovers
+Drita Kosovo	0–3	Netherlands AZ
+Noah Armenia	2–1	Poland Legia Warsaw
+Jagiellonia Białystok Poland	1–2	Spain Rayo Vallecano
+Shkëndija North Macedonia	2–0	Slovakia Slovan Bratislava
+Samsunspor Turkey	1–2	Greece AEK Athens
+Universitatea Craiova Romania	1–2	Czech Republic Sparta Prague
+Aberdeen Scotland	0–1	France Strasbourg
+Hamrun Spartans Malta	0–2	Ukraine Shakhtar Donetsk
+Rijeka Croatia	3–0	Slovenia Celje
+Lech Poznań Poland	1–1	Germany Mainz 05
+KuPS Finland	0–0	Switzerland Lausanne-Sport
+Lincoln Red Imps Gibraltar	2–1	Czech Republic Sigma Olomouc
+Raków Częstochowa Poland	1–0	Bosnia and Herzegovina Zrinjski Mostar
+Shelbourne Republic of Ireland	0–3	England Crystal Palace
+Rapid Wien Austria	0–1	Cyprus Omonia
 TEXT;
 
 // SETTINGS
 $matchday    = 6;
-$competition = "EUL";
+$competition = "COL";
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
