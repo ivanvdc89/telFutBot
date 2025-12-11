@@ -10,5 +10,30 @@ class TeamResult extends Connection {
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
+
+    public function addTeamResult(
+        int $teamId,
+        int $teamPts,
+        int $matchday,
+        string $competition
+    ) {
+        try {
+            $connection = parent::connect();
+
+            $sql = "INSERT INTO team_results (team_id, points, match_day, competition) VALUES (:team_id, :points, :match_day, :competition)";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':team_id', $teamId, PDO::PARAM_INT);
+            $stmt->bindValue(':points', $teamPts, PDO::PARAM_INT);
+            $stmt->bindValue(':match_day', $matchday, PDO::PARAM_INT);
+            $stmt->bindValue(':competition', $competition, PDO::PARAM_STR);
+            $stmt->execute();
+
+            return $connection->lastInsertId();
+
+        } catch (PDOException $e) {
+            error_log("DB insert error: " . $e->getMessage());
+            return false;
+        }
+    }
 }
 ?>

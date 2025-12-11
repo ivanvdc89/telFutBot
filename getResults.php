@@ -6,9 +6,6 @@ require_once("config/connection.php");
 require_once("models/team.php");
 require_once("models/teamResult.php");
 
-$playersRepo    = new Player();
-$teamResultRepo = new TeamResult();
-
 function getTeamId($teamName) {
     $teamsRepo = new Team();
     $team      = $teamsRepo->getTeamByName($teamName);
@@ -53,6 +50,11 @@ function processMatch($line, $matchday, $competition) {
     // Output SQL
     echo "INSERT INTO team_results VALUES (NULL, $homeId, $homePts, $matchday, '$competition');\n";
     echo "INSERT INTO team_results VALUES (NULL, $awayId, $awayPts, $matchday, '$competition');\n";
+
+    $teamResultRepo = new TeamResult();
+    $teamResultRepo->addTeamResult($homeId, $homePts, $matchday, $competition);
+    $teamResultRepo->addTeamResult($awayId, $awayPts, $matchday, $competition);
+    echo "✅ Processed: $homeTeam - $awayTeam\n";
 }
 
 // YOUR INPUT RESULTS
