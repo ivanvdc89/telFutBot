@@ -23,8 +23,10 @@ function normalize($str) {
     return trim($str);
 }
 
-function findTeamId($name, $teams) {
-    $clean = normalize($name);
+function findTeamId($name) {
+    $teamsRepo = new Team();
+    $teams     = $teamsRepo->getAllTeams();
+    $clean     = normalize($name);
 
     $bestId = null;
     $bestScore = 0;

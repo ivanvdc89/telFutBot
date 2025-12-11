@@ -1,5 +1,14 @@
 <?php
 class Team extends Connection {
+    public function getAllTeams(){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from teams;";
+        $sql=$connection->prepare($sql);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getTeamsByPlayerId($playerId){
         $connection= parent::connect();
         parent::set_names();
