@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 6;
-$actionsActivated = false;
+$matchDay = 7;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -407,7 +407,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/kos', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
+            [['/substitució', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -634,6 +634,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/kos') {
+        $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
