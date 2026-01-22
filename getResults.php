@@ -76,9 +76,9 @@ function processMatch($line, $matchday, $competition) {
 
     // Points
     if ($homeGoals > $awayGoals) {
-        $homePts = 4; $awayPts = 0;
+        $homePts = 3; $awayPts = 0;
     } elseif ($awayGoals > $homeGoals) {
-        $homePts = 0; $awayPts = 4;
+        $homePts = 0; $awayPts = 3;
     } else {
         $homePts = 1; $awayPts = 1;
     }
@@ -95,29 +95,30 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Fiorentina Italy	2–1	Ukraine Dynamo Kyiv
-BK Häcken Sweden	1–1	Cyprus AEK Larnaca
-Breiðablik Iceland	3–1	Republic of Ireland Shamrock Rovers
-Drita Kosovo	0–3	Netherlands AZ
-Noah Armenia	2–1	Poland Legia Warsaw
-Jagiellonia Białystok Poland	1–2	Spain Rayo Vallecano
-Shkëndija North Macedonia	2–0	Slovakia Slovan Bratislava
-Samsunspor Turkey	1–2	Greece AEK Athens
-Universitatea Craiova Romania	1–2	Czech Republic Sparta Prague
-Aberdeen Scotland	0–1	France Strasbourg
-Hamrun Spartans Malta	0–2	Ukraine Shakhtar Donetsk
-Rijeka Croatia	3–0	Slovenia Celje
-Lech Poznań Poland	1–1	Germany Mainz 05
-KuPS Finland	0–0	Switzerland Lausanne-Sport
-Lincoln Red Imps Gibraltar	2–1	Czech Republic Sigma Olomouc
-Raków Częstochowa Poland	1–0	Bosnia and Herzegovina Zrinjski Mostar
-Shelbourne Republic of Ireland	0–3	England Crystal Palace
-Rapid Wien Austria	0–1	Cyprus Omonia
+Kairat Kazakhstan	1–4	Belgium Club Brugge
+Bodø/Glimt Norway	3–1	England Manchester City
+Copenhagen Denmark	1–1	Italy Napoli
+Inter Milan Italy	1–3	England Arsenal
+Olympiacos Greece	2–0	Germany Bayer Leverkusen
+Real Madrid Spain	6–1	France Monaco
+Sporting CP Portugal	2–1	France Paris Saint-Germain
+Tottenham Hotspur England	2–0	Germany Borussia Dortmund
+Villarreal Spain	1–2	Netherlands Ajax
+Galatasaray Turkey	1–1	Spain Atlético Madrid
+Qarabağ Azerbaijan	3–2	Germany Eintracht Frankfurt
+Atalanta Italy	2–3	Spain Athletic Bilbao
+Chelsea England	1–0	Cyprus Pafos
+Bayern Munich Germany	2–0	Belgium Union Saint-Gilloise
+Juventus Italy	2–0	Portugal Benfica
+Newcastle United England	3–0	Netherlands PSV Eindhoven
+Marseille France	0–3	England Liverpool
+Slavia Prague Czech Republic	2–4	Spain Barcelona
 TEXT;
 
 // SETTINGS
-$matchday    = 6;
+$matchday    = 7;
 $competition = "COL";
+$competition = "CHL";
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
