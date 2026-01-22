@@ -76,9 +76,9 @@ function processMatch($line, $matchday, $competition) {
 
     // Points
     if ($homeGoals > $awayGoals) {
-        $homePts = 3; $awayPts = 0;
+        $homePts = 4; $awayPts = 0;
     } elseif ($awayGoals > $homeGoals) {
-        $homePts = 0; $awayPts = 3;
+        $homePts = 0; $awayPts = 4;
     } else {
         $homePts = 1; $awayPts = 1;
     }
@@ -95,31 +95,31 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Bologna Italy	2–2	Scotland Celtic
-Young Boys Switzerland	0–1	France Lyon
-Viktoria Plzeň Czech Republic	1–1	Portugal Porto
-Fenerbahçe Turkey	0–1	England Aston Villa
-Feyenoord Netherlands	3–0	Austria Sturm Graz
-Malmö FF Sweden	0–1	Serbia Red Star Belgrade
-PAOK Greece	2–0	Spain Real Betis
-SC Freiburg Germany	1–0	Israel Maccabi Tel Aviv
-Brann Norway	3–3	Denmark Midtjylland
-Roma Italy	2–0	Germany VfB Stuttgart
-Red Bull Salzburg Austria	3–1	Switzerland Basel
-Ferencváros Hungary	1–1	Greece Panathinaikos
-Dinamo Zagreb Croatia	4–1	Romania FCSB
-Nice France	3–0	Netherlands Go Ahead Eagles
-Rangers Scotland	1–0	Bulgaria Ludogorets Razgrad
-Celta Vigo Spain	2–1	France Lille
-Braga Portugal	1–0	England Nottingham Forest
-Utrecht Netherlands	0-2	Belgium Genk
+Mainz 05 Germany	2–0	Turkey Samsunspor
+Sparta Prague Czech Republic	3–0	Scotland Aberdeen
+AEK Athens Greece	3–2	Romania Universitatea Craiova
+AEK Larnaca Cyprus	1–0	North Macedonia Shkëndija
+AZ Netherlands	0–0	Poland Jagiellonia Białystok
+Crystal Palace England	2–2	Finland KuPS
+Shakhtar Donetsk Ukraine	0–0	Croatia Rijeka
+Dynamo Kyiv Ukraine	2–0	Armenia Noah
+Lausanne-Sport Switzerland	1–0	Italy Fiorentina
+Zrinjski Mostar Bosnia and Herzegovina	1–1	Austria Rapid Wien
+Legia Warsaw Poland	4–1	Gibraltar Lincoln Red Imps
+Celje Slovenia	0–0	Republic of Ireland Shelbourne
+Omonia Cyprus	0–1	Poland Raków Częstochowa
+Strasbourg France	3–1	Iceland Breiðablik
+Rayo Vallecano Spain	3–0	Kosovo Drita
+Shamrock Rovers Republic of Ireland	3–1	Malta Hamrun Spartans
+Sigma Olomouc Czech Republic	1–2	Poland Lech Poznań
+Slovan Bratislava Slovakia	1–0	Sweden BK Häcken
 TEXT;
 
 // SETTINGS
 $matchday    = 7;
-$competition = "COL";
 $competition = "CHL";
 $competition = "EUL";
+$competition = "COL";
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
