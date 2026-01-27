@@ -25,7 +25,7 @@ $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
 $matchDay = 8;
-$actionsActivated = false;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
