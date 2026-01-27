@@ -465,6 +465,10 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 }
             }
         }
+
+        if (count($row) != 0) {
+            $rows[] = $row;
+        }
         $keyboard = new ReplyKeyboardMarkup($rows, true, true);
 
         $telegram->sendMessage(
