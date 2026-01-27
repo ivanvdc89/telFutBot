@@ -24,7 +24,7 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 7;
+$matchDay = 8;
 $actionsActivated = false;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
@@ -457,10 +457,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $rows        = [];
         $row         = [];
         foreach ($playerTeams as $team) {
-            $row[] = '/out ' . $team['name'];
-            if(count($row) == 3) {
-                $rows[] = $row;
-                $row = [];
+            if ($team['competition'] != 'COL') {
+                $row[] = '/out ' . $team['name'];
+                if (count($row) == 3) {
+                    $rows[] = $row;
+                    $row    = [];
+                }
             }
         }
         $keyboard = new ReplyKeyboardMarkup($rows, true, true);
@@ -971,13 +973,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'badDay', json_encode($badDayList));
                 $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/malDia Activar CHL', '/malDia Activar EUL', '/malDia Activar COL']], true, true);
+                    new ReplyKeyboardMarkup([['/malDia Activar CHL', '/malDia Activar EUL']], true, true);
             }
 
             $telegram->sendMessage(
@@ -1003,9 +1004,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
                 $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/malDia ' . (in_array('COL', $badDayList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
 
                 $messageClosure = "\nActivar o desactivar:";
@@ -1013,8 +1013,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $message = "Actualment tens el #malDia:\n" .
                 "- Champions League: " . (in_array('CHL', $badDayList) ? "activat\n" : "desactivat\n") .
-                "- Europa League: " . (in_array('EUL', $badDayList) ? "activat\n" : "desactivat\n") .
-                "- Conference League: " . (in_array('COL', $badDayList) ? "activat\n" : "desactivat\n");
+                "- Europa League: " . (in_array('EUL', $badDayList) ? "activat\n" : "desactivat\n");
 
             $telegram->sendMessage(
                 $chatId,
@@ -1028,7 +1027,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/malDia Activar CHL', '/malDia Activar EUL', '/malDia Activar COL']], true, true
+            [['/malDia Activar CHL', '/malDia Activar EUL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -1056,13 +1055,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'iAmTheBest', json_encode($iAmTheBestList));
                 $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/socElMillor Activar CHL', '/socElMillor Activar EUL', '/socElMillor Activar COL']], true, true);
+                    new ReplyKeyboardMarkup([['/socElMillor Activar CHL', '/socElMillor Activar EUL']], true, true);
             }
 
             $telegram->sendMessage(
@@ -1088,9 +1086,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
                 $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/socElMillor ' . (in_array('COL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
 
                 $messageClosure = "\nActivar o desactivar:";
@@ -1098,8 +1095,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $message = "Actualment tens el #socElMillor:\n" .
                 "- Champions League: " . (in_array('CHL', $iAmTheBestList) ? "activat\n" : "desactivat\n") .
-                "- Europa League: " . (in_array('EUL', $iAmTheBestList) ? "activat\n" : "desactivat\n") .
-                "- Conference League: " . (in_array('COL', $iAmTheBestList) ? "activat\n" : "desactivat\n");
+                "- Europa League: " . (in_array('EUL', $iAmTheBestList) ? "activat\n" : "desactivat\n");
 
             $telegram->sendMessage(
                 $chatId,
@@ -1113,7 +1109,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/socElMillor Activar CHL', '/socElMillor Activar EUL', '/socElMillor Activar COL']], true, true
+            [['/socElMillor Activar CHL', '/socElMillor Activar EUL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -1141,13 +1137,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'winOrDie', json_encode($winOrDietList));
                 $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
             } else {
                 $keyboard =
-                    new ReplyKeyboardMarkup([['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']], true, true);
+                    new ReplyKeyboardMarkup([['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL']], true, true);
             }
 
             $telegram->sendMessage(
@@ -1173,9 +1168,8 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
                 $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
                 $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $butCOL = '/guanyarOMorir ' . (in_array('COL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' COL';
                 $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL, $butCOL]
+                    [$butCHL, $butEUL]
                 ], true, true);
 
                 $messageClosure = "\nActivar o desactivar:";
@@ -1183,8 +1177,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
             $message = "Actualment tens el #guanyarOMorir:\n" .
                        "- Champions League: " . (in_array('CHL', $winOrDietList) ? "activat\n" : "desactivat\n") .
-                       "- Europa League: " . (in_array('EUL', $winOrDietList) ? "activat\n" : "desactivat\n") .
-                       "- Conference League: " . (in_array('COL', $winOrDietList) ? "activat\n" : "desactivat\n");
+                       "- Europa League: " . (in_array('EUL', $winOrDietList) ? "activat\n" : "desactivat\n");
 
             $telegram->sendMessage(
                 $chatId,
@@ -1198,7 +1191,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $keyboard = new ReplyKeyboardMarkup(
-            [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']], true, true
+            [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL']], true, true
         );
         $telegram->sendMessage(
             $chatId,
