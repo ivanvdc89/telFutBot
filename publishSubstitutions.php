@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $substitutionRepo = new Substitution();
 
-$matchDay    = 5;
+$matchDay    = 8;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 $message     = "Canvis realitzats:\n";
