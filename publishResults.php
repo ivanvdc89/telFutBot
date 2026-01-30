@@ -78,7 +78,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                && $allMatchDayTeamPoint['action'] != '[]'
                && $allMatchDayTeamPoint['action'] != ''
             ) {
-                $actionInfo = json_decode($allMatchDayPlayerPoint['chl_action'], true);
+                $actionInfo = json_decode($allMatchDayTeamPoint['action'], true);
                 $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
             } else {
                 $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
