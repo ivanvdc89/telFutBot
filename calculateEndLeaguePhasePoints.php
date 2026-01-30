@@ -36,7 +36,8 @@ foreach ($players as $player) {
     $colPoints    = 0;
 
     foreach ($playerTeams as $team) {
-        $pot = $team['pot'];
+        $pot    = $team['pot'];
+        $action = [];
         if (in_array($team['id'], $eliminated)) {
             $points = 0;
             $action = ["type" => "posició", "result" => "eliminat"];
