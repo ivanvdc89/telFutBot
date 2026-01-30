@@ -74,7 +74,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
         if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
             $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
         } else {
-            $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+            if (!is_null($allMatchDayTeamPoint['action'])
+               && $allMatchDayTeamPoint['action'] != '[]'
+               && $allMatchDayTeamPoint['action'] != ''
+            ) {
+                $actionInfo = json_decode($allMatchDayPlayerPoint['chl_action'], true);
+                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
+            } else {
+                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+            }
         }
         if($allMatchDayTeamPoint['pot'] == 4) {
             if(!is_null($allMatchDayPlayerPoint['chl_action'])
