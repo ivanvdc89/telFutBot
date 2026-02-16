@@ -437,6 +437,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
             $oldTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['old_team_id']);
+            if (!isset($oldTeam)) {
+                $oldTeam[0]['name'] = 'Empty';
+            }
             $newTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['new_team_id']);
             $message = "Ja tens una substitució pendent:\n";
             $message .= $oldTeam[0]['name'] . " -> " . $newTeam[0]['name'] . "\n";
