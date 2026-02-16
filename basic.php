@@ -475,7 +475,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
                 $rows[] = $row;
                 $row    = [];
             }
-        }}
+        }
 
         if (count($row) != 0) {
             $rows[] = $row;
