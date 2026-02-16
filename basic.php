@@ -1236,9 +1236,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
         if (str_contains($args[1], '_Pot_')) {
             if ($args[1] == 'CHL_Pot_1' || $args[1] == 'CHL_Pot_2' || $args[1] == 'CHL_Pot_3' || $args[1] == 'CHL_Pot_4') {
-                $oldTeamPot = str_replace('COL_Pot_', '', $args[1]);
+                $oldTeamPot = str_replace('CHL_Pot_', '', $args[1]);
             } elseif ($args[1] == 'EUL_Pot_1' || $args[1] == 'EUL_Pot_2' || $args[1] == 'EUL_Pot_3' || $args[1] == 'EUL_Pot_4') {
-                $oldTeamPot = str_replace('COL_Pot_', '', $args[1]) + 4;
+                $oldTeamPot = str_replace('EUL_Pot_', '', $args[1]) + 4;
             } elseif ($args[1] == 'COL_Pot_1' || $args[1] == 'COL_Pot_2' || $args[1] == 'COL_Pot_3' || $args[1] == 'COL_Pot_4') {
                 $oldTeamPot = str_replace('COL_Pot_', '', $args[1]) + 8;
             } else  {
