@@ -459,13 +459,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $numPot      = 1;
         foreach ($playerTeams as $team) {
             if ($team['pot'] != $numPot) {
-                if ($numPot < 5) {
-                    $row[] = '/out CHL_Pot_' . ($numPot % 4 == 0 ? 4 : $numPot % 4);
-                } elseif ($numPot < 9) {
-                    $row[] = '/out EUL_Pot_' . ($numPot % 4 == 0 ? 4 : $numPot % 4);
-                } else {
-                    $row[] = '/out COL_Pot_' . ($numPot % 4 == 0 ? 4 : $numPot % 4);
-                }
+                $row[] = '/out ' . $team['competition'] . '_Pot_' . ($numPot % 4 == 0 ? 4 : $numPot % 4);
             } else {
                 $row[] = '/out ' . $team['name'];
             }
