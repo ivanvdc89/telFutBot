@@ -437,7 +437,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
         if (is_array($pendingSubstitutions) && count($pendingSubstitutions) > 0) {
             $oldTeam = $teamsRepo->getTeamById($pendingSubstitutions[0]['old_team_id']);
-            if (!isset($oldTeam)) {
+            if (!isset($oldTeam[0])) {
                 $oldTeamName = 'Empty';
             } else {
                 $oldTeamName = $oldTeam[0]['name'];
