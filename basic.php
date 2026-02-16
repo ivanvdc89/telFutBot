@@ -35,7 +35,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
 
     if ($command === '/inici' || $command === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/normes', '/accions'], ['/data', '/configuració']],
+            [['/accions', '/data', '/equips'], ['/normes', '/configuració']],
             true,
             true
         );
