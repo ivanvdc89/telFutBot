@@ -1234,6 +1234,54 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
             exit;
         }
 
+        if (str_contains($args[1], '_Pot_')) {
+            if ($args[1] == 'CHL_Pot_1' || $args[1] == 'CHL_Pot_2' || $args[1] == 'CHL_Pot_3' || $args[1] == 'CHL_Pot_4') {
+                $oldTeamPot = str_replace('COL_Pot_', '', $args[1]);
+            } elseif ($args[1] == 'EUL_Pot_1' || $args[1] == 'EUL_Pot_2' || $args[1] == 'EUL_Pot_3' || $args[1] == 'EUL_Pot_4') {
+                $oldTeamPot = str_replace('COL_Pot_', '', $args[1]) + 4;
+            } elseif ($args[1] == 'COL_Pot_1' || $args[1] == 'COL_Pot_2' || $args[1] == 'COL_Pot_3' || $args[1] == 'COL_Pot_4') {
+                $oldTeamPot = str_replace('COL_Pot_', '', $args[1]) + 8;
+            } else  {
+                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                exit;
+            }
+
+            $playerTeams           = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+            $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $playerTeams);
+            $possibleNewTeams      = $teamsRepo->getTeamsByPot($oldTeamPot);
+            $possibleNewTeams      = array_filter($possibleNewTeams, function($team) use ($alreadyAddedCountries) {
+                return !in_array($team['country'], $alreadyAddedCountries);
+            });
+
+            if (count($possibleNewTeams) == 0) {
+                $telegram->sendMessage($chatId, "ERROR, no hi ha possibilitats de substitució");
+                exit;
+            }
+
+            $rows = [];
+            $row = [];
+            foreach ($possibleNewTeams as $team) {
+                $row[] = '/in ' . $team['name'];
+                if(count($row) == 3) {
+                    $rows[] = $row;
+                    $row = [];
+                }
+            }
+            if (count($row) != 0) {
+                $rows[] = $row;
+            }
+            $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+            $telegram->sendMessage(
+                $chatId,
+                "Nou equip:",
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
         $oldTeam = $teamsRepo->getTeamByName($args[1]);
         if (!is_array($oldTeam) || count($oldTeam) == 0) {
             $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
