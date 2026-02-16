@@ -155,36 +155,28 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/equips' || $command === '/teams') {
-        $message = "No disponible";
-        $telegram->sendMessage($chatId, $message);
-        exit;
         $player = $playersRepo->getPlayerByChatId($chatId);
         if (is_array($player) && count($player) > 0){
-            if (count($player)!=1) {
-                $message = "ERROR, avisa al admin";
-                $telegram->sendMessage($chatId, $message);
-                exit;
-            } else {
-                $playerId              = $player[0]['id'];
-                $alreadyAddedTeams     = $teamsRepo->getTeamsByPlayerId($playerId);
-                $alreadyAddedPots      = array_map(function($team) { return $team['pot']; }, $alreadyAddedTeams);
-                $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
+            $playerId              = $player[0]['id'];
+            $alreadyAddedTeams     = $teamsRepo->getTeamsByPlayerId($playerId);
+            $alreadyAddedPots      = array_map(function($team) { return $team['pot']; }, $alreadyAddedTeams);
+            $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
 
-                $remainingPots = array_diff($pots, $alreadyAddedPots);
-                if (count($remainingPots) == 0) {
-                    $message = '';
-                    foreach ($alreadyAddedTeams as $team) {
-                        $pot = $potNumber[$team['pot']];
-                        $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
-                    }
-                    $telegram->sendMessage($chatId, $message);
-                    exit;
-                }
-                $nextPot = min($remainingPots);
+            $remainingPots = array_diff($pots, $alreadyAddedPots);
+            //if (count($remainingPots) == 0) {
+            $message = '';
+            foreach ($alreadyAddedTeams as $team) {
+                $pot = $potNumber[$team['pot']];
+                $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
             }
+            $telegram->sendMessage($chatId, $message);
+            exit;
+            //}
+            //$nextPot = min($remainingPots);
         } else {
             $playerId = $playersRepo->createPlayer($chatId);
             $nextPot = 1;
+            $alreadyAddedCountries = [];
         }
 
         $nextPotTeams = $teamsRepo->getTeamsByPot($nextPot);
