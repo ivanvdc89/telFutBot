@@ -1354,6 +1354,12 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         }
 
         $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $oldTeam = [
+            'id' => 0,
+            'name' => 'Empty',
+            'pot' => $newTeam[0]['pot'],
+            'country' => 0
+        ];
         foreach ($playerTeams as $team) {
             if ($team['pot'] == $newTeam[0]['pot']) {
                 $oldTeam = $team;
