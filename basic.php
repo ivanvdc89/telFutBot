@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 8;
-$actionsActivated = false;
+$matchDay = 10;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -407,7 +407,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/malDia'], ['/guanyarOMorir', '/socElMillor']], true, true
+            [['/substitució', '/kos']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -457,12 +457,10 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $rows        = [];
         $row         = [];
         foreach ($playerTeams as $team) {
-            if ($team['competition'] != 'COL') {
-                $row[] = '/out ' . $team['name'];
-                if (count($row) == 3) {
-                    $rows[] = $row;
-                    $row    = [];
-                }
+            $row[] = '/out ' . $team['name'];
+            if (count($row) == 3) {
+                $rows[] = $row;
+                $row    = [];
             }
         }
 
@@ -640,7 +638,6 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/kos') {
-        $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
@@ -963,6 +960,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/malDia') {
+        $actionsActivated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
 
@@ -1045,6 +1043,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/socElMillor') {
+        $actionsActivated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
 
@@ -1127,6 +1126,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/guanyarOMorir') {
+        $actionsActivated = false;
         $player  = $playersRepo->getPlayerByChatId($chatId);
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'winOrDie');
 
