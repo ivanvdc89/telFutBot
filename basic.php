@@ -456,19 +456,26 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
         $rows        = [];
         $row         = [];
-        $numPot      = 1;
+        $emptyPots   = [
+            '/out CHL_Pot_1', '/out CHL_Pot_2', '/out CHL_Pot_3', '/out CHL_Pot_4',
+            '/out EUL_Pot_1', '/out EUL_Pot_2', '/out EUL_Pot_3', '/out EUL_Pot_4',
+            '/out COL_Pot_1', '/out COL_Pot_2', '/out COL_Pot_3', '/out COL_Pot_4'
+        ];
         foreach ($playerTeams as $team) {
-            if ($team['pot'] != $numPot) {
-                $row[] = '/out ' . $team['competition'] . '_Pot_' . ($numPot % 4 == 0 ? 4 : $numPot % 4);
-            } else {
-                $row[] = '/out ' . $team['name'];
-            }
+            $row[] = '/out ' . $team['name'];
+            unset($emptyPots[$team['pot']-1]);
             if (count($row) == 3) {
                 $rows[] = $row;
                 $row    = [];
             }
-            $numPot++;
         }
+        foreach ($emptyPots as $pot) {
+            $row[] = $pot;
+            if (count($row) == 3) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }}
 
         if (count($row) != 0) {
             $rows[] = $row;
