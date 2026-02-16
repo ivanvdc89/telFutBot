@@ -35,7 +35,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
 
     if ($command === '/inici' || $command === '/start') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/normes', '/equips', '/accions'], ['/data', '/configuració']],
+            [['/normes', '/accions'], ['/data', '/configuració']],
             true,
             true
         );
@@ -155,6 +155,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/equips' || $command === '/teams') {
+        $message = "No disponible";
+        $telegram->sendMessage($chatId, $message);
+        exit;
         $player = $playersRepo->getPlayerByChatId($chatId);
         if (is_array($player) && count($player) > 0){
             if (count($player)!=1) {
