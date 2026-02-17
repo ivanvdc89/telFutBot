@@ -25,7 +25,7 @@ $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
 $matchDay = 11;
-$actionsActivated = false;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -149,6 +149,21 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 -Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre.
 -Amb només un escut l'equip ja està totalment protegit i sumarà punts.
 -No cal posar més d'un escut al mateix equip.");
+
+                $telegram->sendMessage($chatId, "Norma #segurQuePasse:
+-Depenent de la nostra posició tenim més o menys punts disponibles. 1 punt el primer i després cada 10 punts de diferència el jugador té un punt més. Com a màxim 4.
+-S'ha d'elegir quin dels nostres equips passaran de ronda. Si se classifique se sumaran, a part dels punts del partit, els punts que te toquen.
+-Depenent del partit d'anada, si s'acerte que passarà, se sumaran més punts, 1 punt per cada gol de desventaja que porten del primer partit. 1 punt menys per cada gol de ventaja que porten del primer partit.
+
+Per exemple, vas últim i te correspón 4 punts i marques que el equip1 (va perdre 1-0) passarà de ronda:
+-Si no passe sumes els punts normal del partit (0, 1 o 3)
+-Si passe, a més dels punts del partit, sumaràs els 4 punts que has apostat + 1 perqué tenie un gol de desventaja del primer partit.
+
+Altre exemple, vas primer i te correspón 1 punt i marques que el equip2 (va empatar 1-1) passarà de ronda:
+-Si no passe sumes els punts normal del partit (0, 1 o 3)
+-Si passe, a més dels punts del partit, sumaràs el punt que s'ha apostat + 0 perqué no tenie cap gol de desventaja del primer partit.
+
+Interese apostar per equips amb mal resultat, si han guanyat el primer partit per bastants gols pot ser no te compense ja que els gols de ventaja resten.");
                 exit;
             }
         }
@@ -402,7 +417,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/kos']], true, true
+            [['/substitució', '/segurQuePasse']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -651,6 +666,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
     }
 
     elseif ($command === '/kos') {
+        $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
@@ -1213,6 +1229,79 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
         $telegram->sendMessage(
             $chatId,
             "#guanyarOMorir activar o desactivar:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
+    elseif ($command === '/segurQuePasse') {
+        //$actionsActivated = false;
+        if (!$actionsActivated) {
+            $telegram->sendMessage($chatId, "No disponible");
+            exit;
+        }
+        $player  = $playersRepo->getPlayerByChatId($chatId);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'sureToBeQualified');
+
+        if (is_array($actions) && count($actions) == 1) {
+            $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
+            $sureToBeQualifiedInfo = json_decode($actions[0]['data'], true);
+            $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo);
+            $message = "Actualment tens el activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        } elseif ($args[1] == 'Borrar') {
+            $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
+        } elseif (isset($args[1])) {
+            $team = $teamsRepo->getTeamByName($args[1]);
+            if (!is_array($team) || count($team) == 0) {
+                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                exit;
+            }
+            $actionsRepo->addAction($player[0]['id'], $matchDay, 'sureToBeQualified', json_encode([$team[0]['id']]));
+
+            $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                null
+            );
+            exit;
+        }
+
+        $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
+        $rows        = [];
+        $row         = [];
+        foreach ($playerTeams as $team) {
+            $row[] = '/segurQuePasse ' . $team['name'];
+            if (count($row) == 3) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }
+        if (count($row) != 0) {
+            $rows[] = $row;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $telegram->sendMessage(
+            $chatId,
+            "#segurQuePasse activar amb quin equip:",
             false,
             null,
             null,
