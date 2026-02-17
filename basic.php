@@ -1273,7 +1273,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
                     $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
                     exit;
                 }
-                $actionsRepo->updateAction($player[0]['id'], json_encode([$team[0]['id']]));
+                $actionsRepo->updateAction($actions[0]['id'], json_encode([$team[0]['id']]));
 
                 $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
 
