@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 8;
+$matchDay    = 10;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -42,17 +42,14 @@ $sumVotes = [
     88 => 1,
 ];
 
-$kosAndShieldsActive = false;
+$kosAndShieldsActive = true;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
-    10 => 7,
-    98 => 6,
-    86 => 5,
-    1 => 4,
-    4 => 3,
-    38 => 2,
-    22 => 1
+    70 => 4,
+    2 => 3,
+    6 => 2,
+    63 => 1
 ];
 
 foreach ($allActions as $action) {

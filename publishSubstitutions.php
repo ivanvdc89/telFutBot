@@ -17,8 +17,8 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $substitutionRepo = new Substitution();
 
-$matchDay    = 8;
-$group       = $groupRepo->getGroup(1);
+$matchDay    = 10;
+$group       = $groupRepo->getGroup(2);
 $groupChatId = $group[0]['chat_id'];
 $message     = "Canvis realitzats:\n";
 
@@ -29,7 +29,13 @@ foreach ($allSubstitutions as $substitution) {
     $oldTeam = $teamsRepo->getTeamById($substitution['old_team_id']);
     $newTeam = $teamsRepo->getTeamById($substitution['new_team_id']);
 
-    $message .= "-" . $player[0]['name'] . ": " . $oldTeam[0]['name'] . " -> " . $newTeam[0]['name'] . "\n";
+    if (isset($oldTeam[0])) {
+        $oldTeamName = $oldTeam[0]['name'];
+    } else {
+        $oldTeamName = "Empty";
+    }
+
+    $message .= "-" . $player[0]['name'] . ": " . $oldTeamName . " -> " . $newTeam[0]['name'] . "\n";
     $message .= "Cost " . $substitution['points_cost'] . "\n\n";
     $substitutionRepo->markSubstitutionAsExecuted($substitution['id']);
     $teamsRepo->changePlayerTeam($substitution['player_id'], $substitution['old_team_id'], $substitution['new_team_id']);
