@@ -1250,8 +1250,8 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
             $sureToBeQualifiedInfo = json_decode($actions[0]['data'], true);
             if (count($sureToBeQualifiedInfo) == 1) {
                 $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
-                $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo);
-                $message  = "Actualment tens el activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
+                $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo[0]);
+                $message  = "Actualment tens activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
 
                 $telegram->sendMessage(
                     $chatId,
