@@ -1251,6 +1251,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
             if (count($sureToBeQualifiedInfo) == 1) {
                 if ($args[1] == 'Borrar') {
                     $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
+                    unset($args[1]);
                 } elseif (isset($args[1])) {
                     $team = $teamsRepo->getTeamByName($args[1]);
                     if (!is_array($team) || count($team) == 0) {
