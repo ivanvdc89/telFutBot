@@ -1247,21 +1247,25 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'sureToBeQualified');
 
         if (is_array($actions) && count($actions) == 1) {
-            $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
             $sureToBeQualifiedInfo = json_decode($actions[0]['data'], true);
-            $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo);
-            $message = "Actualment tens el activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
+            if (count($sureToBeQualifiedInfo) == 1) {
+                $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
+                $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo);
+                $message  = "Actualment tens el activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
 
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        } elseif ($args[1] == 'Borrar') {
+                $telegram->sendMessage(
+                    $chatId,
+                    $message,
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
+        }
+
+        if ($args[1] == 'Borrar') {
             $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
         } elseif (isset($args[1])) {
             $team = $teamsRepo->getTeamByName($args[1]);
