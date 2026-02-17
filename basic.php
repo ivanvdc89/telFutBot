@@ -1252,26 +1252,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
                 if ($args[1] == 'Borrar') {
                     $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
                     unset($args[1]);
-                } elseif (isset($args[1])) {
-                    $team = $teamsRepo->getTeamByName($args[1]);
-                    if (!is_array($team) || count($team) == 0) {
-                        $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                        exit;
-                    }
-                    $actionsRepo->addAction($player[0]['id'], $matchDay, 'sureToBeQualified', json_encode([$team[0]['id']]));
-
-                    $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
-
-                    $telegram->sendMessage(
-                        $chatId,
-                        $message,
-                        false,
-                        null,
-                        null,
-                        null
-                    );
-                    exit;
-                } else {
+                }  else {
                     $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
                     $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo[0]);
                     $message  = "Actualment tens activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
@@ -1286,6 +1267,25 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
                     );
                     exit;
                 }
+            } elseif (isset($args[1])) {
+                $team = $teamsRepo->getTeamByName($args[1]);
+                if (!is_array($team) || count($team) == 0) {
+                    $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
+                    exit;
+                }
+                $actionsRepo->updateAction($player[0]['id'], json_encode([$team[0]['id']]));
+
+                $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
+
+                $telegram->sendMessage(
+                    $chatId,
+                    $message,
+                    false,
+                    null,
+                    null,
+                    null
+                );
+                exit;
             }
         }
 
