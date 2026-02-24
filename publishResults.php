@@ -61,8 +61,8 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 
     $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], $matchDay);
 
+    $message .=  "CHL:\n";
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
-        $message .=  "CHL:\n";
         if (in_array($allMatchDayTeamPoint['pot'], [1, 2, 3, 4])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
@@ -89,12 +89,12 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 }
             }
         }
-        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
-        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
     }
+    $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
 
+    $message .=  "\nEUL:\n";
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
-        $message .=  "\nEUL:\n";
         if (in_array($allMatchDayTeamPoint['pot'], [5, 6, 7, 8])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
@@ -121,12 +121,12 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 }
             }
         }
-        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
-        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
     }
+    $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
 
+    $message .=  "\nCOL:\n";
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
-        $message .=  "\nCOL:\n";
         if (in_array($allMatchDayTeamPoint['pot'], [9, 10, 11, 12])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
@@ -154,9 +154,9 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                 }
             }
         }
-        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
-        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
     }
+    $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+    $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
 
     $message .= "\n- SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
     $message .= "- TOTAL: " . $allMatchDayPlayerPoint['total'] . " pts\n";
