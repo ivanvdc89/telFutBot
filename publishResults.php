@@ -60,31 +60,25 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
     }
 
     $allMatchDayTeamPoints = $matchDayTeamPointsRepo->getAllMatchDayTeamPointsByPlayerIdAndMatchDay($allMatchDayPlayerPoint['player_id'], $matchDay);
+
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
-        if($allMatchDayTeamPoint['pot'] == 1) {
-            $message .=  "CHL:\n";
-        }
-        if($allMatchDayTeamPoint['pot'] == 5) {
-            $message .=  "\nEUL:\n";
-        }
-        if($allMatchDayTeamPoint['pot'] == 9) {
-            $message .=  "\nCOL:\n";
-        }
-        $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
-        if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
-            $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
-        } else {
-            if (!is_null($allMatchDayTeamPoint['action'])
-               && $allMatchDayTeamPoint['action'] != '[]'
-               && $allMatchDayTeamPoint['action'] != ''
-            ) {
-                $actionInfo = json_decode($allMatchDayTeamPoint['action'], true);
-                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
+        $message .=  "CHL:\n";
+        if (in_array([1, 2, 3, 4], $allMatchDayTeamPoint['pot'])) {
+            $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
+
+            if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
+                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
             } else {
-                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+                if (!is_null($allMatchDayTeamPoint['action'])
+                    && $allMatchDayTeamPoint['action'] != '[]'
+                    && $allMatchDayTeamPoint['action'] != ''
+                ) {
+                    $actionInfo = json_decode($allMatchDayTeamPoint['action'], true);
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
+                } else {
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+                }
             }
-        }
-        if($allMatchDayTeamPoint['pot'] == 4) {
             if(!is_null($allMatchDayPlayerPoint['chl_action'])
                && $allMatchDayPlayerPoint['chl_action'] != '[]'
                && $allMatchDayPlayerPoint['chl_action'] != ''
@@ -94,10 +88,29 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
             }
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
         }
-        if($allMatchDayTeamPoint['pot'] == 8) {
+        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
+        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['chl_total'] . " pts\n";
+    }
+
+    foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
+        $message .=  "\nEUL:\n";
+        if (in_array([5, 6, 7, 8], $allMatchDayTeamPoint['pot'])) {
+            $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
+
+            if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
+                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
+            } else {
+                if (!is_null($allMatchDayTeamPoint['action'])
+                    && $allMatchDayTeamPoint['action'] != '[]'
+                    && $allMatchDayTeamPoint['action'] != ''
+                ) {
+                    $actionInfo = json_decode($allMatchDayTeamPoint['action'], true);
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
+                } else {
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+                }
+            }
             if(!is_null($allMatchDayPlayerPoint['eul_action'])
                && $allMatchDayPlayerPoint['eul_action'] != '[]'
                && $allMatchDayPlayerPoint['eul_action'] != ''
@@ -107,10 +120,30 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
             }
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
         }
-        if($allMatchDayTeamPoint['pot'] == 12) {
+        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
+        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['eul_total'] . " pts\n";
+    }
+
+    foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
+        $message .=  "\nCOL:\n";
+        if (in_array([9, 10, 11, 12], $allMatchDayTeamPoint['pot'])) {
+            $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
+
+            if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
+                $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " -> " . $allMatchDayTeamPoint['total'] . " pts\n";
+            } else {
+                if (!is_null($allMatchDayTeamPoint['action'])
+                   && $allMatchDayTeamPoint['action'] != '[]'
+                   && $allMatchDayTeamPoint['action'] != ''
+                ) {
+                    $actionInfo = json_decode($allMatchDayTeamPoint['action'], true);
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts || " . $actionInfo['result'] . "\n";
+                } else {
+                    $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
+                }
+            }
+
             if(!is_null($allMatchDayPlayerPoint['col_action'])
                && $allMatchDayPlayerPoint['col_action'] != '[]'
                && $allMatchDayPlayerPoint['col_action'] != ''
@@ -120,10 +153,11 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
                 }
             }
-            $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
-            $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
         }
+        $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
+        $message .= "- TOTAL: " . $allMatchDayPlayerPoint['col_total'] . " pts\n";
     }
+
     $message .= "\n- SUMA JORNADA: " . $allMatchDayPlayerPoint['match_day_total'] . " pts\n";
     $message .= "- TOTAL: " . $allMatchDayPlayerPoint['total'] . " pts\n";
 
