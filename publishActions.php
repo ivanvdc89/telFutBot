@@ -94,8 +94,8 @@ foreach ($allActions as $action) {
             $shieldsMessage .= "\n";
         }
     } elseif ($action['type'] == 'sureToBeQualified') {
-        $teamId = $action['data'][0];
-        $team = $teamsRepo->getTeamById($teamId);
+        $sureToBeQualifiedInfo = json_decode($action['data'], true);
+        $team = $teamsRepo->getTeamById($sureToBeQualifiedInfo[0]);
         $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $team[0]['name'] . "\n";
     } else {
         $competitions = json_decode($action['data'], true);
