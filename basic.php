@@ -1237,7 +1237,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
         exit;
     }
 
-    elseif ($command === '/segurQuePasse') {
+    elseif ($command === '/segurQuePasse' || $command === '/passe') {
         //$actionsActivated = false;
         if (!$actionsActivated) {
             $telegram->sendMessage($chatId, "No disponible");
@@ -1314,7 +1314,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
         $rows        = [];
         $row         = [];
         foreach ($playerTeams as $team) {
-            $row[] = '/segurQuePasse ' . $team['name'];
+            $row[] = '/passe ' . $team['name'];
             if (count($row) == 3) {
                 $rows[] = $row;
                 $row    = [];
