@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 11;
-$actionsActivated = true;
+$matchDay = 12;
+$actionsActivated = false;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
