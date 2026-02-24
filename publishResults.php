@@ -63,7 +63,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         $message .=  "CHL:\n";
-        if (in_array([1, 2, 3, 4], $allMatchDayTeamPoint['pot'])) {
+        if (in_array($allMatchDayTeamPoint['pot'], [1, 2, 3, 4])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
             if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
@@ -95,7 +95,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         $message .=  "\nEUL:\n";
-        if (in_array([5, 6, 7, 8], $allMatchDayTeamPoint['pot'])) {
+        if (in_array($allMatchDayTeamPoint['pot'], [5, 6, 7, 8])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
             if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
@@ -127,7 +127,7 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
 
     foreach ($allMatchDayTeamPoints as $allMatchDayTeamPoint) {
         $message .=  "\nCOL:\n";
-        if (in_array([9, 10, 11, 12], $allMatchDayTeamPoint['pot'])) {
+        if (in_array($allMatchDayTeamPoint['pot'], [9, 10, 11, 12])) {
             $team = $teamsRepo->getTeamById($allMatchDayTeamPoint['team_id']);
 
             if ($allMatchDayTeamPoint['points'] != $allMatchDayTeamPoint['total']) {
