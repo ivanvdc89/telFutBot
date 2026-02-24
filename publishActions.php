@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 10;
+$matchDay    = 11;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -29,6 +29,7 @@ $actionsTexts = [
     'winOrDie' => 'guanyarOMorir',
     'doubleOrNothing' => 'dobleORes',
     'kosAndShields' => 'kosAmbEscuts',
+    'sureToBeQualified' => 'segurQuePasse',
 ];
 
 $doubleOrNothingActive = false;
@@ -42,7 +43,7 @@ $sumVotes = [
     88 => 1,
 ];
 
-$kosAndShieldsActive = true;
+$kosAndShieldsActive = false;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
@@ -63,7 +64,7 @@ foreach ($allActions as $action) {
             } else {
                 $sumVotes[$teamId] = 10;
             }
-            $team    = $teamsRepo->getTeamById($teamId);
+            $team = $teamsRepo->getTeamById($teamId);
             $doubleOrNothingMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
                         . $team[0]['name'] . "\n";
         }
@@ -78,7 +79,7 @@ foreach ($allActions as $action) {
             } else {
                 $sumKos[$teamId] = 10;
             }
-            $team    = $teamsRepo->getTeamById($teamId);
+            $team = $teamsRepo->getTeamById($teamId);
             $kosMessage .= "-" . $player[0]['name'] . ": 1 vot de KO a " . $team[0]['name'] . "\n";
         }
         if (count($kosAndShieldsData['kos']) > 0) {
@@ -92,6 +93,10 @@ foreach ($allActions as $action) {
         if (count($kosAndShieldsData['shields']) > 0) {
             $shieldsMessage .= "\n";
         }
+    } elseif ($action['type'] == 'sureToBeQualified') {
+        $teamId = $action['data'][0];
+        $team = $teamsRepo->getTeamById($teamId);
+        $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $team[0]['name'] . "\n";
     } else {
         $competitions = json_decode($action['data'], true);
         foreach ($competitions as $competition) {
