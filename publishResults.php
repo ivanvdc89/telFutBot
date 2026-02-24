@@ -79,15 +79,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
                 }
             }
-            if(!is_null($allMatchDayPlayerPoint['chl_action'])
-               && $allMatchDayPlayerPoint['chl_action'] != '[]'
-               && $allMatchDayPlayerPoint['chl_action'] != ''
-            ) {
-                $actionInfo = json_decode($allMatchDayPlayerPoint['chl_action'], true);
-                foreach ($actionInfo as $action) {
-                    $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
-                }
-            }
+        }
+    }
+    if(!is_null($allMatchDayPlayerPoint['chl_action'])
+       && $allMatchDayPlayerPoint['chl_action'] != '[]'
+       && $allMatchDayPlayerPoint['chl_action'] != ''
+    ) {
+        $actionInfo = json_decode($allMatchDayPlayerPoint['chl_action'], true);
+        foreach ($actionInfo as $action) {
+            $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
         }
     }
     $message .= "- JORNADA: " . $allMatchDayPlayerPoint['chl_sum'] . " pts\n";
@@ -111,15 +111,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
                 }
             }
-            if(!is_null($allMatchDayPlayerPoint['eul_action'])
-               && $allMatchDayPlayerPoint['eul_action'] != '[]'
-               && $allMatchDayPlayerPoint['eul_action'] != ''
-            ) {
-                $actionInfo = json_decode($allMatchDayPlayerPoint['eul_action'], true);
-                foreach ($actionInfo as $action) {
-                    $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
-                }
-            }
+        }
+    }
+    if(!is_null($allMatchDayPlayerPoint['eul_action'])
+       && $allMatchDayPlayerPoint['eul_action'] != '[]'
+       && $allMatchDayPlayerPoint['eul_action'] != ''
+    ) {
+        $actionInfo = json_decode($allMatchDayPlayerPoint['eul_action'], true);
+        foreach ($actionInfo as $action) {
+            $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
         }
     }
     $message .= "- JORNADA: " . $allMatchDayPlayerPoint['eul_sum'] . " pts\n";
@@ -143,16 +143,15 @@ foreach ($allMatchDayPlayerPoints as $allMatchDayPlayerPoint) {
                     $message .= "- " . $team[0]['name'] . " " . $allMatchDayTeamPoint['points'] . " pts\n";
                 }
             }
-
-            if(!is_null($allMatchDayPlayerPoint['col_action'])
-               && $allMatchDayPlayerPoint['col_action'] != '[]'
-               && $allMatchDayPlayerPoint['col_action'] != ''
-            ) {
-                $actionInfo = json_decode($allMatchDayPlayerPoint['col_action'], true);
-                foreach ($actionInfo as $action) {
-                    $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
-                }
-            }
+        }
+    }
+    if(!is_null($allMatchDayPlayerPoint['col_action'])
+       && $allMatchDayPlayerPoint['col_action'] != '[]'
+       && $allMatchDayPlayerPoint['col_action'] != ''
+    ) {
+        $actionInfo = json_decode($allMatchDayPlayerPoint['col_action'], true);
+        foreach ($actionInfo as $action) {
+            $message .= "- " . $action['type'] . " activat: " . $action['result'] . "\n";
         }
     }
     $message .= "- JORNADA: " . $allMatchDayPlayerPoint['col_sum'] . " pts\n";
