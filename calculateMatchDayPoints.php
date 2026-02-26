@@ -93,7 +93,7 @@ foreach ($players as $player) {
             $action = ["type" => "dobleORes", "result" => "Doble"];
             $totalPoints = 2 * $teamResult[0]['points'];
         }
-        if (array_key_exists($team['id'], $classifiedTeams) ) {
+        if ($team['id'] === $sureToBeQualifiedTeam && array_key_exists($team['id'], $classifiedTeams)) {
             $action = ["type" => "segurQuePasse", "result" => "YES"];
             $totalPoints = $teamResult[0]['points'] + $classifiedTeams[$team['id']] + $sureToBeQualifiedPoints;
         }
