@@ -18,7 +18,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 10;
+$matchDay                = 11;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
@@ -39,7 +39,12 @@ $bestCOL = 5; // TODO: must be calculated dinamically
 
 $nothingTeams = [];
 $doubleTeams  = [];
-$koTeams      = [64, 5];
+$koTeams      = [];
+
+$classifiedTeams = [
+    2 => -1,
+    73 => 1
+];
 
 $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
@@ -62,6 +67,15 @@ foreach ($players as $player) {
         }
     }
 
+    $sureToBeQualifiedTeam   = -1;
+    $sureToBeQualifiedPoints = 0;
+    $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'sureToBeQualified');
+    if (count($actions)>0) {
+        $actionData = json_decode($actions[0]['data'], true);
+        $sureToBeQualifiedTeam = $actionData['team'];
+        $sureToBeQualifiedPoints = $actionData['points'];
+    }
+
     foreach ($playerTeams as $team) {
         $pot        = $team['pot'];
         $teamResult = $teamResultRepo->getResultByTeamIdAndMatchDay($team['id'], $matchDay);
@@ -78,6 +92,10 @@ foreach ($players as $player) {
         if (in_array($team['id'], $doubleTeams) ) {
             $action = ["type" => "dobleORes", "result" => "Doble"];
             $totalPoints = 2 * $teamResult[0]['points'];
+        }
+        if (array_key_exists($team['id'], $classifiedTeams) ) {
+            $action = ["type" => "segurQuePasse", "result" => "YES"];
+            $totalPoints = $teamResult[0]['points'] + $classifiedTeams[$team['id']] + $sureToBeQualifiedPoints;
         }
         if (in_array($team['id'], $koTeams) ) {
             if (in_array($team['id'], $shieldTeams) ) {
