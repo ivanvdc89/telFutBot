@@ -97,7 +97,7 @@ function processMatch($line, $matchday, $competition) {
 $input = <<<TEXT
 KuPS Finland	0–2	Poland Lech Poznań
 Noah Armenia	0-2	Netherlands AZ
-Zrinjski Mostar Bosnia and Herzegovina	3-0	England Crystal Palace
+Zrinjski Mostar Bosnia and Herzegovina	0-3	England Crystal Palace
 Jagiellonia Białystok Poland	4–0	Italy Fiorentina
 Shkëndija North Macedonia	0–5	Turkey Samsunspor
 Drita Kosovo	4–6	Slovenia Celje
