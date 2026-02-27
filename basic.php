@@ -666,7 +666,6 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/kos') {
-        $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
