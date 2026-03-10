@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $substitutionRepo = new Substitution();
 
-$matchDay    = 10;
+$matchDay    = 12;
 $group       = $groupRepo->getGroup(2);
 $groupChatId = $group[0]['chat_id'];
 $message     = "Canvis realitzats:\n";
@@ -38,7 +38,15 @@ foreach ($allSubstitutions as $substitution) {
     $message .= "-" . $player[0]['name'] . ": " . $oldTeamName . " -> " . $newTeam[0]['name'] . "\n";
     $message .= "Cost " . $substitution['points_cost'] . "\n\n";
     $substitutionRepo->markSubstitutionAsExecuted($substitution['id']);
-    $teamsRepo->changePlayerTeam($substitution['player_id'], $substitution['old_team_id'], $substitution['new_team_id']);
+    if ($substitution['old_team_id'] === 0) {
+        $teamsRepo->addPlayerTeam($substitution['player_id'], $substitution['new_team_id']);
+    } else {
+        $teamsRepo->changePlayerTeam(
+            $substitution['player_id'],
+            $substitution['old_team_id'],
+            $substitution['new_team_id']
+        );
+    }
 }
 
 $telegram->sendMessage($groupChatId, $message);
