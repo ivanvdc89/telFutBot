@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 11;
+$matchDay    = 12;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -43,7 +43,7 @@ $sumVotes = [
     88 => 1,
 ];
 
-$kosAndShieldsActive = false;
+$kosAndShieldsActive = true;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
