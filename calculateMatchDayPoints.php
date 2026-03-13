@@ -18,7 +18,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 11;
+$matchDay                = 12;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
@@ -39,7 +39,7 @@ $bestCOL = 5; // TODO: must be calculated dinamically
 
 $nothingTeams = [];
 $doubleTeams  = [];
-$koTeams      = [];
+$koTeams      = [4,49];
 
 $classifiedTeams = [
     2 => -1,
