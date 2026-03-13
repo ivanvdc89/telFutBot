@@ -76,11 +76,11 @@ function processMatch($line, $matchday, $competition) {
 
     // Points
     if ($homeGoals > $awayGoals) {
-        $homePts = 3; $awayPts = 0;
+        $homePts = 5; $awayPts = 0;
     } elseif ($awayGoals > $homeGoals) {
-        $homePts = 0; $awayPts = 3;
+        $homePts = 0; $awayPts = 5;
     } else {
-        $homePts = 1; $awayPts = 1;
+        $homePts = 2; $awayPts = 2;
     }
 
     // Output SQL
@@ -95,21 +95,21 @@ function processMatch($line, $matchday, $competition) {
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-KuPS Finland	0–2	Poland Lech Poznań
-Noah Armenia	0-2	Netherlands AZ
-Zrinjski Mostar Bosnia and Herzegovina	0-3	England Crystal Palace
-Jagiellonia Białystok Poland	4–0	Italy Fiorentina
-Shkëndija North Macedonia	0–5	Turkey Samsunspor
-Drita Kosovo	4–6	Slovenia Celje
-Sigma Olomouc Czech Republic	1-0	Switzerland Lausanne-Sport
-Omonia Cyprus	1–4	Croatia Rijeka
+Paris Saint-Germain France	5–2	England Chelsea	
+Galatasaray Turkey	1–0	England Liverpool	
+Real Madrid Spain	3–0	England Manchester City	
+Atalanta Italy	1–6	Germany Bayern Munich	
+Newcastle United England	1–1	Spain Barcelona	
+Atlético Madrid Spain	5–2	England Tottenham Hotspur	
+Bodø/Glimt Norway	3–0	Portugal Sporting CP	
+Bayer Leverkusen Germany	1–1	England Arsenal	
 TEXT;
 
 // SETTINGS
-$matchday    = 11;
-//$competition = "CHL";
+$matchday    = 12;
+$competition = "CHL";
 //$competition = "EUL";
-$competition = "COL";
+//$competition = "COL";
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
