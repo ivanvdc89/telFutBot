@@ -109,21 +109,21 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Ferencváros Hungary	0–2	Portugal Braga	
-Panathinaikos Greece	0–4	Spain Real Betis	
-Genk Belgium	1–4	Germany SC Freiburg	
-Celta Vigo Spain	3–1	France Lyon	
-VfB Stuttgart Germany	0–2	Portugal Porto	
-Nottingham Forest England	2–1	Denmark Midtjylland	
-Bologna Italy	3-3	Italy Roma	
-Lille France	0–2	England Aston Villa	
+Lech Poznań Poland	1–0	Ukraine Shakhtar Donetsk	
+AZAlkmaar Netherlands	2–1	Czech Republic Sparta Prague	
+Crystal Palace England	0–0	Cyprus AEK Larnaca	
+Fiorentina Italy	2–1	Poland Raków Częstochowa	
+Samsunspor Turkey	1–0	Spain Rayo Vallecano	
+Celje Slovenia	2–0	Greece AEK Athens	
+Sigma Olomouc Czech Republic	0–2	Germany Mainz 05	
+Rijeka Croatia	1–1	France Strasbourg
 TEXT;
 
 // SETTINGS
 $matchday    = 13;
 //$competition = "CHL";
-$competition = "EUL";
-//$competition = "COL";
+//$competition = "EUL";
+$competition = "COL";
 $extraPointsForClassifiedTeams = 1;
 
 foreach (explode("\n", trim($input)) as $line) {
