@@ -48,7 +48,7 @@ function findTeamId($name) {
 }
 
 // Converts single match line to SQL inserts
-function processMatch($line, $matchday, $competition) {
+function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedTeams) {
     if (!preg_match('/(.+?)\s+(\d+)[–-](\d+)\s+(.+)/u', $line, $m)) {
         echo "INVALID LINE: $line\n";
         return;
@@ -83,36 +83,51 @@ function processMatch($line, $matchday, $competition) {
         $homePts = 2; $awayPts = 2;
     }
 
+    $classifiedTeams = [
+        1, 2, 4, 5, 9, 10, 12, 23,
+        37, 38, 43, 45, 47, 57, 59, 64,
+        72, 73, 74, 80, 82, 85, 86, 93,
+    ];
+
+    if (in_array($homeId, $classifiedTeams)) {
+        $homePts+=$extraPointsForClassifiedTeams;
+    }
+
+    if (in_array($awayId, $classifiedTeams)) {
+        $awayPts+=$extraPointsForClassifiedTeams;
+    }
+
     // Output SQL
-    echo "INSERT INTO team_results VALUES (NULL, $homeId, $homePts, $matchday, '$competition');\n";
-    echo "INSERT INTO team_results VALUES (NULL, $awayId, $awayPts, $matchday, '$competition');\n";
+    echo "INSERT INTO team_results VALUES (NULL, $homeId, $homePts, $matchDay, '$competition');\n";
+    echo "INSERT INTO team_results VALUES (NULL, $awayId, $awayPts, $matchDay, '$competition');\n";
 
     $teamResultRepo = new TeamResult();
-    $teamResultRepo->addTeamResult($homeId, $homePts, $matchday, $competition);
-    $teamResultRepo->addTeamResult($awayId, $awayPts, $matchday, $competition);
+    $teamResultRepo->addTeamResult($homeId, $homePts, $matchDay, $competition);
+    $teamResultRepo->addTeamResult($awayId, $awayPts, $matchDay, $competition);
     echo "✅ Processed: $homeTeam - $awayTeam\n";
 }
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Paris Saint-Germain France	5–2	England Chelsea	
-Galatasaray Turkey	0–1	England Liverpool	
-Real Madrid Spain	3–0	England Manchester City	
-Atalanta Italy	1–6	Germany Bayern Munich	
-Newcastle United England	1–2	Spain Barcelona	
-Atlético Madrid Spain	1–2	England Tottenham Hotspur	
-Bodø/Glimt Norway	0–3	Portugal Sporting CP	
-Bayer Leverkusen Germany	1–3	England Arsenal		
+Ferencváros Hungary	0–2	Portugal Braga	
+Panathinaikos Greece	0–4	Spain Real Betis	
+Genk Belgium	1–4	Germany SC Freiburg	
+Celta Vigo Spain	3–1	France Lyon	
+VfB Stuttgart Germany	0–2	Portugal Porto	
+Nottingham Forest England	2–1	Denmark Midtjylland	
+Bologna Italy	3-3	Italy Roma	
+Lille France	0–2	England Aston Villa	
 TEXT;
 
 // SETTINGS
 $matchday    = 13;
-$competition = "CHL";
-//$competition = "EUL";
+//$competition = "CHL";
+$competition = "EUL";
 //$competition = "COL";
+$extraPointsForClassifiedTeams = 1;
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
-        processMatch(trim($line), $matchday, $competition);
+        processMatch(trim($line), $matchday, $competition, $extraPointsForClassifiedTeams);
 }
 ?>
