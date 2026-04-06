@@ -84,9 +84,7 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
     }
 
     $classifiedTeams = [
-        1, 2, 4, 5, 9, 10, 12, 23,
-        37, 38, 43, 45, 47, 57, 59, 64,
-        72, 73, 74, 80, 82, 85, 86, 93,
+        1, 2, 4, 5, 9, 10, 12, 23, 38, 43, 45, 47, 57, 59, 63, 64, 72, 73, 74, 80, 82, 85, 86, 93,
     ];
 
     if (in_array($homeId, $classifiedTeams)) {
