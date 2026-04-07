@@ -43,7 +43,7 @@ $sumVotes = [
     88 => 1,
 ];
 
-$kosAndShieldsActive = false;
+$kosAndShieldsActive = true;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
