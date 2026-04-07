@@ -334,7 +334,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
             } elseif ($args[1] === 'pot') {
                 if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
                     $teams   = $teamsRepo->getCountPlayerTeamsByPot($args[2]);
-                    $message = '';
+                    $message = 'Equipos del pot ' . $args[2] . ":\n";
                     foreach ($teams as $team) {
                         $message .= $team['total'] . " " . $team['name'] . "\n";
                         $players = $teamsRepo->getPlayersByTeam($team['id']);
