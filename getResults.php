@@ -84,7 +84,7 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
     }
 
     $classifiedTeams = [
-        1, 2, 4, 5, 9, 10, 12, 23, 38, 43, 45, 47, 57, 59, 63, 64, 72, 73, 74, 80, 82, 85, 86, 93,
+        //1, 2, 4, 5, 9, 10, 12, 23, 38, 43, 45, 47, 57, 59, 63, 64, 72, 73, 74, 80, 82, 85, 86, 93,
     ];
 
     if (in_array($homeId, $classifiedTeams)) {
@@ -107,20 +107,30 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Lech Poznań Poland	1–0	Ukraine Shakhtar Donetsk	
-AZAlkmaar Netherlands	2–1	Czech Republic Sparta Prague	
-Crystal Palace England	0–0	Cyprus AEK Larnaca	
-Fiorentina Italy	2–1	Poland Raków Częstochowa	
-Samsunspor Turkey	1–0	Spain Rayo Vallecano	
-Celje Slovenia	2–0	Greece AEK Athens	
-Sigma Olomouc Czech Republic	0–2	Germany Mainz 05	
-Rijeka Croatia	1–1	France Strasbourg
+Paris Saint-Germain France	2–0	England Liverpool
+Real Madrid Spain	1–2	Germany Bayern Munich
+Barcelona Spain	0–2	Spain Atlético Madrid
+Sporting CP Portugal	0–1	England Arsenal
+TEXT;
+
+$input = <<<TEXT
+Braga Portugal	1-1	Spain Real Betis
+SC Freiburg Germany	2-0	Spain Celta Vigo
+Porto Portugal	3-3	England Nottingham Forest
+Bologna Italy	1-4	England Aston Villa
+TEXT;
+
+$input = <<<TEXT
+Shakhtar Donetsk Ukraine	1-0	Netherlands AZ Alkmaar
+Crystal Palace England	2-0	Italy Fiorentina
+Rayo Vallecano Spain	3-0	Greece AEK Athens
+Mainz 05 Germany	4-0	France Strasbourg
 TEXT;
 
 // SETTINGS
-$matchday    = 13;
-//$competition = "CHL";
-//$competition = "EUL";
+$matchday    = 14;
+$competition = "CHL";
+$competition = "EUL";
 $competition = "COL";
 $extraPointsForClassifiedTeams = 1;
 

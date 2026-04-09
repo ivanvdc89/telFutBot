@@ -17,7 +17,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 13;
+$matchDay    = 14;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
