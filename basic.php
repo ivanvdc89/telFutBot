@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 15;
-$actionsActivated = true;
+$matchDay = 16;
+$actionsActivated = false;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -1238,7 +1238,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/segurQuePasse' || $command === '/passe') {
-        //$actionsActivated = false;
+        $actionsActivated = false;
         if (!$actionsActivated) {
             $telegram->sendMessage($chatId, "No disponible");
             exit;
