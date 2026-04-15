@@ -8,6 +8,11 @@ require_once("models/team.php");
 require_once("models/group.php");
 require_once("models/action.php");
 
+if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
+    http_response_code(403);
+    exit;
+}
+
 use TelegramBot\Api\BotApi;
 
 $telegram = new BotApi('%TOKEN_ID');

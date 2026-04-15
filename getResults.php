@@ -6,6 +6,11 @@ require_once("config/connection.php");
 require_once("models/team.php");
 require_once("models/teamResult.php");
 
+if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
+    http_response_code(403);
+    exit;
+}
+
 function normalize($str) {
     // remove accents
     $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);

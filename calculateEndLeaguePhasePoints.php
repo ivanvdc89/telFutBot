@@ -11,6 +11,11 @@ require_once("models/teamResult.php");
 require_once("models/action.php");
 require_once("models/substitution.php");
 
+if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
+    http_response_code(403);
+    exit;
+}
+
 $playersRepo             = new Player();
 $teamsRepo               = new Team();
 $matchDayTeamPointRepo   = new MatchDayTeamPoint();

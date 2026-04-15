@@ -10,6 +10,11 @@ require_once("models/substitution.php");
 
 use TelegramBot\Api\BotApi;
 
+if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
+    http_response_code(403);
+    exit;
+}
+
 $telegram = new BotApi('%TOKEN_ID');
 
 $groupRepo        = new Group();
