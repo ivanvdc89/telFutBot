@@ -11,7 +11,7 @@ require_once("models/matchDayTeamPoint.php");
 
 use TelegramBot\Api\BotApi;
 
-if (basename(__FILE__) == basename($_SERVER["SCRIPT_FILENAME"])) {
+if (php_sapi_name() !== 'cli') {
     http_response_code(403);
     exit;
 }
