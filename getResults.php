@@ -89,7 +89,7 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
     }
 
     $classifiedTeams = [
-        //1, 2, 4, 5, 9, 10, 12, 23, 38, 43, 45, 47, 57, 59, 63, 64, 72, 73, 74, 80, 82, 85, 86, 93,
+        1, 4, 10, 12, 45, 47, 57, 59, 74, 80, 82, 86,
     ];
 
     if (in_array($homeId, $classifiedTeams)) {
@@ -114,30 +114,30 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 $input = <<<TEXT
 Paris Saint-Germain France	2–0	England Liverpool
 Real Madrid Spain	1–2	Germany Bayern Munich
-Barcelona Spain	0–2	Spain Atlético Madrid
-Sporting CP Portugal	0–1	England Arsenal
+Barcelona Spain	2–1	Spain Atlético Madrid
+Sporting CP Portugal	0–0	England Arsenal
 TEXT;
 
 $input = <<<TEXT
-Braga Portugal	1-1	Spain Real Betis
+Braga Portugal	2-1	Spain Real Betis
 SC Freiburg Germany	2-0	Spain Celta Vigo
-Porto Portugal	3-3	England Nottingham Forest
+Porto Portugal	1-3	England Nottingham Forest
 Bologna Italy	1-4	England Aston Villa
 TEXT;
 
 $input = <<<TEXT
-Shakhtar Donetsk Ukraine	1-0	Netherlands AZ Alkmaar
-Crystal Palace England	2-0	Italy Fiorentina
-Rayo Vallecano Spain	3-0	Greece AEK Athens
-Mainz 05 Germany	4-0	France Strasbourg
+Shakhtar Donetsk Ukraine	1-1	Netherlands AZ Alkmaar
+Crystal Palace England	0-3	Italy Fiorentina
+Rayo Vallecano Spain	1-3	Greece AEK Athens
+Mainz 05 Germany	0-4	France Strasbourg
 TEXT;
 
 // SETTINGS
-$matchday    = 14;
+$matchday    = 15;
 $competition = "CHL";
 $competition = "EUL";
 $competition = "COL";
-$extraPointsForClassifiedTeams = 1;
+$extraPointsForClassifiedTeams = 2;
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
