@@ -26,7 +26,7 @@ $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 
 $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
-$matchDay       = 14;
+$matchDay       = 15;
 $message        = "";
 $order          = 1;
 $messageBestsCHL = "";
