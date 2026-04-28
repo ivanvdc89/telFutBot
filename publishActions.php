@@ -22,7 +22,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 15;
+$matchDay    = 16;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -52,11 +52,12 @@ $kosAndShieldsActive = true;
 $kosMessage = "";
 $shieldsMessage = "";
 $sumKos = [
-    5 => 5,
-    70 => 4,
-    2 => 3,
-    6 => 2,
-    63 => 1
+    10 => 6, //arsenal    24 +19
+    4 => 5,  //bayern     21 +14
+    86 => 4, //strasbourg 21 +6
+    82 => 3, //rayo       17 +6 13
+    47 => 2, //braga      17 +6 11
+    57 => 1, //friburg    17 +6 10
 ];
 
 foreach ($allActions as $action) {
