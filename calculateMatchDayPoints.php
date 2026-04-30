@@ -44,7 +44,7 @@ $bestCOL = 5; // TODO: must be calculated dinamically
 
 $nothingTeams = [];
 $doubleTeams  = [];
-$koTeams      = [10,80];
+$koTeams      = [10,82];
 
 $classifiedTeams = [
     //86 => 2,
