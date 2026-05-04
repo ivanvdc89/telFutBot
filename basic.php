@@ -24,7 +24,7 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 16;
+$matchDay = 17;
 $actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
@@ -417,7 +417,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució', '/kos']], true, true
+            [['/segurQuePasse']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -432,6 +432,9 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/substitució') {
         $player = $playersRepo->getPlayerByChatId($chatId);
+
+        $telegram->sendMessage($chatId, "No disponible");
+        exit;
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
 
@@ -666,7 +669,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/kos') {
-        //$actionsActivated = false;
+        $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
         $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
         if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
@@ -1238,7 +1241,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/segurQuePasse' || $command === '/passe') {
-        $actionsActivated = false;
+        //$actionsActivated = false;
         if (!$actionsActivated) {
             $telegram->sendMessage($chatId, "No disponible");
             exit;
