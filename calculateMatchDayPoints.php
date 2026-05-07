@@ -47,7 +47,7 @@ $doubleTeams  = [];
 $koTeams      = []; //[10,82];
 
 $classifiedTeams = [
-    2 => 0,
+    10 => 0,
     57 => 1,
 ];
 
