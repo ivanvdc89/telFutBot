@@ -88,9 +88,7 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
         $homePts = 2; $awayPts = 2;
     }
 
-    $classifiedTeams = [
-        //1, 4, 10, 12, 45, 47, 57, 59, 74, 80, 82, 86,
-    ];
+    $classifiedTeams = [1, 10, 45, 57, 80, 82];
 
     if (in_array($homeId, $classifiedTeams)) {
         $homePts+=$extraPointsForClassifiedTeams;
@@ -112,13 +110,13 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Paris Saint-Germain France	2–0	Germany Bayern Munich
-Atlético Madrid Spain	2–2	England Arsenal
+Paris Saint-Germain France	1–1	Germany Bayern Munich
+Atlético Madrid Spain	1–2	England Arsenal
 TEXT;
 
 $input = <<<TEXT
-Braga Portugal	2-1	Germany SC Freiburg 
-Aston Villa England	1-3	England Nottingham Forest
+Braga Portugal	0-1	Germany SC Freiburg 
+Aston Villa England	4-0	England Nottingham Forest
 TEXT;
 
 $input = <<<TEXT
@@ -127,7 +125,7 @@ Rayo Vallecano Spain	1-0	France Strasbourg
 TEXT;
 
 // SETTINGS
-$matchday    = 16;
+$matchday    = 17;
 $competition = "CHL";
 $competition = "EUL";
 $competition = "COL";
