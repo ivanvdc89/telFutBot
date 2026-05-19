@@ -150,6 +150,14 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 -Amb només un escut l'equip ja està totalment protegit i sumarà punts.
 -No cal posar més d'un escut al mateix equip.");
 
+                $telegram->sendMessage($chatId, "Norma #millorFinal:
+-Només té efectes per a les finals.
+-Hi ha una votació per a donar més punts a la final de cada competició.
+-La final més votada donarà 6 punts més al guanyador del partit (3 a cada finalista si hi ha empat al minut 90)
+-La segona final més votada donarà 2 punts més al guanyador del partit (1 a cada finalista si hi ha empat al minut 90)
+-La final menys votada restarà 2 punts al perdedor del partit (-1 a cada finalista si hi ha empat al minut 90)
+-Depenent de la posició del jugador en la classificació, el vot té més importància. 1 per al primer i després cada 10 punts de diferència el jugador sume un vot més. Com a màxim 4:");
+
                 $telegram->sendMessage($chatId, "Norma #segurQuePasse:
 -Depenent de la nostra posició tenim més o menys punts disponibles. 1 punt el primer i després cada 10 punts de diferència el jugador té un punt més. Com a màxim 4.
 -S'ha d'elegir quin dels nostres equips passaran de ronda. Si se classifique se sumaran, a part dels punts del partit, els punts que te toquen.
