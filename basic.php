@@ -1358,6 +1358,8 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
                 $actionsRepo->addAction($player[0]['id'], $matchDay, 'bestFinal', json_encode([$args[1]]));
             }
         }
+
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'bestFinal');
         if (is_array($actions) && count($actions) == 1) {
             $badDayList = json_decode($actions[0]['data'], true);
             $button     = '/millorFinal borrar';
