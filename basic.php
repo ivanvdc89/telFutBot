@@ -156,7 +156,7 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 -La final més votada donarà 6 punts més al guanyador del partit (3 a cada finalista si hi ha empat al minut 90)
 -La segona final més votada donarà 2 punts més al guanyador del partit (1 a cada finalista si hi ha empat al minut 90)
 -La final menys votada restarà 2 punts al perdedor del partit (-1 a cada finalista si hi ha empat al minut 90)
--Depenent de la posició del jugador en la classificació, el vot té més importància. 1 per al primer i després cada 10 punts de diferència el jugador sume un vot més. Com a màxim 4:");
+-Depenent de la posició del jugador en la classificació, el vot té més importància. 1 per al primer i després cada 10 punts de diferència el jugador sume un vot més. Com a màxim 4");
 
                 $telegram->sendMessage($chatId, "Norma #segurQuePasse:
 -Depenent de la nostra posició tenim més o menys punts disponibles. 1 punt el primer i després cada 10 punts de diferència el jugador té un punt més. Com a màxim 4.
