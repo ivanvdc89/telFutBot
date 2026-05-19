@@ -24,8 +24,8 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 17;
-$actionsActivated = false;
+$matchDay = 18;
+$actionsActivated = true;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -417,7 +417,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/segurQuePasse']], true, true
+            [['/millorFinal']], true, true
         );
         $telegram->sendMessage(
             $chatId,
@@ -1338,6 +1338,61 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
         );
         exit;
     }
+
+    elseif ($command === '/millorFinal') {
+        if (!$actionsActivated) {
+            $telegram->sendMessage($chatId, "No disponible");
+            exit;
+        }
+
+        $player = $playersRepo->getPlayerByChatId($chatId);
+        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'bestFinal');
+
+        if (isset($args[1]) && $args[1] == 'borrar') {
+            $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
+        }
+        if (isset($args[1]) && in_array($args[1], ['CHL', 'EUL', 'COL'])) {
+            if (is_array($actions) && count($actions) == 1) {
+                $actionsRepo->updateAction($actions[0]['id'], json_encode([$args[1]]));
+            } else {
+                $actionsRepo->addAction($player[0]['id'], $matchDay, 'bestFinal', json_encode([$args[1]]));
+            }
+        }
+        if (is_array($actions) && count($actions) == 1) {
+            $badDayList = json_decode($actions[0]['data'], true);
+            $button     = '/millorFinal borrar';
+            $keyboard   = new ReplyKeyboardMarkup([[$button]], true, true);
+            $message     = "\nMillorFinal: " . $badDayList[0] . "\n";
+
+            $telegram->sendMessage(
+                $chatId,
+                $message,
+                false,
+                null,
+                null,
+                $keyboard
+            );
+            exit;
+        }
+
+        $butCHL = '/millorFinal CHL';
+        $butEUL = '/millorFinal EUL';
+        $butCOL = '/millorFinal COL';
+        $keyboard = new ReplyKeyboardMarkup([
+            [$butCHL, $butEUL, $butCOL]
+        ], true, true);
+
+        $telegram->sendMessage(
+            $chatId,
+            "#millorFinal:",
+            false,
+            null,
+            null,
+            $keyboard
+        );
+        exit;
+    }
+
 
     elseif ($command === '/out') {
         $player = $playersRepo->getPlayerByChatId($chatId);
