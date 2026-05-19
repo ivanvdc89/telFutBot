@@ -1361,20 +1361,22 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
         $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'bestFinal');
         if (is_array($actions) && count($actions) == 1) {
-            $badDayList = json_decode($actions[0]['data'], true);
-            $button     = '/millorFinal borrar';
-            $keyboard   = new ReplyKeyboardMarkup([[$button]], true, true);
-            $message     = "\nMillorFinal: " . $badDayList[0] . "\n";
+            $bestFinalData = json_decode($actions[0]['data'], true);
+            if (count($bestFinalData) != 0) {
+                $button        = '/millorFinal borrar';
+                $keyboard      = new ReplyKeyboardMarkup([[$button]], true, true);
+                $message       = "\nMillorFinal: " . $bestFinalData[0] . "\n";
 
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
+                $telegram->sendMessage(
+                    $chatId,
+                    $message,
+                    false,
+                    null,
+                    null,
+                    $keyboard
+                );
+                exit;
+            }
         }
 
         $butCHL = '/millorFinal CHL';
