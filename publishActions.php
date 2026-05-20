@@ -22,7 +22,7 @@ $playersRepo      = new Player();
 $teamsRepo        = new Team();
 $actionsRepo      = new Action();
 
-$matchDay    = 17;
+$matchDay    = 18;
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
@@ -60,6 +60,14 @@ $sumKos = [
     57 => 1, //friburg    17 +6 10
 ];
 
+$bestFinalActive = true;
+$bestFinalMessage = "";
+$sumBestFinal = [
+    'CHL' => 0,
+    'EUL' => 0,
+    'COL' => 0
+];
+
 foreach ($allActions as $action) {
     $player = $playersRepo->getPlayerById($action['player_id']);
     if ($action['type'] == 'doubleOrNothing') {
@@ -77,6 +85,15 @@ foreach ($allActions as $action) {
         if (count($doubleOrNothingData['teams']) > 0) {
             $doubleOrNothingMessage .= "\n";
         }
+    } elseif ($action['type'] == 'bestFinal') {
+        $bestFinalData = json_decode($action['data'], true);
+            if (isset($bestFinalData['competition'])) {
+                $sumBestFinal[$bestFinalData['competition']] += $bestFinalData['points'];
+            }
+        $bestFinalMessage .= "-" . $player[0]['name'] .
+                             ": " . $bestFinalData['points'] .
+                             " vots de " . $actionsTexts[$action['type']] .
+                             " a " . $bestFinalData['competition'] . "\n";
     } elseif ($action['type'] == 'kosAndShields') {
         $kosAndShieldsData = json_decode($action['data'], true);
         foreach ($kosAndShieldsData['kos'] as $teamId) {
@@ -176,6 +193,15 @@ if ($kosAndShieldsActive) {
         }
     }
     $message .= "\n" . $shieldsMessage . "\n";
+}
+
+if ($bestFinalActive) {
+    arsort($sumBestFinal);
+
+    $message .= "\n" . $bestFinalMessage . "\n";
+    $message .= "-Millor final (+6): CHL\n";
+    $message .= "-Final (+2): EUL\n";
+    $message .= "-Pitjor final (-2): COL\n";
 }
 
 $telegram->sendMessage($groupChatId, $message);
