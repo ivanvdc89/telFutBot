@@ -35,6 +35,7 @@ $actionsTexts = [
     'doubleOrNothing' => 'dobleORes',
     'kosAndShields' => 'kosAmbEscuts',
     'sureToBeQualified' => 'segurQuePasse',
+    'bestFinal' => 'millorFinal',
 ];
 
 $doubleOrNothingActive = false;
