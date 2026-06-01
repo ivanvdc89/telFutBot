@@ -23,7 +23,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 17;
+$matchDay                = 18;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
@@ -46,10 +46,7 @@ $nothingTeams = [];
 $doubleTeams  = [];
 $koTeams      = []; //[10,82];
 
-$classifiedTeams = [
-    10 => 0,
-    57 => 1,
-];
+$classifiedTeams = [];
 
 $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
