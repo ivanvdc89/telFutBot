@@ -26,7 +26,7 @@ $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
     $playerId     = $player['id'];
     $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
-    $chlPoints    = $playerId == 19 ? 20 : 0;
+    $chlPoints    = $playerId == 10 ? 20 : 0;
     $eulPoints    = $playerId == 17 ? 20 : 0;
     $colPoints    = $playerId == 9 ? 20 : 0;
 
