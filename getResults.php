@@ -81,14 +81,32 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
     // Points
     if ($homeGoals > $awayGoals) {
-        $homePts = 5; $awayPts = 0;
+        if ($competition == "CHL") {
+             $homePts = 11; $awayPts = 0;
+        } elseif ($competition == "EUL") {
+             $homePts = 7; $awayPts = 0;
+        } else {
+             $homePts = 5; $awayPts = -2;
+        }
     } elseif ($awayGoals > $homeGoals) {
-        $homePts = 0; $awayPts = 5;
+        if ($competition == "CHL") {
+            $homePts = 0; $awayPts = 11;
+        } elseif ($competition == "EUL") {
+            $homePts = 0; $awayPts = 7;
+        } else {
+            $homePts = -2; $awayPts = 5;
+        }
     } else {
-        $homePts = 2; $awayPts = 2;
+        if ($competition == "CHL") {
+            $homePts = 5; $awayPts = 5;
+        } elseif ($competition == "EUL") {
+            $homePts = 3; $awayPts = 3;
+        } else {
+            $homePts = 1; $awayPts = 1;
+        }
     }
 
-    $classifiedTeams = [1, 10, 45, 57, 80, 82];
+    $classifiedTeams = [1, 45, 80];
 
     if (in_array($homeId, $classifiedTeams)) {
         $homePts+=$extraPointsForClassifiedTeams;
@@ -110,26 +128,23 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Paris Saint-Germain France	1–1	Germany Bayern Munich
-Atlético Madrid Spain	1–2	England Arsenal
+Paris Saint-Germain France  1–1	England Arsenal
 TEXT;
 
 $input = <<<TEXT
-Braga Portugal	0-1	Germany SC Freiburg 
-Aston Villa England	4-0	England Nottingham Forest
+Aston Villa England  4-1	Germany SC Freiburg 
 TEXT;
 
 $input = <<<TEXT
-Shakhtar Donetsk Ukraine	1-3	England Crystal Palace
-Rayo Vallecano Spain	1-0	France Strasbourg
+Rayo Vallecano Spain    1-3	England Crystal Palace
 TEXT;
 
 // SETTINGS
-$matchday    = 17;
+$matchday    = 18;
 $competition = "CHL";
 $competition = "EUL";
 $competition = "COL";
-$extraPointsForClassifiedTeams = 4;
+$extraPointsForClassifiedTeams = 8;
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")
