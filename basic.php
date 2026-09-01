@@ -90,27 +90,6 @@ Exemple, s'active el #malDia a la Conference League:
 -Fent 6 o menys punts -> 12 punts
 -Fent més de 6 punts, per exemple 9 -> 2 punt");
 
-                $telegram->sendMessage($chatId, "Norma #pitjorÉsMillor:
--Se use en cada competició de forma individual i independent (se pot activar en les 3 competicions, 2, 1 o cap).
--S'ha de tindre en compte que en Conference les victòries donen 4 punts.
--En la competició que penseu que aneu a fer pocs punts s'aposte a com de mal heu faran els teus equips dient quants punts faran com a màxim (en cada competició pots dir un número diferent).
--Si fan eixos punts o menys t'assegures sumar 12 (o 16 en Conference) menys els punts que has dit.
--Si te passes sumes els punts que has fet -3 (-4 per en Conference).
--No compense apostar a més de 6 punts (o 8 punts en Conference).
--Només té efectes per a la jornada en la que s'active.
-
-Exemple, jo m'activo el #pitjorÉsMillor a la Champions i dic que faré 5 punts:
--Si faig 5 o menys punts -> Sumaré 12 - 5 = 7 punts
--Si faig més de 5 punts, per exemple 7 -> Sumaré els punts -3 = 4
-
-Exemple, jo m'activo el #pitjorÉsMillor a la Europa League i dic que faré 1 punt:
--Si faig 1 o 0 -> Sumaré 12 - 1 = 11 punts
--Si faig més de 1 punt, per exemple 3 -> Sumaré els punts -3 = 0
-
-Exemple, jo m'activo el #pitjorÉsMillor a la Conference League i dic que faré 8 punts:
--Si faig 8 o menys punts -> Sumaré 16 - 8 = 8 punts
--Si faig més de 8 punts, per exemple 16 -> Sumaré els punts -4 = 12");
-
                 $telegram->sendMessage($chatId, "Norma #socElMillor:
 -Se use en cada competició de forma individual i independent (se pot activar en les 3 competicions, 2, 1 o cap).
 -Entre tots els que s'activen la norma a cada competició, se li sumarà 3 (o 4 en COL) punts al jugador o jugadors que sumen més punts i a la resta se'ls restarà 3 (o 4 en COL) punts.
@@ -186,16 +165,16 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
             $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
 
             $remainingPots = array_diff($pots, $alreadyAddedPots);
-            //if (count($remainingPots) == 0) {
-            $message = '';
-            foreach ($alreadyAddedTeams as $team) {
-                $pot = $potNumber[$team['pot']];
-                $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
+            if (count($remainingPots) == 0) {
+                $message = '';
+                foreach ($alreadyAddedTeams as $team) {
+                    $pot = $potNumber[$team['pot']];
+                    $message .= $team['name'] . " (" . $team['competition'] . " Pot " . $pot . ")\n";
+                }
+                $telegram->sendMessage($chatId, $message);
+                exit;
             }
-            $telegram->sendMessage($chatId, $message);
-            exit;
-            //}
-            //$nextPot = min($remainingPots);
+            $nextPot = min($remainingPots);
         } else {
             $playerId = $playersRepo->createPlayer($chatId);
             $nextPot = 1;
@@ -425,7 +404,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/millorFinal']], true, true
+            [['/equips']], true, true
         );
         $telegram->sendMessage(
             $chatId,
