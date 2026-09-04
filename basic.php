@@ -66,7 +66,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             exit;
         } else {
             if ($args[1] === 'bàsiques') {
-                $telegram->sendPhoto($chatId, new CURLFile("files/rules.jpg"), "Regles del joc");
+                $telegram->sendPhoto($chatId, new CURLFile("files/rules.png"), "Regles del joc");
                 $telegram->sendPhoto($chatId, new CURLFile("files/ch.png"), "Equips de la Champions");
                 $telegram->sendPhoto($chatId, new CURLFile("files/el.png"), "Equips de la Europa League");
                 $telegram->sendPhoto($chatId, new CURLFile("files/cl.png"), "Equips de la Conference League");
