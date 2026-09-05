@@ -287,6 +287,19 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/data') {
+        $player = $playersRepo->getPlayerByChatId($chatId);
+
+        if (is_array($player) && count($player) == 0){
+            $playerId = $playersRepo->createPlayer($chatId);
+        } else {
+            $playerId = $player[0]['id'];
+        }
+
+        if ($playerId != 9) {
+            $telegram->sendMessage($chatId, "No disponible");
+            exit;
+        }
+
         if(!isset($args[1])) {
             $keyboard = new ReplyKeyboardMarkup(
                 [['/data pots', '/data players']], true, true
