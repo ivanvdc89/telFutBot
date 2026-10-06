@@ -6,11 +6,6 @@ require_once("config/connection.php");
 require_once("models/team.php");
 require_once("models/teamResult.php");
 
-if (php_sapi_name() !== 'cli') {
-    http_response_code(403);
-    exit;
-}
-
 function normalize($str) {
     // remove accents
     $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);
@@ -81,39 +76,11 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
     // Points
     if ($homeGoals > $awayGoals) {
-        if ($competition == "CHL") {
-             $homePts = 11; $awayPts = 0;
-        } elseif ($competition == "EUL") {
-             $homePts = 7; $awayPts = 0;
-        } else {
-             $homePts = 5; $awayPts = -2;
-        }
+        $homePts = 3; $awayPts = 0;
     } elseif ($awayGoals > $homeGoals) {
-        if ($competition == "CHL") {
-            $homePts = 0; $awayPts = 11;
-        } elseif ($competition == "EUL") {
-            $homePts = 0; $awayPts = 7;
-        } else {
-            $homePts = -2; $awayPts = 5;
-        }
+        $homePts = 0; $awayPts = 3;
     } else {
-        if ($competition == "CHL") {
-            $homePts = 5; $awayPts = 5;
-        } elseif ($competition == "EUL") {
-            $homePts = 3; $awayPts = 3;
-        } else {
-            $homePts = 1; $awayPts = 1;
-        }
-    }
-
-    $classifiedTeams = [1, 45, 80];
-
-    if (in_array($homeId, $classifiedTeams)) {
-        $homePts+=$extraPointsForClassifiedTeams;
-    }
-
-    if (in_array($awayId, $classifiedTeams)) {
-        $awayPts+=$extraPointsForClassifiedTeams;
+        $homePts = 1; $awayPts = 1;
     }
 
     // Output SQL
@@ -128,23 +95,32 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-Paris Saint-Germain France  1–1	England Arsenal
-TEXT;
-
-$input = <<<TEXT
-Aston Villa England  4-1	Germany SC Freiburg 
-TEXT;
-
-$input = <<<TEXT
-Rayo Vallecano Spain    1-3	England Crystal Palace
+AEK Athens Greece	1–0	Austria LASK
+Club Brugge Belgium	2–3	England Aston Villa
+Borussia Dortmund Germany	3–2	Spain Villarreal
+Porto Portugal	0–2	England Manchester City
+Lille France	2–3	Spain Real Betis
+Real Madrid Spain	2–1	Italy Inter Milan
+Barcelona Spain	5–1	Netherlands Feyenoord
+VfB Stuttgart Germany	3–1	Norway Viking
+Liverpool England	2–1	Spain Atlético Madrid
+Paris Saint-Germain France	6–1	Slovakia Slovan Bratislava
+Sporting CP Portugal	3–1	Turkey Galatasaray
+Napoli Italy	0–1	England Arsenal
+Fenerbahçe Turkey	1–1	Italy Roma
+PSV Eindhoven Netherlands	1–1	Ukraine Shakhtar Donetsk
+Como Italy	4–1	Germany RB Leipzig
+Bayern Munich Germany	5–0	Norway Bodø/Glimt
+Manchester United England	4–0	Azerbaijan Sabah
+Slavia Prague Czech Republic	2–3	France Lens
 TEXT;
 
 // SETTINGS
-$matchday    = 18;
+$matchday    = 1;
 $competition = "CHL";
-$competition = "EUL";
-$competition = "COL";
-$extraPointsForClassifiedTeams = 8;
+//$competition = "EUL";
+//$competition = "COL";
+$extraPointsForClassifiedTeams = 1;
 
 foreach (explode("\n", trim($input)) as $line) {
     if (trim($line) !== "")

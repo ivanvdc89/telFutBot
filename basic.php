@@ -404,7 +404,7 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/accions' || $command === '/actions') {
         $keyboard = new ReplyKeyboardMarkup(
-            [['/equips']], true, true
+            [['/substitució']], true, true
         );
         $telegram->sendMessage(
             $chatId,
