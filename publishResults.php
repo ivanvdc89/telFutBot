@@ -26,7 +26,7 @@ $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 
 $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
-$matchDay       = 18;
+$matchDay       = 1;
 $message        = "";
 $order          = 1;
 $messageBestsCHL = "";
@@ -34,7 +34,7 @@ $messageBestsEUL = "";
 $messageBestsCOL = "";
 $bestCHLPoints  = -1;
 $bestEULPoints  = -1;
-$bestCOLPoints  = -1;
+$bestCOLPoints  = 1;
 $messageRanking = "Classificació general:\n";
 
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints($matchDay);
