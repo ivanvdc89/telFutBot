@@ -23,7 +23,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 18;
+$matchDay                = 1;
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [
