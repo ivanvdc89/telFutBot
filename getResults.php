@@ -95,30 +95,30 @@ function processMatch($line, $matchDay, $competition, $extraPointsForClassifiedT
 
 // YOUR INPUT RESULTS
 $input = <<<TEXT
-AEK Athens Greece	1–0	Austria LASK
-Club Brugge Belgium	2–3	England Aston Villa
-Borussia Dortmund Germany	3–2	Spain Villarreal
-Porto Portugal	0–2	England Manchester City
-Lille France	2–3	Spain Real Betis
-Real Madrid Spain	2–1	Italy Inter Milan
-Barcelona Spain	5–1	Netherlands Feyenoord
-VfB Stuttgart Germany	3–1	Norway Viking
-Liverpool England	2–1	Spain Atlético Madrid
-Paris Saint-Germain France	6–1	Slovakia Slovan Bratislava
-Sporting CP Portugal	3–1	Turkey Galatasaray
-Napoli Italy	0–1	England Arsenal
-Fenerbahçe Turkey	1–1	Italy Roma
-PSV Eindhoven Netherlands	1–1	Ukraine Shakhtar Donetsk
-Como Italy	4–1	Germany RB Leipzig
-Bayern Munich Germany	5–0	Norway Bodø/Glimt
-Manchester United England	4–0	Azerbaijan Sabah
-Slavia Prague Czech Republic	2–3	France Lens
+Ararat-Armenia Armenia	1–4	Czech Republic Sparta Prague
+Omonia Cyprus	1–0	Spain Celta Vigo
+Milan Italy	0–2	Portugal Benfica
+Bayer Leverkusen Germany	2–0	Slovenia Celje
+Hapoel Be'er Sheva Israel	0–0	Croatia Dinamo Zagreb
+Olympiacos Greece	2–1	Poland Jagiellonia Białystok
+Anderlecht Belgium	1–2	France Lyon
+Sturm Graz Austria	0–0	France Rennes
+Sunderland England	1–0	Netherlands AZ
+OFI Greece	2–0	Germany TSG Hoffenheim
+Levski Sofia Bulgaria	0–1	Austria Red Bull Salzburg
+Beşiktaş Turkey	4–1	France Marseille
+Celtic Scotland	1–3	Hungary Ferencváros
+Crystal Palace England	4–0	Poland Lech Poznań
+Viktoria Plzeň Czech Republic	0–3	Belgium Union Saint-Gilloise
+Juventus Italy	5–0	Netherlands NEC
+Lillestrøm Norway	1–2	Portugal Torreense
+Real Sociedad Spain	1–2	England Bournemouth
 TEXT;
 
 // SETTINGS
 $matchday    = 1;
-$competition = "CHL";
-//$competition = "EUL";
+//$competition = "CHL";
+$competition = "EUL";
 //$competition = "COL";
 $extraPointsForClassifiedTeams = 1;
 
