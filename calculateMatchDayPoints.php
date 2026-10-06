@@ -51,7 +51,7 @@ $classifiedTeams = [];
 $players = $playersRepo->getAllPlayers();
 foreach ($players as $player) {
     $playerId     = $player['id'];
-    $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
+    $lastMatchDay = 0; //$matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
     $playerTeams  = $teamsRepo->getTeamsByPlayerId($player['id']);
     $chlPoints    = 0;
     $chlWins      = 0;
