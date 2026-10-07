@@ -2,7 +2,8 @@
 #
 # El lloc serveix l'arrel sencera del projecte, així que qualsevol fitxer que no
 # sigui .php i que no estigués bloquejat es podia descarregar. Per aquí es va
-# filtrar secrets.sh amb el token del bot a dins (content-type text/x-sh).
+# filtrar un fitxer de secrets que el servidor servia en text pla (content-type
+# text/x-sh).
 #
 # Els .php no cal bloquejar-los: en demanar-los s'executen i no aboquen el codi,
 # i a més tots els scripts que no són el webhook tenen guarda de CLI.
