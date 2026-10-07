@@ -78,6 +78,39 @@ class MatchDayPlayerPoint extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * Total acumulat més recent de cada jugador, com a [player_id => total].
+     *
+     * Serveix per saber qui va líder i quants punts té un jugador, que és el que
+     * necessita la regla "els canvis són gratis si estàs a més de 29 punts del
+     * líder". Es pren l'última jornada de CADA jugador per separat: el total és
+     * acumulat i pot baixar (les accions i el cost dels canvis resten), així que
+     * no es pot fer servir el max(total) de tota la taula.
+     */
+    public function getLastTotalsByPlayer(): array
+    {
+        $connection = parent::connect();
+        parent::set_names();
+        $sql = "select m.player_id, m.total
+                from match_day_player_points m
+                join (
+                    select player_id, max(match_day) as last_match_day
+                    from match_day_player_points
+                    group by player_id
+                ) latest
+                  on latest.player_id = m.player_id
+                 and latest.last_match_day = m.match_day;";
+        $stmt = $connection->prepare($sql);
+        $stmt->execute();
+
+        $totals = [];
+        foreach ($stmt->fetchAll(pdo::FETCH_ASSOC) as $row) {
+            $totals[(int) $row['player_id']] = (int) $row['total'];
+        }
+
+        return $totals;
+    }
+
     public function getLastMatchDayByPlayer(int $playerId): array
     {
         $connection= parent::connect();

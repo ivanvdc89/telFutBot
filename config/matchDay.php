@@ -24,6 +24,24 @@
 
 define('CURRENT_MATCH_DAY', 2);
 
+/**
+ * Darrera jornada en què es poden fer canvis d'equips.
+ *
+ * Les normes diuen que no es poden fer canvis a partir de les semifinals, així
+ * que aquest valor ha de ser l'última jornada que es juga abans d'elles. El bot
+ * bloqueja /out i /in a partir de la jornada següent a aquesta.
+ *
+ * Surt de la numeració que ja fan servir els scripts de final de fase:
+ * calculateEndLeaguePhasePoints.php tanca la fase de lliga a la 9 i
+ * calculateEndGamePoints.php tanca el joc a la 19. Si cada eliminatòria té anada
+ * i tornada, queden play-in (10-11), octaus (12-13), quarts (14-15), semifinals
+ * (16-17) i final (18-19). Per tant l'última jornada amb mercat obert és la 15.
+ *
+ * COMPROVA-HO: si la numeració de les eliminatòries canvia, aquest número és el
+ * primer que s'ha d'ajustar.
+ */
+define('LAST_MATCH_DAY_WITH_CHANGES', 15);
+
 function currentMatchDay(): int
 {
     if (PHP_SAPI !== 'cli') {

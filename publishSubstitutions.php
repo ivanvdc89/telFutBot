@@ -44,7 +44,7 @@ foreach ($allSubstitutions as $substitution) {
     $message .= "-" . $player[0]['name'] . ": " . $oldTeamName . " -> " . $newTeam[0]['name'] . "\n";
     $message .= "Cost " . $substitution['points_cost'] . "\n\n";
     $substitutionRepo->markSubstitutionAsExecuted($substitution['id']);
-    if ($substitution['old_team_id'] === 0) {
+    if ((int) $substitution['old_team_id'] === 0) {
         $teamsRepo->addPlayerTeam($substitution['player_id'], $substitution['new_team_id']);
     } else {
         $teamsRepo->changePlayerTeam(
