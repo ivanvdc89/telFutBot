@@ -79,6 +79,12 @@ class FakeAction extends Action
         return array_values(array_filter($this->rows, fn($r) => $r['type'] === $type));
     }
 
+    /** Totes les files de la jornada, de qualsevol tipus: el conflicte entre accions. */
+    public function getActionsByPlayerAndMatchDay(int $playerId, int $matchDay)
+    {
+        return array_values(array_filter($this->rows, fn($r) => $r['match_day'] === $matchDay));
+    }
+
     public function addAction(int $playerId, int $matchDay, string $type, string $data)
     {
         $this->added[] = ['type' => $type, 'data' => json_decode($data, true)];

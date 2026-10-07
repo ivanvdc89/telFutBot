@@ -20,9 +20,4 @@ class BadDayAction extends CompetitionToggleAction
     {
         return 'badDay';
     }
-
-    protected function label(): string
-    {
-        return '#malDia';
-    }
 }

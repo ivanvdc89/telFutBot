@@ -21,9 +21,4 @@ class WinOrDieAction extends CompetitionToggleAction
     {
         return 'winOrDie';
     }
-
-    protected function label(): string
-    {
-        return '#guanyarOMorir';
-    }
 }

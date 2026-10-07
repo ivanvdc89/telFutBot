@@ -30,6 +30,25 @@ class Action extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * Totes les files d'acció d'un jugador en una jornada, de qualsevol tipus.
+     *
+     * Les accions que s'activen per competició (#malDia, #socElMillor,
+     * #guanyarOMorir) només en poden tenir una per competició i jornada, i per
+     * comprovar-ho cal veure què hi ha activat a la jornada en curs amb les
+     * altres dues.
+     */
+    public function getActionsByPlayerAndMatchDay(int $playerId, int $matchDay){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from actions where player_id=? and match_day=?;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $playerId);
+        $sql->bindValue(2, $matchDay);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getActions(int $matchDay, string $type){
         $connection= parent::connect();
         parent::set_names();

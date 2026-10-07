@@ -69,6 +69,12 @@ class FakeAction extends Action
         return array_values(array_filter($this->rows, fn($r) => $r['type'] === $type));
     }
 
+    /** Totes les files de la jornada, de qualsevol tipus: el conflicte entre accions. */
+    public function getActionsByPlayerAndMatchDay(int $playerId, int $matchDay)
+    {
+        return array_values(array_filter($this->rows, fn($r) => $r['match_day'] === $matchDay));
+    }
+
     public function addAction(int $playerId, int $matchDay, string $type, string $data)
     {
         $this->added[] = ['playerId' => $playerId, 'matchDay' => $matchDay, 'type' => $type, 'data' => json_decode($data, true)];
@@ -135,6 +141,21 @@ function buildWorld($actionData = null, bool $activated = true): array
  * temporada. Per defecte del mateix tipus que l'acció que s'està provant.
  */
 function seasonRow(FakeAction $action, int $matchDay, array $data, string $type = 'badDay', int $id = 1): void
+{
+    $action->rows[] = [
+        'id'        => $id,
+        'player_id' => PLAYER_ID,
+        'match_day' => $matchDay,
+        'type'      => $type,
+        'data'      => json_encode($data),
+    ];
+}
+
+/**
+ * Fila d'una de les altres dues accions del grup, per provar que només se'n pot
+ * activar una per competició i jornada.
+ */
+function otherActionRow(FakeAction $action, string $type, array $data, int $matchDay = MATCH_DAY, int $id = 50): void
 {
     $action->rows[] = [
         'id'        => $id,
@@ -360,6 +381,61 @@ $world = buildWorld(['CHL', 'EUL', 'COL'], true);
 [$sent, $action] = runCommand($world, '/malDia Activar CHL');
 check('avisa del límit', $sent[0]['text'] !== '' && str_contains($sent[0]['text'], 'Ja has fet servir el #malDia 3 vegades'), true);
 check('i no escriu res', $action->updates, []);
+
+echo "\n--- una sola de les tres accions per competició i jornada ---\n";
+
+echo "  (a) si una altra acció ja té la competició, es rebutja\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+otherActionRow($action, 'iAmTheBest', ['CHL']);   // el rival ocupa CHL aquesta jornada
+[$sent, $action] = runCommand($world, '/malDia Activar CHL');
+check('un sol missatge', count($sent), 1);
+checkContains('diu quina altra acció la té', $sent[0]['text'], 'ja hi tens el #socElMillor');
+checkContains('i quina competició', $sent[0]['text'], 'Champions League');
+check('no crea cap fila', $action->added, []);
+
+echo "  (b) una altra competició no queda bloquejada\n";
+[$sent, $action] = runCommand($world, '/malDia Activar EUL');
+check('sí que es pot', count($action->added), 1);
+check('i és la d\'EUL', $action->added[0]['data'], ['EUL']);
+
+echo "  (c) el conflicte és per jornada, no de temporada\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+otherActionRow($action, 'iAmTheBest', ['COL'], 1);   // jornada 1, no la que es juga
+[$sent, $action] = runCommand($world, '/malDia Activar COL');
+check('no bloqueja', count($action->added), 1);
+
+echo "  (d) si l'altra acció ho desactiva, la competició queda lliure\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+otherActionRow($action, 'iAmTheBest', ['CHL'], MATCH_DAY, 50);
+[$sent, $action] = runCommand($world, '/malDia Activar CHL');
+check('primer queda bloquejat', $action->added, []);
+
+foreach ($action->rows as $i => $row) {          // l'altra acció el desactiva
+    if ($row['id'] === 50) {
+        $action->rows[$i]['data'] = json_encode([]);
+    }
+}
+[$sent, $action] = runCommand($world, '/malDia Activar CHL');
+check('i ara ja es pot', count($action->added), 1);
+
+echo "  (e) també es comprova quan la fila pròpia ja existeix\n";
+$world = buildWorld(['EUL'], true);              // fila pròpia amb EUL
+[, , $action] = $world;
+otherActionRow($action, 'winOrDie', ['CHL'], MATCH_DAY, 51);
+[$sent, $action] = runCommand($world, '/malDia Activar CHL');
+checkContains('rebutja i diu qui la té', $sent[0]['text'], 'ja hi tens el #guanyarOMorir');
+check('no escriu res', $action->updates, []);
+check('però tot seguit mostra l\'estat', count($sent), 2);
+
+echo "  (f) una competició que no existeix es rebutja\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+[$sent, $action] = runCommand($world, '/malDia Activar XXX');
+check('text', $sent[0]['text'], 'ERROR, competició no vàlida');
+check('no crea cap fila', $action->added, []);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /malDia', BadDayAction::handlesCommand('/malDia'), true);

@@ -21,9 +21,4 @@ class IAmTheBestAction extends CompetitionToggleAction
     {
         return 'iAmTheBest';
     }
-
-    protected function label(): string
-    {
-        return '#socElMillor';
-    }
 }

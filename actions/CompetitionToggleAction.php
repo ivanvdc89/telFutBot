@@ -47,6 +47,20 @@ abstract class CompetitionToggleAction
     ];
 
     /**
+     * Les tres accions que comparteixen aquesta base, amb l'etiqueta que surt
+     * als missatges.
+     *
+     * És la llista del grup i, alhora, la font de label(): així el nom de cada
+     * acció és en un sol lloc. Només se'n pot activar UNA per competició i
+     * jornada, i per comprovar-ho cal conèixer les altres dues.
+     */
+    private const GROUP = [
+        'badDay'     => '#malDia',
+        'iAmTheBest' => '#socElMillor',
+        'winOrDie'   => '#guanyarOMorir',
+    ];
+
+    /**
      * Vegades que es pot fer servir cada acció en TOTA la temporada.
      *
      * El límit compta competicions activades, no jornades: activar les 3
@@ -93,9 +107,21 @@ abstract class CompetitionToggleAction
     abstract protected function actionType(): string;
 
     /**
-     * Etiqueta que surt als missatges, per exemple '#malDia'.
+     * Etiqueta que surt als missatges, per exemple '#malDia'. Surt del grup, i
+     * per tant una subclasse només ha de declarar command() i actionType().
      */
-    abstract protected function label(): string;
+    protected function label(): string
+    {
+        $type = $this->actionType();
+
+        if (!isset(self::GROUP[$type])) {
+            throw new RuntimeException(
+                "L'acció '$type' no està al grup d'accions de competició de CompetitionToggleAction."
+            );
+        }
+
+        return self::GROUP[$type];
+    }
 
     public static function handlesCommand(string $command): bool
     {
@@ -151,7 +177,13 @@ abstract class CompetitionToggleAction
                 return;
             }
 
-            $list[] = $this->args[2] ?? null;
+            $competition = $this->args[2] ?? null;
+
+            if (!$this->canActivateCompetition($playerId, $competition)) {
+                return;
+            }
+
+            $list[] = $competition;
 
             $this->actionsRepo->addAction(
                 $playerId,
@@ -188,7 +220,11 @@ abstract class CompetitionToggleAction
                     $this->sendLimitReached();
                     $save = false;
                 } elseif (!in_array($competition, $list)) {
-                    $list[] = $competition;
+                    if ($this->canActivateCompetition($playerId, $competition)) {
+                        $list[] = $competition;
+                    } else {
+                        $save = false;
+                    }
                 }
             } elseif ($this->subCommand() === 'Desactivar') {
                 $list = array_diff($list, [$this->args[2] ?? null]);
@@ -284,6 +320,61 @@ abstract class CompetitionToggleAction
         }
 
         return $total;
+    }
+
+    /**
+     * Comprova que es pugui activar aquesta competició: que sigui una de les
+     * tres i que cap de les altres dues accions del grup no la tingui ja
+     * activada en aquesta mateixa jornada.
+     *
+     * Si no es pot, envia el motiu i retorna false.
+     */
+    private function canActivateCompetition(int $playerId, ?string $competition): bool
+    {
+        if (!isset(self::COMPETITIONS[$competition])) {
+            $this->telegram->sendMessage($this->chatId, "ERROR, competició no vàlida");
+
+            return false;
+        }
+
+        $takenBy = $this->competitionTakenBy($playerId, $competition);
+
+        if ($takenBy !== null) {
+            $this->telegram->sendMessage(
+                $this->chatId,
+                "A la " . self::COMPETITIONS[$competition] . " d'aquesta jornada ja hi tens el "
+                    . $takenBy . ". Només s'hi pot activar una de les tres accions."
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Etiqueta de l'acció del grup que ja té aquesta competició activada en
+     * aquesta jornada, o null si no en té cap.
+     *
+     * Només mira la jornada en curs: la restricció és per competició i jornada,
+     * no de temporada.
+     */
+    private function competitionTakenBy(int $playerId, string $competition): ?string
+    {
+        foreach ($this->actionsRepo->getActionsByPlayerAndMatchDay($playerId, $this->matchDay) as $row) {
+            // La meva pròpia acció no em bloqueja.
+            if ($row['type'] === $this->actionType() || !isset(self::GROUP[$row['type']])) {
+                continue;
+            }
+
+            $list = json_decode($row['data'], true);
+
+            if (is_array($list) && in_array($competition, $list)) {
+                return self::GROUP[$row['type']];
+            }
+        }
+
+        return null;
     }
 
     private function sendLimitReached(): void
