@@ -1,0 +1,43 @@
+# Blindatge del document root.
+#
+# El lloc serveix l'arrel sencera del projecte, així que qualsevol fitxer que no
+# sigui .php i que no estigués bloquejat es podia descarregar. Per aquí es va
+# filtrar secrets.sh amb el token del bot a dins (content-type text/x-sh).
+#
+# Els .php no cal bloquejar-los: en demanar-los s'executen i no aboquen el codi,
+# i a més tots els scripts que no són el webhook tenen guarda de CLI.
+#
+# ATENCIÓ: aquest fitxer afecta TOT el lloc, i un error de sintaxi el deixa en
+# 500. El servidor ja en tenia un (retornava 403), així que abans de pujar-lo
+# comprova que no perds res d'aquell i fusiona'ls. Si després de pujar-lo veus un
+# 500, esborra'l: no cal perquè el bot funcioni.
+#
+# Els <IfModule> van a fora i els <FilesMatch> a dins perquè Apache no accepta
+# <IfModule> dins de <FilesMatch> (provoca "not allowed here" i un 500 a tot el
+# lloc, tot i que httpd -t digui que la sintaxi és correcta).
+
+<IfModule mod_authz_core.c>
+    # Res que comenci per punt (.gitignore, .env, .htaccess...)
+    <FilesMatch "^\.">
+        Require all denied
+    </FilesMatch>
+
+    # Scripts, borses de la base de dades, còpies de seguretat, logs,
+    # configuracions i fitxers d'entorn.
+    <FilesMatch "\.(sh|bash|sql|bak|backup|old|orig|save|swp|log|ini|conf|cfg|env|yml|yaml|json|lock|md|txt|dist)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+# Mateix bloqueig per a servidors Apache 2.2, que no entén "Require".
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^\.">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+
+    <FilesMatch "\.(sh|bash|sql|bak|backup|old|orig|save|swp|log|ini|conf|cfg|env|yml|yaml|json|lock|md|txt|dist)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>

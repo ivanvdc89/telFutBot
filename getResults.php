@@ -6,6 +6,14 @@ require_once("config/connection.php");
 require_once("models/team.php");
 require_once("models/teamResult.php");
 
+// Només per CLI. Els resultats estan enganxats aquí sota i el bucle els inserix
+// a team_results, així que si algú demanava aquesta URL per web escrivia a la
+// base de dades de producció sense cap autenticació.
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit;
+}
+
 function normalize($str) {
     // remove accents
     $str = iconv('UTF-8', 'ASCII//TRANSLIT', $str);

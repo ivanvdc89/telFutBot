@@ -6,5 +6,9 @@ CREATE TABLE team_results (
     points      INT DEFAULT NULL,
     match_day   INT NOT NULL,
     competition ENUM('CHL', 'EUL', 'COL') NOT NULL,
-    UNIQUE KEY u_team_matchday (team_id, matchday, competition)
+    -- Una sola fila per equip, jornada i competició. Sense aquesta clau, tornar
+    -- a executar getResults.php duplica els resultats: els punts no es compten
+    -- dues vegades (el motor llegeix només la primera fila), però les dades
+    -- queden brutes.
+    UNIQUE KEY u_team_matchday (team_id, match_day, competition)
 );
