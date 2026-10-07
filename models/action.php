@@ -12,6 +12,24 @@ class Action extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * Totes les files d'acció d'un jugador i un tipus, de qualsevol jornada.
+     *
+     * Les accions de temporada (badDay, iAmTheBest, winOrDie) només es poden
+     * fer servir 3 vegades en tota la temporada, i per saber quantes n'ha fet
+     * cal mirar totes les jornades, no només la de la jornada en curs.
+     */
+    public function getActionsByPlayerAndType(int $playerId, string $type){
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select * from actions where player_id=? and type=? order by match_day;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $playerId);
+        $sql->bindValue(2, $type);
+        $sql->execute();
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function getActions(int $matchDay, string $type){
         $connection= parent::connect();
         parent::set_names();

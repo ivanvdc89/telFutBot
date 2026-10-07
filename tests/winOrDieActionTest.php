@@ -67,19 +67,37 @@ class FakeAction extends Action
     {
         $this->queriedTypes[] = $type;
 
-        return $this->rows;
+        return array_values(array_filter(
+            $this->rows,
+            fn($r) => $r['match_day'] === $matchDay && $r['type'] === $type
+        ));
+    }
+
+    /** Totes les files del tipus, de qualsevol jornada: és el límit de temporada. */
+    public function getActionsByPlayerAndType(int $playerId, string $type)
+    {
+        return array_values(array_filter($this->rows, fn($r) => $r['type'] === $type));
     }
 
     public function addAction(int $playerId, int $matchDay, string $type, string $data)
     {
         $this->added[] = ['type' => $type, 'data' => json_decode($data, true)];
 
-        return 1;
+        $id           = 100 + count($this->rows);
+        $this->rows[] = ['id' => $id, 'player_id' => $playerId, 'match_day' => $matchDay, 'type' => $type, 'data' => $data];
+
+        return $id;
     }
 
     public function updateAction(int $id, string $data)
     {
         $this->updates[] = ['id' => $id, 'data' => json_decode($data, true)];
+
+        foreach ($this->rows as $i => $row) {
+            if ($row['id'] === $id) {
+                $this->rows[$i]['data'] = $data;
+            }
+        }
     }
 }
 
@@ -106,6 +124,18 @@ function buildWorld($actionData = null, bool $activated = true): array
     }
 
     return [$bot, $player, $action, $activated];
+}
+
+/** Fila d'una altra jornada: és el que compta per al límit de temporada. */
+function seasonRow(FakeAction $action, int $matchDay, array $data, string $type = 'winOrDie', int $id = 1): void
+{
+    $action->rows[] = [
+        'id'        => $id,
+        'player_id' => PLAYER_ID,
+        'match_day' => $matchDay,
+        'type'      => $type,
+        'data'      => json_encode($data),
+    ];
 }
 
 $failures = 0;
@@ -150,24 +180,24 @@ echo "\n--- /guanyarOMorir sense fila i activada ---\n";
 [$sent, $action] = runCommand(buildWorld(null, true), '/guanyarOMorir');
 check('consulta el tipus winOrDie', $action->queriedTypes, ['winOrDie']);
 check('text amb l\'etiqueta pròpia', $sent[0]['text'], '#guanyarOMorir activar o desactivar:');
-check('botons amb el comandament propi', $sent[0]['keyboard'], [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL']]);
+check('botons amb el comandament propi', $sent[0]['keyboard'], [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']]);
 check('no crea res sense demanar activar', $action->added, []);
 
 echo "\n--- /guanyarOMorir Activar EUL ---\n";
 [$sent, $action] = runCommand(buildWorld(null, true), '/guanyarOMorir Activar EUL');
 check('crea la fila amb el tipus winOrDie', $action->added, [['type' => 'winOrDie', 'data' => ['EUL']]]);
-check('el botó es gira', $sent[0]['keyboard'], [['/guanyarOMorir Activar CHL', '/guanyarOMorir Desactivar EUL']]);
+check('el botó es gira', $sent[0]['keyboard'], [['/guanyarOMorir Activar CHL', '/guanyarOMorir Desactivar EUL', '/guanyarOMorir Activar COL']]);
 
 echo "\n--- /guanyarOMorir amb fila: estat ---\n";
 [$sent, $action] = runCommand(buildWorld(['CHL'], true), '/guanyarOMorir');
-check('text', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: activat\n- Europa League: desactivat\n\nActivar o desactivar:");
-check('botons girats', $sent[0]['keyboard'], [['/guanyarOMorir Desactivar CHL', '/guanyarOMorir Activar EUL']]);
+check('text', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: activat\n- Europa League: desactivat\n- Conference League: desactivat\n\nActivar o desactivar:");
+check('botons girats', $sent[0]['keyboard'], [['/guanyarOMorir Desactivar CHL', '/guanyarOMorir Activar EUL', '/guanyarOMorir Activar COL']]);
 check('desa el mateix estat', $action->updates, [['id' => 55, 'data' => ['CHL']]]);
 
 echo "\n--- /guanyarOMorir Desactivar CHL ---\n";
 [$sent, $action] = runCommand(buildWorld(['CHL', 'EUL'], true), '/guanyarOMorir Desactivar CHL');
 check('desa la resta', $action->updates, [['id' => 55, 'data' => [1 => 'EUL']]]);
-check('text', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: desactivat\n- Europa League: activat\n\nActivar o desactivar:");
+check('text', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: desactivat\n- Europa League: activat\n- Conference League: desactivat\n\nActivar o desactivar:");
 
 echo "\n--- /guanyarOMorir amb l'acció apagada ---\n";
 [$sent, $action] = runCommand(buildWorld(null, false), '/guanyarOMorir');
@@ -175,9 +205,17 @@ check('sense fila: no disponible', $sent[0]['text'], 'No disponible');
 check('no crea cap fila', $action->added, []);
 
 [$sent, $action] = runCommand(buildWorld(['CHL'], false), '/guanyarOMorir');
-check('amb fila: mostra l\'estat', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: activat\n- Europa League: desactivat\n");
+check('amb fila: mostra l\'estat', $sent[0]['text'], "Actualment tens el #guanyarOMorir:\n- Champions League: activat\n- Europa League: desactivat\n- Conference League: desactivat\n");
 check('sense teclat', $sent[0]['keyboard'], null);
 check('no modifica res', $action->updates, []);
+
+echo "\n--- límit de temporada, també per al #guanyarOMorir ---\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+seasonRow($action, 1, ['CHL', 'EUL', 'COL']);   // les 3 gastades
+[$sent, $action] = runCommand($world, '/guanyarOMorir Activar CHL');
+check('avisa del límit amb la seva etiqueta', str_contains($sent[0]['text'], 'Ja has fet servir el #guanyarOMorir 3 vegades'), true);
+check('i no crea cap fila', $action->added, []);
 
 echo "\n";
 if ($failures === 0) {

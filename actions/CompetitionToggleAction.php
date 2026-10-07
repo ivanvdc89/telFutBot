@@ -23,9 +23,10 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *   - Amb més d'una fila (no hauria de passar) es mostra el menú, sense mirar
  *     el commutador.
  *
- * PENDENT: el teclat només ofereix CHL i EUL. Les normes diuen que aquestes
- * accions es poden activar a les 3 competicions i calculateMatchDayPoints ja
- * contempla COL, però aquí no hi ha cap botó per a la Conference.
+ * Les tres competicions es poden activar de forma independent. Abans el teclat
+ * només oferia CHL i EUL tot i que les normes i calculateMatchDayPoints ja
+ * parlaven de la Conference; ara surten les tres, definides a COMPETITIONS per
+ * no haver-les de repetir al teclat i al missatge d'estat.
  *
  * Una instància viu una sola petició del webhook: rep les dependències pel
  * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
@@ -33,6 +34,28 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  */
 abstract class CompetitionToggleAction
 {
+    /**
+     * Competicions que es poden activar, amb el nom que surt als missatges.
+     *
+     * L'ordre és el de sempre al projecte —Champions, Europa, Conference—, el
+     * mateix que el dels pots (1-4, 5-8, 9-12).
+     */
+    private const COMPETITIONS = [
+        'CHL' => 'Champions League',
+        'EUL' => 'Europa League',
+        'COL' => 'Conference League',
+    ];
+
+    /**
+     * Vegades que es pot fer servir cada acció en TOTA la temporada.
+     *
+     * El límit compta competicions activades, no jornades: activar les 3
+     * competicions a la mateixa jornada gasta les 3, i activar-ne una a tres
+     * jornades seguides també. Com que el que compta és el que està activat,
+     * desactivar-ne una torna a deixar marge.
+     */
+    private const MAX_USES_PER_SEASON = 3;
+
     protected BotApi $telegram;
     protected Player $playersRepo;
     protected Action $actionsRepo;
@@ -98,7 +121,7 @@ abstract class CompetitionToggleAction
         }
 
         if (count($actions) === 1) {
-            $this->updateAndShowState($actions[0]);
+            $this->updateAndShowState($playerId, $actions[0]);
 
             return;
         }
@@ -122,6 +145,12 @@ abstract class CompetitionToggleAction
         $list = [];
 
         if ($this->subCommand() === 'Activar') {
+            if ($this->usedThisSeason($playerId) >= self::MAX_USES_PER_SEASON) {
+                $this->sendLimitReached();
+
+                return;
+            }
+
             $list[] = $this->args[2] ?? null;
 
             $this->actionsRepo->addAction(
@@ -139,31 +168,48 @@ abstract class CompetitionToggleAction
      * Amb una fila: el commutador només decideix si es pot modificar. L'estat
      * es mostra sempre.
      */
-    private function updateAndShowState(array $action): void
+    private function updateAndShowState(int $playerId, array $action): void
     {
         $list           = json_decode($action['data'], true);
         $messageClosure = '';
         $keyboard       = null;
 
         if ($this->actionsActivated) {
+            $save = true;
+
             if ($this->subCommand() === 'Activar') {
-                $list[] = $this->args[2] ?? null;
-                $list   = array_unique($list);
+                $competition = $this->args[2] ?? null;
+
+                // El límit és de temporada i compta totes les jornades, també la
+                // que s'està jugant ara. Si ja ha arribat a 3 no s'activa res:
+                // ni tan sols si el que demana ja estava activat, perquè la
+                // comanda ha de fallar i no escriure res.
+                if ($this->usedThisSeason($playerId) >= self::MAX_USES_PER_SEASON) {
+                    $this->sendLimitReached();
+                    $save = false;
+                } elseif (!in_array($competition, $list)) {
+                    $list[] = $competition;
+                }
             } elseif ($this->subCommand() === 'Desactivar') {
                 $list = array_diff($list, [$this->args[2] ?? null]);
             }
 
-            // Es desa sempre, encara que no s'hagi demanat ni activar ni
-            // desactivar res: és el que feia el codi original.
-            $this->actionsRepo->updateAction((int) $action['id'], json_encode($list));
+            // Es desa sempre que la comanda no hagi estat bloquejada pel límit,
+            // encara que no s'hagi demanat ni activar ni desactivar res: és el
+            // que feia el codi original.
+            if ($save) {
+                $this->actionsRepo->updateAction((int) $action['id'], json_encode($list));
+            }
 
             $keyboard       = new ReplyKeyboardMarkup($this->toggleRows($list), true, true);
             $messageClosure = "\nActivar o desactivar:";
         }
 
-        $message = "Actualment tens el " . $this->label() . ":\n"
-            . "- Champions League: " . (in_array('CHL', $list) ? "activat\n" : "desactivat\n")
-            . "- Europa League: " . (in_array('EUL', $list) ? "activat\n" : "desactivat\n");
+        $message = "Actualment tens el " . $this->label() . ":\n";
+
+        foreach (self::COMPETITIONS as $competition => $name) {
+            $message .= "- " . $name . ": " . (in_array($competition, $list) ? "activat\n" : "desactivat\n");
+        }
 
         $this->telegram->sendMessage($this->chatId, $message . $messageClosure, false, null, null, $keyboard);
     }
@@ -192,11 +238,25 @@ abstract class CompetitionToggleAction
     private function toggleRows(array $list): array
     {
         $command = static::command();
+        $rows    = [];
+        $row     = [];
 
-        $butCHL = $command . ' ' . (in_array('CHL', $list) ? 'Desactivar' : 'Activar') . ' CHL';
-        $butEUL = $command . ' ' . (in_array('EUL', $list) ? 'Desactivar' : 'Activar') . ' EUL';
+        foreach (array_keys(self::COMPETITIONS) as $competition) {
+            $row[] = $command . ' '
+                . (in_array($competition, $list) ? 'Desactivar' : 'Activar')
+                . ' ' . $competition;
 
-        return [[$butCHL, $butEUL]];
+            if (count($row) === 3) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }
+
+        if (count($row) !== 0) {
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
     /**
@@ -205,6 +265,35 @@ abstract class CompetitionToggleAction
     private function subCommand(): string
     {
         return (string) ($this->args[1] ?? '');
+    }
+
+    /**
+     * Competicions que el jugador té activades aquesta temporada amb aquesta
+     * acció, sumant totes les jornades.
+     *
+     * El límit és per acció: les 3 del #malDia són independents de les 3 del
+     * #socElMillor.
+     */
+    private function usedThisSeason(int $playerId): int
+    {
+        $total = 0;
+
+        foreach ($this->actionsRepo->getActionsByPlayerAndType($playerId, $this->actionType()) as $row) {
+            $list = json_decode($row['data'], true);
+            $total += is_array($list) ? count($list) : 0;
+        }
+
+        return $total;
+    }
+
+    private function sendLimitReached(): void
+    {
+        $this->telegram->sendMessage(
+            $this->chatId,
+            "Ja has fet servir el " . $this->label() . " " . self::MAX_USES_PER_SEASON
+                . " vegades aquesta temporada, que és el màxim. Si en vols activar una altra, "
+                . "desactiva'n primer alguna."
+        );
     }
 
     /**
