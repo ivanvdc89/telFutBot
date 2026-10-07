@@ -296,8 +296,7 @@ $sub->pending = [
 [$sent] = runCommand($world, '/substitució');
 check('un sol missatge', count($sent), 1);
 checkContains('diu que ja estan tots', $sent[0]['text'], 'Ja has fet un canvi a cada competició.');
-check('teclat per competició + tots', $sent[0]['keyboard'], [
-    ['/substitució remove CHL', '/substitució remove EUL', '/substitució remove COL'],
+check('teclat només amb el botó de tots', $sent[0]['keyboard'], [
     ['/substitució remove', '/inici'],
 ]);
 check('no ofereix cap equip', in_array('/out OwnedPot1', flatKeyboard($sent[0]['keyboard']), true), false);
@@ -317,7 +316,7 @@ $sub->pending = [pendingRow(33, 'CHL', 101, 4, MATCH_DAY - 1)];
 check('no apareix cap pendent', $sent[0]['text'], 'Els teus equips:');
 check('sense botó de remove', in_array('/substitució remove', flatKeyboard($sent[0]['keyboard']), true), false);
 
-echo "\n--- /substitució remove (un de sol) ---\n";
+echo "\n--- /substitució remove amb un de sol (equival a tots) ---\n";
 $world = buildWorld(range(1, 12));
 [, , , $sub] = $world;
 $sub->pending = [pendingRow(33, 'CHL', 101, 4)];
@@ -337,7 +336,10 @@ $sub->pending = [
 check('text', $sent[0]['text'], 'Canvis eliminats (3)');
 check('ids eliminats', $sub->removed, [33, 34, 35]);
 
-echo "\n--- /substitució remove CHL ---\n";
+echo "\n--- un argument de més s'ignora: només hi ha esborrar-ho tot ---\n";
+// No existeix l'esborrat individual (vegeu removeSubstitutions): les validacions
+// es fan sobre la plantilla efectiva i treure'n un de sol podria deixar la resta
+// en una combinació il·legal. Qualsevol argument s'ignora i s'ho emporta tot.
 $world = buildWorld(range(1, 12));
 [, , , $sub] = $world;
 $sub->pending = [
@@ -345,32 +347,21 @@ $sub->pending = [
     pendingRow(34, 'EUL', 105, 50),
 ];
 [$sent, $sub] = runCommand($world, '/substitució remove CHL');
-check('text', $sent[0]['text'], 'Canvi eliminat: CHL');
-check('només el de CHL', $sub->removed, [33]);
+check('elimina els dos, no només CHL', $sent[0]['text'], 'Canvis eliminats (2)');
+check('ids eliminats', $sub->removed, [33, 34]);
 
-echo "\n--- /substitució remove eul (minúscules) ---\n";
-$world = buildWorld(range(1, 12));
-[, , , $sub] = $world;
-$sub->pending = [pendingRow(34, 'EUL', 105, 50)];
-[$sent, $sub] = runCommand($world, '/substitució remove eul');
-check('text', $sent[0]['text'], 'Canvi eliminat: EUL');
-check('id eliminat', $sub->removed, [34]);
-
-echo "\n--- /substitució remove d'una competició sense canvi ---\n";
+echo "\n  la combinació il·legal que permetia l'esborrat parcial és inaccessible\n";
+// El cas exacte: amb el canvi de CHL viu, Espanya queda alliberada i el pot 5
+// pot ser espanyol. Sense aquell canvi (l'estat en què quedaries si el poguessis
+// esborrar de sol) el bot ho rebutja.
 $world = buildWorld(range(1, 12));
 [, , , $sub] = $world;
 $sub->pending = [pendingRow(33, 'CHL', 101, 4)];
-[$sent, $sub] = runCommand($world, '/substitució remove EUL');
-check('text', $sent[0]['text'], 'No tens cap canvi pendent a EUL');
-check('no s\'ha eliminat res', $sub->removed, []);
+[$sent] = runCommand($world, '/in CandSpain5');
+check('amb el canvi de CHL viu: es permet', $sent[0]['text'], 'Substitució guardada: OwnedPot5 -> CandSpain5 (cost: 6 punts)');
 
-echo "\n--- /substitució remove d'una competició inventada ---\n";
-$world = buildWorld(range(1, 12));
-[, , , $sub] = $world;
-$sub->pending = [pendingRow(33, 'CHL', 101, 4)];
-[$sent, $sub] = runCommand($world, '/substitució remove XXX');
-check('text', $sent[0]['text'], 'ERROR, competició no vàlida');
-check('no s\'ha eliminat res', $sub->removed, []);
+[$sent] = runCommand(buildWorld(range(1, 12)), '/in CandSpain5');
+check('sense el canvi de CHL: es rebutja', $sent[0]['text'], "ERROR, ja tens un equip d'aquest país");
 
 echo "\n--- /substitució remove sense cap pendent ---\n";
 [$sent] = runCommand(buildWorld(range(1, 12)), '/substitució remove');

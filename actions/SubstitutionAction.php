@@ -158,7 +158,7 @@ class SubstitutionAction
             $message .= "Els canvis estan tancats: no es poden fer canvis a partir de les semifinals.";
 
             $keyboard = count($pending) > 0
-                ? new ReplyKeyboardMarkup($this->removeRows($pendingCompetitions), true, true)
+                ? new ReplyKeyboardMarkup($this->removeRows(), true, true)
                 : null;
 
             $this->telegram->sendMessage($this->chatId, $message, false, null, null, $keyboard);
@@ -170,7 +170,7 @@ class SubstitutionAction
 
         if (count($freeCompetitions) === 0) {
             $message .= "Ja has fet un canvi a cada competició.";
-            $keyboard = new ReplyKeyboardMarkup($this->removeRows($pendingCompetitions), true, true);
+            $keyboard = new ReplyKeyboardMarkup($this->removeRows(), true, true);
             $this->telegram->sendMessage($this->chatId, $message, false, null, null, $keyboard);
 
             return;
@@ -180,7 +180,7 @@ class SubstitutionAction
         $rows = $this->teamChoiceRows($playerId, $freeCompetitions);
 
         if (count($pending) > 0) {
-            $rows = array_merge($rows, $this->removeRows($pendingCompetitions));
+            $rows = array_merge($rows, $this->removeRows());
         }
 
         $message  .= "Els teus equips:";
@@ -351,8 +351,21 @@ class SubstitutionAction
     }
 
     /**
-     * /substitució remove      esborra tots els canvis pendents.
-     * /substitució remove CHL  esborra només el de la competició indicada.
+     * Esborra tots els canvis pendents de la jornada.
+     *
+     *     /substitució remove
+     *
+     * No existeix l'esborrat individual. Les validacions de país i de pot es fan
+     * sobre la plantilla efectiva (la real amb tots els pendents aplicats), i
+     * treure'n un de sol podria deixar els altres en una combinació il·legal. Per
+     * exemple, amb Espanya al pot 1 i França al pot 5: si demanes pot 1 ->
+     * Alemanya i després pot 5 -> un equip espanyol, els dos canvis junts són
+     * legals (Alemanya + Espanya), però si n'esborressis el primer et quedaries
+     * amb l'Espanya del pot 1 i el del pot 5, dos equips del mateix país.
+     * Esborrar-los tots sempre torna a la plantilla original, que és legal.
+     *
+     * El comandament no té cap argument: si n'arriba algun s'ignora i s'ho
+     * emporta tot, que és l'única cosa que sap fer.
      */
     private function removeSubstitutions(array $pending): void
     {
@@ -362,44 +375,16 @@ class SubstitutionAction
             return;
         }
 
-        $competition = strtoupper(trim((string) ($this->args[2] ?? '')));
-
-        if ($competition === '') {
-            foreach ($pending as $substitution) {
-                $this->substitutionsRepo->removePendingSubstitution($substitution['id']);
-            }
-
-            $this->telegram->sendMessage(
-                $this->chatId,
-                count($pending) === 1
-                    ? "Substitució eliminada"
-                    : "Canvis eliminats (" . count($pending) . ")"
-            );
-
-            return;
-        }
-
-        if (!in_array($competition, self::COMPETITIONS, true)) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, competició no vàlida");
-
-            return;
-        }
-
-        $removed = 0;
         foreach ($pending as $substitution) {
-            if ($substitution['competition'] === $competition) {
-                $this->substitutionsRepo->removePendingSubstitution($substitution['id']);
-                $removed++;
-            }
+            $this->substitutionsRepo->removePendingSubstitution($substitution['id']);
         }
 
-        if ($removed === 0) {
-            $this->telegram->sendMessage($this->chatId, "No tens cap canvi pendent a " . $competition);
-
-            return;
-        }
-
-        $this->telegram->sendMessage($this->chatId, "Canvi eliminat: " . $competition);
+        $this->telegram->sendMessage(
+            $this->chatId,
+            count($pending) === 1
+                ? "Substitució eliminada"
+                : "Canvis eliminats (" . count($pending) . ")"
+        );
     }
 
     /**
@@ -453,32 +438,15 @@ class SubstitutionAction
     }
 
     /**
-     * Files de botons per eliminar: un botó per competició quan n'hi ha més
-     * d'una, i sempre el botó que ho elimina tot.
+     * Files de botons per eliminar.
+     *
+     * Només hi ha l'opció d'eliminar-ho tot: un canvi individual no es pot
+     * treure sense poder deixar la resta en una combinació il·legal, tal com
+     * s'explica a removeSubstitutions().
      */
-    private function removeRows(array $pendingCompetitions): array
+    private function removeRows(): array
     {
-        $rows = [];
-
-        if (count($pendingCompetitions) > 1) {
-            $row = [];
-            foreach ($pendingCompetitions as $competition) {
-                $row[] = '/substitució remove ' . $competition;
-
-                if (count($row) === 3) {
-                    $rows[] = $row;
-                    $row    = [];
-                }
-            }
-
-            if (count($row) !== 0) {
-                $rows[] = $row;
-            }
-        }
-
-        $rows[] = ['/substitució remove', '/inici'];
-
-        return $rows;
+        return [['/substitució remove', '/inici']];
     }
 
     /**
