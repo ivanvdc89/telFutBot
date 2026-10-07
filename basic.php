@@ -11,6 +11,10 @@ require_once("models/substitution.php");
 require_once("models/action.php");
 require_once("models/matchDayPlayerPoint.php");
 require_once("actions/SubstitutionAction.php");
+require_once("actions/DoubleOrNothingAction.php");
+require_once("actions/BadDayAction.php");
+require_once("actions/IAmTheBestAction.php");
+require_once("actions/WinOrDieAction.php");
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -38,9 +42,9 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
     $args    = explode(" ", $text);
     $command = $args[0];
 
-    // L'acció de substitució viu a actions/SubstitutionAction.php. El router
-    // només comprova si el comandament li pertoca i, si és així, tanca la
-    // petició aquí perquè no caigui al missatge final de més avall.
+    // Cada acció viu a actions/. El router només comprova si el comandament és
+    // seu i, si ho és, tanca la petició aquí perquè no caigui al missatge final
+    // de més avall.
     if (SubstitutionAction::handlesCommand($command)) {
         $substitutionAction = new SubstitutionAction(
             $telegram,
@@ -54,6 +58,63 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             $args
         );
         $substitutionAction->run($command);
+        exit;
+    }
+
+    if (DoubleOrNothingAction::handlesCommand($command)) {
+        $doubleOrNothingAction = new DoubleOrNothingAction(
+            $telegram,
+            $playersRepo,
+            $teamsRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            $actionsActivated
+        );
+        $doubleOrNothingAction->run();
+        exit;
+    }
+
+    if (BadDayAction::handlesCommand($command)) {
+        $badDayAction = new BadDayAction(
+            $telegram,
+            $playersRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            $actionsActivated
+        );
+        $badDayAction->run();
+        exit;
+    }
+
+    if (IAmTheBestAction::handlesCommand($command)) {
+        $iAmTheBestAction = new IAmTheBestAction(
+            $telegram,
+            $playersRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            $actionsActivated
+        );
+        $iAmTheBestAction->run();
+        exit;
+    }
+
+    if (WinOrDieAction::handlesCommand($command)) {
+        $winOrDieAction = new WinOrDieAction(
+            $telegram,
+            $playersRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            $actionsActivated
+        );
+        $winOrDieAction->run();
         exit;
     }
 
@@ -441,163 +502,6 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
         exit;
     }
 
-    elseif ($command === '/dobleORes') {
-        $actionsActivated = false;
-
-        $player    = $playersRepo->getPlayerByChatId($chatId);
-        $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'doubleOrNothing');
-        if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
-            $telegram->sendMessage($chatId, "No disponible");
-            exit;
-        }
-        $doubleOrNothingData = json_decode($actions[0]['data'], true);
-
-        if ($args[1] == 'borrar') {
-            $doubleOrNothingData['teams'] = [];
-            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/dobleORes', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Vots borrats",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        }
-
-        if ($doubleOrNothingData['max'] == count($doubleOrNothingData['teams'])) {
-            $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
-                       "Equipts votats:\n";
-
-            foreach ($doubleOrNothingData['teams'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                null
-            );
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/dobleORes borrar', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Ja tens tots els vots fets",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        }
-
-        if(!isset($args[1])) {
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/dobleORes pot 1', '/dobleORes pot 2', '/dobleORes pot 3', '/dobleORes pot 4'],
-                    ['/dobleORes pot 5', '/dobleORes pot 6', '/dobleORes pot 7', '/dobleORes pot 8'],
-                    ['/dobleORes pot 9', '/dobleORes pot 10', '/dobleORes pot 11', '/dobleORes pot 12']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Pots disponibles:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        } elseif ($args[1] == 'pot') {
-            if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
-                $teams   = $teamsRepo->getTeamsByPot($args[2]);
-                $rows    = [];
-                $row     = [];
-                foreach ($teams as $team) {
-                    $row[] = '/dobleORes vot ' . $team['name'];
-                    if(count($row) == 3) {
-                        $rows[] = $row;
-                        $row = [];
-                    }
-                }
-                if (count($row) != 0) {
-                    $rows[] = $row;
-                }
-
-                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-
-                $telegram->sendMessage(
-                    $chatId,
-                    "Equips del pot " . $args[2] . ":",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            } else {
-                $telegram->sendMessage($chatId, "ERROR, pot invàlid");
-                exit;
-            }
-        } elseif ($args[1] == 'vot') {
-            $team = $teamsRepo->getTeamByName($args[2]);
-            if (!is_array($team) || count($team) == 0) {
-                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                exit;
-            }
-            $doubleOrNothingData['teams'][] = $team[0]['id'];
-            $actionsRepo->updateAction($actions[0]['id'], json_encode($doubleOrNothingData));
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/dobleORes', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Vot guardat",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-
-            $message = "Vots màxims: " . $doubleOrNothingData['max'] . "\n" .
-                       "Equipts votats:\n";
-
-            foreach ($doubleOrNothingData['teams'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                null
-            );
-            exit;
-
-        }
-    }
-
     elseif ($command === '/kos') {
         $actionsActivated = false;
         $player    = $playersRepo->getPlayerByChatId($chatId);
@@ -919,255 +823,6 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
                 exit;
             }
         }
-    }
-
-    elseif ($command === '/malDia') {
-        $actionsActivated = false;
-        $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'badDay');
-
-        if (is_array($actions) && count($actions) == 0) {
-            if (!$actionsActivated) {
-                $telegram->sendMessage($chatId, "No disponible");
-                exit;
-            }
-
-            if ($args[1] === 'Activar') {
-                $badDayList[]=$args[2];
-                $actionsRepo->addAction($player[0]['id'], $matchDay, 'badDay', json_encode($badDayList));
-                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-            } else {
-                $keyboard =
-                    new ReplyKeyboardMarkup([['/malDia Activar CHL', '/malDia Activar EUL']], true, true);
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                "#malDia activar o desactivar:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        } elseif (count($actions) == 1) {
-            $badDayList = json_decode($actions[0]['data'], true);
-            $messageClosure = "";
-            if ($actionsActivated) {
-                if ($args[1] === 'Activar') {
-                    $badDayList[] = $args[2];
-                    $badDayList   = array_unique($badDayList);
-                } elseif ($args[1] === 'Desactivar') {
-                    $badDayList = array_diff($badDayList, [$args[2]]);
-                }
-                $actionsRepo->updateAction($actions[0]['id'], json_encode($badDayList));
-
-                $butCHL = '/malDia ' . (in_array('CHL', $badDayList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/malDia ' . (in_array('EUL', $badDayList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-
-                $messageClosure = "\nActivar o desactivar:";
-            }
-
-            $message = "Actualment tens el #malDia:\n" .
-                "- Champions League: " . (in_array('CHL', $badDayList) ? "activat\n" : "desactivat\n") .
-                "- Europa League: " . (in_array('EUL', $badDayList) ? "activat\n" : "desactivat\n");
-
-            $telegram->sendMessage(
-                $chatId,
-                $message . $messageClosure,
-                false,
-                null,
-                null,
-                $keyboard ?? null
-            );
-            exit;
-        }
-
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/malDia Activar CHL', '/malDia Activar EUL']], true, true
-        );
-        $telegram->sendMessage(
-            $chatId,
-            "#malDia activar o desactivar:",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-        exit;
-    }
-
-    elseif ($command === '/socElMillor') {
-        $actionsActivated = false;
-        $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'iAmTheBest');
-
-        if (is_array($actions) && count($actions) == 0) {
-            if (!$actionsActivated) {
-                $telegram->sendMessage($chatId, "No disponible");
-                exit;
-            }
-
-            if ($args[1] === 'Activar') {
-                $iAmTheBestList[]=$args[2];
-                $actionsRepo->addAction($player[0]['id'], $matchDay, 'iAmTheBest', json_encode($iAmTheBestList));
-                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-            } else {
-                $keyboard =
-                    new ReplyKeyboardMarkup([['/socElMillor Activar CHL', '/socElMillor Activar EUL']], true, true);
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                "#socElMillor activar o desactivar:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        } elseif (count($actions) == 1) {
-            $iAmTheBestList = json_decode($actions[0]['data'], true);
-            $messageClosure = "";
-            if ($actionsActivated) {
-                if ($args[1] === 'Activar') {
-                    $iAmTheBestList[] = $args[2];
-                    $iAmTheBestList   = array_unique($iAmTheBestList);
-                } elseif ($args[1] === 'Desactivar') {
-                    $iAmTheBestList = array_diff($iAmTheBestList, [$args[2]]);
-                }
-                $actionsRepo->updateAction($actions[0]['id'], json_encode($iAmTheBestList));
-
-                $butCHL = '/socElMillor ' . (in_array('CHL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/socElMillor ' . (in_array('EUL', $iAmTheBestList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-
-                $messageClosure = "\nActivar o desactivar:";
-            }
-
-            $message = "Actualment tens el #socElMillor:\n" .
-                "- Champions League: " . (in_array('CHL', $iAmTheBestList) ? "activat\n" : "desactivat\n") .
-                "- Europa League: " . (in_array('EUL', $iAmTheBestList) ? "activat\n" : "desactivat\n");
-
-            $telegram->sendMessage(
-                $chatId,
-                $message . $messageClosure,
-                false,
-                null,
-                null,
-                $keyboard ?? null
-            );
-            exit;
-        }
-
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/socElMillor Activar CHL', '/socElMillor Activar EUL']], true, true
-        );
-        $telegram->sendMessage(
-            $chatId,
-            "#socElMillor activar o desactivar:",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-        exit;
-    }
-
-    elseif ($command === '/guanyarOMorir') {
-        $actionsActivated = false;
-        $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'winOrDie');
-
-        if (is_array($actions) && count($actions) == 0) {
-            if (!$actionsActivated) {
-                $telegram->sendMessage($chatId, "No disponible");
-                exit;
-            }
-
-            if ($args[1] === 'Activar') {
-                $winOrDietList[]=$args[2];
-                $actionsRepo->addAction($player[0]['id'], $matchDay, 'winOrDie', json_encode($winOrDietList));
-                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-            } else {
-                $keyboard =
-                    new ReplyKeyboardMarkup([['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL']], true, true);
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                "#guanyarOMorir activar o desactivar:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        } elseif (count($actions) == 1) {
-            $winOrDietList = json_decode($actions[0]['data'], true);
-            $messageClosure = "";
-            if ($actionsActivated) {
-                if ($args[1] === 'Activar') {
-                    $winOrDietList[] = $args[2];
-                    $winOrDietList   = array_unique($winOrDietList);
-                } elseif ($args[1] === 'Desactivar') {
-                    $winOrDietList = array_diff($winOrDietList, [$args[2]]);
-                }
-                $actionsRepo->updateAction($actions[0]['id'], json_encode($winOrDietList));
-
-                $butCHL = '/guanyarOMorir ' . (in_array('CHL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' CHL';
-                $butEUL = '/guanyarOMorir ' . (in_array('EUL', $winOrDietList) ? 'Desactivar' : 'Activar') . ' EUL';
-                $keyboard = new ReplyKeyboardMarkup([
-                    [$butCHL, $butEUL]
-                ], true, true);
-
-                $messageClosure = "\nActivar o desactivar:";
-            }
-
-            $message = "Actualment tens el #guanyarOMorir:\n" .
-                       "- Champions League: " . (in_array('CHL', $winOrDietList) ? "activat\n" : "desactivat\n") .
-                       "- Europa League: " . (in_array('EUL', $winOrDietList) ? "activat\n" : "desactivat\n");
-
-            $telegram->sendMessage(
-                $chatId,
-                $message . $messageClosure,
-                false,
-                null,
-                null,
-                $keyboard ?? null
-            );
-            exit;
-        }
-
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/guanyarOMorir Activar CHL', '/guanyarOMorir Activar EUL']], true, true
-        );
-        $telegram->sendMessage(
-            $chatId,
-            "#guanyarOMorir activar o desactivar:",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-        exit;
     }
 
     elseif ($command === '/segurQuePasse' || $command === '/passe') {
