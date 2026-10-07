@@ -1,6 +1,8 @@
 <?php
 
-$token = '';
+require_once("config/secrets.php");
+
+$token = secret('telegram_token');
 
 $url = 'https://ko.ivanvdc.com/basic.php';
 

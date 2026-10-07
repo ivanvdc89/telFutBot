@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
+require_once("config/secrets.php");
 require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
@@ -18,7 +19,7 @@ $pots           = [1,2,3,4,5,6,7,8,9,10,11,12];
 $potNumber      = [0,1,2,3,4,1,2,3,4,1,2,3,4];
 $potCompetition = ['X', 'CHL', 'CHL', 'CHL', 'CHL', 'EUL', 'EUL', 'EUL', 'EUL', 'COL', 'COL', 'COL', 'COL'];
 
-$telegram = new BotApi('%TOKEN_ID');
+$telegram = new BotApi(secret('telegram_token'));
 
 $update = json_decode(file_get_contents('php://input'));
 

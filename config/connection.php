@@ -1,12 +1,16 @@
 <?php
+require_once(__DIR__ . '/secrets.php');
+
 class Connection{
     protected $dbh;
 
     protected function connect() {
         try {
-            $dsn = "mysql:host=localhost;dbname=fut_ko;charset=utf8mb4";
-            $user = "myappuser";
-            $pass = "123ggg";
+            $dsn = "mysql:host=" . secret('db_host')
+                . ";dbname=" . secret('db_name')
+                . ";charset=utf8mb4";
+            $user = secret('db_user');
+            $pass = secret('db_pass', true);
 
             $options = [
                 PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,

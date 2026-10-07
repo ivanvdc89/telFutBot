@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
+require_once("config/secrets.php");
 require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
@@ -17,7 +18,7 @@ if (php_sapi_name() !== 'cli') {
     exit;
 }
 
-$telegram = new BotApi('%TOKEN_ID');
+$telegram = new BotApi(secret('telegram_token'));
 
 $groupRepo                = new Group();
 $playersRepo              = new Player();

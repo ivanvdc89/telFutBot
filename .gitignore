@@ -1,2 +1,3 @@
 .idea
 secrets.sh
+config/secrets.values.php

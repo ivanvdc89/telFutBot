@@ -20,7 +20,7 @@ class FakeBot extends BotApi
 
     public function __construct()
     {
-        parent::__construct('%TOKEN_ID');
+        parent::__construct('test-token');
     }
 
     public function sendMessage(
