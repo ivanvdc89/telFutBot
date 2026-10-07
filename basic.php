@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
+require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
@@ -24,7 +25,7 @@ $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
-$matchDay = 18;
+$matchDay = currentMatchDay();
 $actionsActivated = false;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
@@ -419,9 +420,6 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
 
     elseif ($command === '/substitució') {
         $player = $playersRepo->getPlayerByChatId($chatId);
-
-        $telegram->sendMessage($chatId, "No disponible");
-        exit;
 
         $pendingSubstitutions = $substitutionsRepo->getPendingSubstitutionsByPlayerId($player[0]['id']);
 

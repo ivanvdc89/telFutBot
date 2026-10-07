@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
+require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/matchDayTeamPoint.php");
@@ -23,7 +24,7 @@ $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
 $actionsRepo             = new Action();
 $substitutionsRepo       = new Substitution();
-$matchDay                = 1;
+$matchDay                = currentMatchDay();
 
 $actions = $actionsRepo->getActions($matchDay, 'iAmTheBest');
 $players = [

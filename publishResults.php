@@ -3,6 +3,7 @@
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
+require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/group.php");
@@ -26,7 +27,7 @@ $matchDayTeamPointsRepo   = new MatchDayTeamPoint();
 
 $group          = $groupRepo->getGroup(1);
 $groupChatId    = $group[0]['chat_id'];
-$matchDay       = 1;
+$matchDay       = currentMatchDay();
 $message        = "";
 $order          = 1;
 $messageBestsCHL = "";
