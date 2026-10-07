@@ -4,12 +4,20 @@
  *
  * PER PASSAR DE JORNADA, EDITA NOMÉS EL VALOR DE CURRENT_MATCH_DAY D'AQUEST FITXER.
  *
- * La fan servir els 5 scripts vius, que sempre han d'anar amb la mateixa jornada:
+ * La fan servir aquests scripts, que sempre han d'anar amb la mateixa jornada:
  *   - basic.php                    (el bot, recull accions i substitucions)
- *   - publishActions.php           (publica les accions al grup)
+ *   - applySubstitutions.php       (aplica les substitucions a la plantilla)
  *   - calculateMatchDayPoints.php  (calcula els punts de la jornada)
+ *   - publishSubstitutions.php     (anuncia al grup els canvis aplicats)
+ *   - publishActions.php           (publica les accions al grup)
  *   - publishResults.php           (publica els resultats al grup)
- *   - publishSubstitutions.php     (aplica les substitucions pendents)
+ *
+ * L'ordre dels passos de la jornada és:
+ *   applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
+ *                                                -> publishResults
+ * Cada pas es pot tornar a executar pel seu compte: aplicar és idempotent i
+ * anunciar no consumeix res, així que si un enviament a Telegram falla només
+ * cal repetir aquell pas.
  *
  * NO la fan servir els scripts de final de fase, perquè la seva jornada és una
  * fita fixa i no la jornada en curs:

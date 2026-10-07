@@ -77,6 +77,14 @@ class Team extends Connection {
         }
     }
 
+    /**
+     * Canvia l'equip d'un jugador.
+     *
+     * Retorna el nombre de files afectades (1 si el canvi s'ha fet, 0 si no
+     * existia cap fila amb aquell equip) o false si hi ha hagut un error de BD.
+     * Abans retornava lastInsertId(), que en un UPDATE no vol dir res i feia
+     * impossible detectar un fracàs des de qui el crida.
+     */
     public function changePlayerTeam($playerId, $oldTeamId, $newTeamId) {
         try {
             $connection = parent::connect();
@@ -88,7 +96,7 @@ class Team extends Connection {
             $stmt->bindValue(':new_team_id', $newTeamId, PDO::PARAM_INT);
             $stmt->execute();
 
-            return $connection->lastInsertId();
+            return $stmt->rowCount();
 
         } catch (PDOException $e) {
             error_log("DB update error: " . $e->getMessage());
@@ -105,6 +113,21 @@ class Team extends Connection {
         $sql->bindValue(1, $teamId);
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
+    /**
+     * Nom de l'equip, o "Empty" si l'id és 0 (forat buit) o l'equip ja no
+     * existeix. El fan servir els scripts de substitució per als seus missatges.
+     */
+    public function getTeamName($teamId): string
+    {
+        if ((int) $teamId === 0) {
+            return 'Empty';
+        }
+
+        $team = $this->getTeamById($teamId);
+
+        return isset($team[0]) ? $team[0]['name'] : '#' . $teamId;
     }
 }
 ?>

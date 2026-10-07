@@ -25,6 +25,25 @@ class Substitution extends Connection
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * Substitucions ja aplicades d'una jornada (pending = 0).
+     *
+     * Les fa servir publishSubstitutions.php per anunciar el que
+     * applySubstitutions.php ha aplicat prèviament. Com que no depèn de res que
+     * es consumeixi, tornar a executar el publicador reenvia el mateix anunci.
+     */
+    public function getExecutedSubstitutionsByMatchDay(int $matchDay)
+    {
+        $connection = parent::connect();
+        parent::set_names();
+        $sql = "select * from substitutions where match_day=? and pending = 0 order by id;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $matchDay);
+        $sql->execute();
+
+        return $sql->fetchAll(pdo::FETCH_ASSOC);
+    }
+
     public function addSubstitution(int $playerId, int $matchDay, int $oldTeamId, int $newTeamId, string $competition, int $pointsCost)
     {
         try {
