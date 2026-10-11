@@ -50,6 +50,31 @@ define('CURRENT_MATCH_DAY', 2);
  */
 define('LAST_MATCH_DAY_WITH_CHANGES', 15);
 
+/**
+ * Els dos interruptors de la temporada. Els mou l'administrador a mà, i són el
+ * que obre i tanca cada fase del joc.
+ *
+ * SUBSTITUTIONS_OPEN: es poden fer canvis d'equips. Es tanca al termini de cada
+ *   jornada, ABANS d'aplicar i publicar els canvis pendents.
+ * ACTIONS_OPEN: es poden activar les accions de competició (#malDia,
+ *   #socElMillor, #guanyarOMorir). S'obre DESPRÉS d'aplicar i publicar els
+ *   canvis, perquè ningú no triï accions sobre una plantilla que encara ha de
+ *   canviar.
+ *
+ * El menú /accions i els handlers surten d'aquests dos valors, així que tancar
+ * una cosa la treu de la llista tot sol: no hi ha cap llista per editar.
+ *
+ * ORDRE DEL TERMINI D'UNA JORNADA:
+ *   1. SUBSTITUTIONS_OPEN = false
+ *   2. php applySubstitutions.php        <- encara amb la jornada en curs
+ *   3. php publishSubstitutions.php
+ *   4. ACTIONS_OPEN = true
+ * Canviar CURRENT_MATCH_DAY abans del pas 2 faria que el pas 2 no trobés les
+ * substitucions pendents d'aquesta jornada, i es perdrien.
+ */
+define('SUBSTITUTIONS_OPEN', true);
+define('ACTIONS_OPEN', false);
+
 function currentMatchDay(): int
 {
     if (PHP_SAPI !== 'cli') {

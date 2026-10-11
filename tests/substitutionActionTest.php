@@ -238,13 +238,20 @@ function checkContains(string $label, ?string $haystack, string $needle): void
 }
 
 /** @return array [missatges enviats, repo de substitucions] */
-function runCommand(array $world, string $text, int $lastMatchDayWithChanges = LAST_MATCH_DAY_WITH_CHANGES): array
-{
+function runCommand(
+    array $world,
+    string $text,
+    int $lastMatchDayWithChanges = LAST_MATCH_DAY_WITH_CHANGES,
+    bool $substitutionsOpen = SUBSTITUTIONS_OPEN
+): array {
     [$bot, $player, $team, $sub, $points] = $world;
     $bot->sent = [];
     $args      = explode(' ', $text);
 
-    $action = new SubstitutionAction($bot, $player, $team, $sub, $points, CHAT_ID, MATCH_DAY, $lastMatchDayWithChanges, $args);
+    $action = new SubstitutionAction(
+        $bot, $player, $team, $sub, $points, CHAT_ID, MATCH_DAY,
+        $lastMatchDayWithChanges, $substitutionsOpen, $args
+    );
     $action->run($args[0]);
 
     return [$bot->sent, $sub];
@@ -545,6 +552,46 @@ $sub->pending = [pendingRow(33, 'CHL', 101, 4)];
 [$sent, $sub] = runCommand($world, '/substitució remove', MATCH_DAY - 1);
 check('es pot eliminar amb els canvis tancats', $sent[0]['text'], 'Substitució eliminada');
 check('id eliminat', $sub->removed, [33]);
+
+echo "\n--- el termini tancat per l'administrador (SUBSTITUTIONS_OPEN = false) ---\n";
+// És el que passa cada jornada a les 23:59, just abans d'aplicar i publicar.
+$TANCAT = "Els canvis estan tancats: el termini d'aquesta jornada s'ha acabat.";
+
+[$sent] = runCommand(buildWorld(range(1, 12)), '/out OwnedPot1', LAST_MATCH_DAY_WITH_CHANGES, false);
+check('/out queda bloquejat', $sent[0]['text'], $TANCAT);
+
+[$sent, $sub] = runCommand(buildWorld(range(1, 12)), '/in CandA', LAST_MATCH_DAY_WITH_CHANGES, false);
+check('/in queda bloquejat', $sent[0]['text'], $TANCAT);
+check('i no s\'ha guardat res', $sub->added, []);
+
+[$sent] = runCommand(buildWorld(range(1, 12)), '/substitució', LAST_MATCH_DAY_WITH_CHANGES, false);
+check('/substitució avisa del termini', $sent[0]['text'], $TANCAT);
+
+// Els dos motius de tancament són diferents i el jugador ha de saber quin és:
+// un és el termini que mou l'administrador, l'altre la norma de les semifinals.
+check('el motiu del termini no es confon amb el de les semifinals',
+    str_contains($sent[0]['text'], 'semifinals'), false);
+
+$world = buildWorld(range(1, 12));
+[, , , $sub] = $world;
+$sub->pending = [pendingRow(33, 'CHL', 101, 4)];
+[$sent] = runCommand($world, '/substitució', LAST_MATCH_DAY_WITH_CHANGES, false);
+checkContains('encara llista el pendent', $sent[0]['text'], 'Canvis pendents:');
+checkContains('i explica per què està tancat', $sent[0]['text'], "s'ha acabat");
+
+// Poder eliminar amb el termini tancat és el que permet rectificar just abans
+// que s'apliquin els canvis.
+$world = buildWorld(range(1, 12));
+[, , , $sub] = $world;
+$sub->pending = [pendingRow(33, 'CHL', 101, 4)];
+[$sent, $sub] = runCommand($world, '/substitució remove', LAST_MATCH_DAY_WITH_CHANGES, false);
+check('es pot eliminar amb el termini tancat', $sent[0]['text'], 'Substitució eliminada');
+check('id eliminat', $sub->removed, [33]);
+
+// Amb el termini tancat tampoc no s'ha d'obrir el camí de fer un canvi nou.
+check('no es pot arribar a /in amb el termini tancat',
+    runCommand(buildWorld(range(1, 12)), '/in CandA', LAST_MATCH_DAY_WITH_CHANGES, false)[0][0]['text'],
+    $TANCAT);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /substitució', SubstitutionAction::handlesCommand('/substitució'), true);

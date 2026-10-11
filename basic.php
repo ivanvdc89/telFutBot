@@ -5,6 +5,7 @@ include './vendor/autoload.php';
 require_once("config/connection.php");
 require_once("config/secrets.php");
 require_once("config/matchDay.php");
+require_once("config/actions.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
@@ -18,6 +19,7 @@ require_once("actions/WinOrDieAction.php");
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
+use TelegramBot\Api\Types\ReplyKeyboardRemove;
 
 $pots           = [1,2,3,4,5,6,7,8,9,10,11,12];
 $potNumber      = [0,1,2,3,4,1,2,3,4,1,2,3,4];
@@ -34,7 +36,10 @@ $actionsRepo       = new Action();
 $pointsRepo        = new MatchDayPlayerPoint();
 
 $matchDay = currentMatchDay();
-$actionsActivated = false;
+
+// Només afecta les accions que encara viuen en aquest fitxer, que el forcen a
+// false mentre no s'extreguin. Les que ja són a actions/ llegeixen ACTIONS_OPEN.
+$actionsActivated = ACTIONS_OPEN;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -55,6 +60,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             (int) $chatId,
             $matchDay,
             LAST_MATCH_DAY_WITH_CHANGES,
+            SUBSTITUTIONS_OPEN,
             $args
         );
         $substitutionAction->run($command);
@@ -70,7 +76,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             (int) $chatId,
             $matchDay,
             $args,
-            $actionsActivated
+            ACTIONS_OPEN
         );
         $doubleOrNothingAction->run();
         exit;
@@ -84,7 +90,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             (int) $chatId,
             $matchDay,
             $args,
-            $actionsActivated
+            ACTIONS_OPEN
         );
         $badDayAction->run();
         exit;
@@ -98,7 +104,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             (int) $chatId,
             $matchDay,
             $args,
-            $actionsActivated
+            ACTIONS_OPEN
         );
         $iAmTheBestAction->run();
         exit;
@@ -112,7 +118,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             (int) $chatId,
             $matchDay,
             $args,
-            $actionsActivated
+            ACTIONS_OPEN
         );
         $winOrDieAction->run();
         exit;
@@ -488,16 +494,32 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
     }
 
     elseif ($command === '/accions' || $command === '/actions') {
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/substitució']], true, true
-        );
+        // El menú surt dels interruptors, no d'una llista escrita a mà: tancar
+        // una fase la treu de la llista tota sola.
+        $rows = actionsMenuRows(SUBSTITUTIONS_OPEN, ACTIONS_OPEN);
+
+        if (count($rows) === 0) {
+            // Passa a la estona d'aplicar i publicar els canvis. Cal treure el
+            // teclat vell, que si no es queda a la pantalla oferint coses que ja
+            // no es poden fer.
+            $telegram->sendMessage(
+                $chatId,
+                "Ara mateix no hi ha cap acció disponible.",
+                false,
+                null,
+                null,
+                new ReplyKeyboardRemove()
+            );
+            exit;
+        }
+
         $telegram->sendMessage(
             $chatId,
             "Accions disponibles:",
             false,
             null,
             null,
-            $keyboard
+            new ReplyKeyboardMarkup($rows, true, true)
         );
         exit;
     }

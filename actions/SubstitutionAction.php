@@ -77,6 +77,7 @@ class SubstitutionAction
     private int $chatId;
     private int $matchDay;
     private int $lastMatchDayWithChanges;
+    private bool $substitutionsOpen;
     private array $args;
 
     public function __construct(
@@ -88,6 +89,7 @@ class SubstitutionAction
         int $chatId,
         int $matchDay,
         int $lastMatchDayWithChanges,
+        bool $substitutionsOpen,
         array $args
     ) {
         $this->telegram                = $telegram;
@@ -98,6 +100,7 @@ class SubstitutionAction
         $this->chatId                  = $chatId;
         $this->matchDay                = $matchDay;
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
+        $this->substitutionsOpen       = $substitutionsOpen;
         $this->args                    = $args;
     }
 
@@ -124,9 +127,12 @@ class SubstitutionAction
             return;
         }
 
-        // A partir de les semifinals ja no es pot obrir cap canvi nou.
-        if ($this->changesClosed()) {
-            $this->sendChangesClosed();
+        // Amb el termini tancat, o a partir de les semifinals, no es pot obrir
+        // cap canvi nou. /substitució i el seu "remove" ja s'han atès més amunt.
+        $closedReason = $this->changesClosedReason();
+
+        if ($closedReason !== null) {
+            $this->telegram->sendMessage($this->chatId, $closedReason);
 
             return;
         }
@@ -154,8 +160,12 @@ class SubstitutionAction
         $pendingCompetitions = $this->pendingCompetitions($pending);
         $message             = $this->pendingSubstitutionsText($pending);
 
-        if ($this->changesClosed()) {
-            $message .= "Els canvis estan tancats: no es poden fer canvis a partir de les semifinals.";
+        $closedReason = $this->changesClosedReason();
+
+        if ($closedReason !== null) {
+            // Sense salt extra: pendingSubstitutionsText() ja acaba amb una
+            // línia en blanc, i amb cap pendent el missatge és només el motiu.
+            $message .= $closedReason;
 
             $keyboard = count($pending) > 0
                 ? new ReplyKeyboardMarkup($this->removeRows(), true, true)
@@ -576,19 +586,23 @@ class SubstitutionAction
     }
 
     /**
-     * Els canvis estan tancats a partir de les semifinals.
+     * Motiu pel qual els canvis estan tancats, o null si es poden fer.
+     *
+     * Són dos motius diferents i el jugador ha de saber quin és: el termini que
+     * tanca l'administrador al final de cada jornada, o la norma de les
+     * semifinals, que és permanent.
      */
-    private function changesClosed(): bool
+    private function changesClosedReason(): ?string
     {
-        return $this->matchDay > $this->lastMatchDayWithChanges;
-    }
+        if (!$this->substitutionsOpen) {
+            return "Els canvis estan tancats: el termini d'aquesta jornada s'ha acabat.";
+        }
 
-    private function sendChangesClosed(): void
-    {
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Els canvis estan tancats: no es poden fer canvis a partir de les semifinals."
-        );
+        if ($this->matchDay > $this->lastMatchDayWithChanges) {
+            return "Els canvis estan tancats: no es poden fer canvis a partir de les semifinals.";
+        }
+
+        return null;
     }
 
     /**
