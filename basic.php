@@ -12,6 +12,9 @@ require_once("models/substitution.php");
 require_once("models/action.php");
 require_once("actions/SubstitutionAction.php");
 require_once("actions/DoubleOrNothingAction.php");
+require_once("actions/KosAndShieldsAction.php");
+require_once("actions/SureToBeQualifiedAction.php");
+require_once("actions/BestFinalAction.php");
 require_once("actions/BadDayAction.php");
 require_once("actions/IAmTheBestAction.php");
 require_once("actions/WinOrDieAction.php");
@@ -34,10 +37,6 @@ $teamsRepo         = new Team();
 $actionsRepo       = new Action();
 
 $matchDay = currentMatchDay();
-
-// Només afecta les accions que encara viuen en aquest fitxer, que el forcen a
-// false mentre no s'extreguin. Les que ja són a actions/ llegeixen ACTIONS_OPEN.
-$actionsActivated = ACTIONS_OPEN;
 
 if(isset($update->message->text) && $update->message->chat->type === "private") {
     $chatId  = $update->message->chat->id;
@@ -76,6 +75,50 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             ACTIONS_OPEN
         );
         $doubleOrNothingAction->run();
+        exit;
+    }
+
+    if (KosAndShieldsAction::handlesCommand($command)) {
+        $kosAndShieldsAction = new KosAndShieldsAction(
+            $telegram,
+            $playersRepo,
+            $teamsRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            ACTIONS_OPEN
+        );
+        $kosAndShieldsAction->run();
+        exit;
+    }
+
+    if (SureToBeQualifiedAction::handlesCommand($command)) {
+        $sureToBeQualifiedAction = new SureToBeQualifiedAction(
+            $telegram,
+            $playersRepo,
+            $teamsRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            ACTIONS_OPEN
+        );
+        $sureToBeQualifiedAction->run();
+        exit;
+    }
+
+    if (BestFinalAction::handlesCommand($command)) {
+        $bestFinalAction = new BestFinalAction(
+            $telegram,
+            $playersRepo,
+            $actionsRepo,
+            (int) $chatId,
+            $matchDay,
+            $args,
+            ACTIONS_OPEN
+        );
+        $bestFinalAction->run();
         exit;
     }
 
@@ -517,487 +560,6 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
             null,
             null,
             new ReplyKeyboardMarkup($rows, true, true)
-        );
-        exit;
-    }
-
-    elseif ($command === '/kos') {
-        $actionsActivated = false;
-        $player    = $playersRepo->getPlayerByChatId($chatId);
-        $actions   = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'kosAndShields');
-        if (!$actionsActivated || (is_array($actions) && count($actions) == 0)) {
-            $telegram->sendMessage($chatId, "No disponible");
-            exit;
-        }
-        $kosAndShieldsData = json_decode($actions[0]['data'], true);
-
-        if ($args[1] == 'borrar') {
-            $kosAndShieldsData['kos'] = [];
-            $kosAndShieldsData['shields'] = [];
-            $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/kos', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Vots i escuts borrats",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        }
-
-        if ($kosAndShieldsData['max'] == count($kosAndShieldsData['kos']) && $kosAndShieldsData['max'] == count($kosAndShieldsData['shields'])) {
-            $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" .
-                       "Equipts votats:\n";
-            foreach ($kosAndShieldsData['kos'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $message .= "\nEscuts:\n";
-            foreach ($kosAndShieldsData['shields'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                null
-            );
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/kos borrar', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Ja tens tots els vots fets",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        }
-
-        if(!isset($args[1])) {
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/kos ko_pot 1', '/kos ko_pot 2', '/kos ko_pot 3', '/kos ko_pot 4'],
-                    ['/kos ko_pot 5', '/kos ko_pot 6', '/kos ko_pot 7', '/kos ko_pot 8'],
-                    ['/kos ko_pot 9', '/kos ko_pot 10', '/kos ko_pot 11', '/kos ko_pot 12'],
-                    ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Pots disponibles:",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-            exit;
-        }
-        elseif ($args[1] == 'ko_pot') {
-            if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
-                $keyboard = new ReplyKeyboardMarkup(
-                    [
-                        ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
-                    ], true, true
-                );
-                $telegram->sendMessage(
-                    $chatId,
-                    "Ja has fet el màxim de vots de kos, ara pots posar escuts si vols:",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            }
-            if (isset($args[2]) && is_numeric($args[2]) && $args[2] >= 1 && $args[2] <= 12) {
-                $teams   = $teamsRepo->getTeamsByPot($args[2]);
-                $rows    = [];
-                $row     = [];
-                foreach ($teams as $team) {
-                    $row[] = '/kos ko_vot ' . $team['name'];
-                    if(count($row) == 3) {
-                        $rows[] = $row;
-                        $row = [];
-                    }
-                }
-                if (count($row) != 0) {
-                    $rows[] = $row;
-                }
-
-                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-
-                $telegram->sendMessage(
-                    $chatId,
-                    "Equips del pot " . $args[2] . ":",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            } else {
-                $telegram->sendMessage($chatId, "ERROR, pot invàlid");
-                exit;
-            }
-        }
-        elseif ($args[1] == 'ko_vot') {
-            if($kosAndShieldsData['max'] == count($kosAndShieldsData['kos'])) {
-                $keyboard = new ReplyKeyboardMarkup(
-                    [
-                        ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']
-                    ], true, true
-                );
-                $telegram->sendMessage(
-                    $chatId,
-                    "Ja has fet el màxim de vots de kos, ara pots posar escuts si vols:",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            }
-            $team = $teamsRepo->getTeamByName($args[2]);
-            if (!is_array($team) || count($team) == 0) {
-                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                exit;
-            }
-            $kosAndShieldsData['kos'][] = $team[0]['id'];
-            $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
-
-            $keyboard = new ReplyKeyboardMarkup(
-                [
-                    ['/kos', '/inici']
-                ], true, true
-            );
-            $telegram->sendMessage(
-                $chatId,
-                "Vot guardat",
-                false,
-                null,
-                null,
-                $keyboard
-            );
-
-            $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" .
-                       "Equipts votats:\n";
-
-            foreach ($kosAndShieldsData['kos'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $message .= "\nEscuts:\n";
-            foreach ($kosAndShieldsData['shields'] as $team) {
-                $teamInfo = $teamsRepo->getTeamById($team);
-                $message .= "- " . $teamInfo[0]['name'] . "\n";
-            }
-
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                null
-            );
-            exit;
-        }
-        elseif ($args[1] == 'escut') {
-            if ($kosAndShieldsData['max'] == count($kosAndShieldsData['shields'])) {
-                $keyboard = new ReplyKeyboardMarkup(
-                    [
-                        [
-                            '/kos ko_pot 1',
-                            '/kos ko_pot 2',
-                            '/kos ko_pot 3',
-                            '/kos ko_pot 4'
-                        ],
-                        [
-                            '/kos ko_pot 5',
-                            '/kos ko_pot 6',
-                            '/kos ko_pot 7',
-                            '/kos ko_pot 8'
-                        ],
-                        [
-                            '/kos ko_pot 9',
-                            '/kos ko_pot 10',
-                            '/kos ko_pot 11',
-                            '/kos ko_pot 12'
-                        ]
-                    ], true, true
-                );
-                $telegram->sendMessage(
-                    $chatId,
-                    "Ja has posat el màxim d'escuts, ara pots votat els kos si vols:",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            }
-
-            if (isset($args[2]) && in_array($args[2], ['CHL', 'EUL', 'COL'])) {
-                $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
-                $rows        = [];
-                $row         = [];
-                foreach ($playerTeams as $team) {
-                    if (in_array($team['id'], $kosAndShieldsData['shields'])) {
-                        continue;
-                    }
-                    if ($team['competition'] !== $args[2]) {
-                        continue;
-                    }
-                    $row[] = '/kos escut ' . $team['name'];
-                    if (count($row) == 3) {
-                        $rows[] = $row;
-                        $row    = [];
-                    }
-                }
-                if (count($row) != 0) {
-                    $rows[] = $row;
-                }
-
-                $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-
-                $telegram->sendMessage(
-                    $chatId,
-                    "Els teus equips per a posar escut:",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            }
-            elseif (isset($args[2])) {
-                $team = $teamsRepo->getTeamByName($args[2]);
-                if (!is_array($team) || count($team) == 0) {
-                    $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                    exit;
-                }
-
-                if (in_array($args[2], $kosAndShieldsData['shields'])) {
-                    $telegram->sendMessage($chatId, "ERROR, l'equip ja té l'escut activat");
-                    exit;
-                }
-
-                $kosAndShieldsData['shields'][] = $team[0]['id'];
-                $actionsRepo->updateAction($actions[0]['id'], json_encode($kosAndShieldsData));
-
-                $keyboard = new ReplyKeyboardMarkup(
-                    [
-                        ['/kos', '/inici']
-                    ], true, true
-                );
-                $telegram->sendMessage(
-                    $chatId,
-                    "Escut guardat",
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-
-                $message = "Vots màxims: " . $kosAndShieldsData['max'] . "\n" . "Equipts votats:\n";
-
-                foreach ($kosAndShieldsData['kos'] as $team) {
-                    $teamInfo = $teamsRepo->getTeamById($team);
-                    $message  .= "- " . $teamInfo[0]['name'] . "\n";
-                }
-
-                $message .= "\nEscuts:\n";
-                foreach ($kosAndShieldsData['shields'] as $team) {
-                    $teamInfo = $teamsRepo->getTeamById($team);
-                    $message  .= "- " . $teamInfo[0]['name'] . "\n";
-                }
-
-                $telegram->sendMessage(
-                    $chatId,
-                    $message,
-                    false,
-                    null,
-                    null,
-                    null
-                );
-                exit;
-            }
-        }
-    }
-
-    elseif ($command === '/segurQuePasse' || $command === '/passe') {
-        $actionsActivated = false;
-        if (!$actionsActivated) {
-            $telegram->sendMessage($chatId, "No disponible");
-            exit;
-        }
-        $player  = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'sureToBeQualified');
-
-        if (is_array($actions) && count($actions) == 1) {
-            $sureToBeQualifiedInfo = json_decode($actions[0]['data'], true);
-            if (count($sureToBeQualifiedInfo) == 1) {
-                if ($args[1] == 'Borrar') {
-                    $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
-                    unset($args[1]);
-                }  else {
-                    $keyboard = new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true);
-                    $teamInfo = $teamsRepo->getTeamById($sureToBeQualifiedInfo[0]);
-                    $message  = "Actualment tens activat el #segurQuePasse amb el " . $teamInfo[0]['name'] . "\n";
-
-                    $telegram->sendMessage(
-                        $chatId,
-                        $message,
-                        false,
-                        null,
-                        null,
-                        $keyboard
-                    );
-                    exit;
-                }
-            } elseif (isset($args[1])) {
-                $team = $teamsRepo->getTeamByName($args[1]);
-                if (!is_array($team) || count($team) == 0) {
-                    $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                    exit;
-                }
-                $actionsRepo->updateAction($actions[0]['id'], json_encode([$team[0]['id']]));
-
-                $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
-
-                $telegram->sendMessage(
-                    $chatId,
-                    $message,
-                    false,
-                    null,
-                    null,
-                    null
-                );
-                exit;
-            }
-        }
-
-        if (isset($args[1])) {
-            $team = $teamsRepo->getTeamByName($args[1]);
-            if (!is_array($team) || count($team) == 0) {
-                $telegram->sendMessage($chatId, "ERROR, l'equip no existeix");
-                exit;
-            }
-            $actionsRepo->addAction($player[0]['id'], $matchDay, 'sureToBeQualified', json_encode([$team[0]['id']]));
-
-            $message = "Has activat el #segurQuePasse amb el " . $team[0]['name'] . "\n";
-
-            $telegram->sendMessage(
-                $chatId,
-                $message,
-                false,
-                null,
-                null,
-                null
-            );
-            exit;
-        }
-
-        $playerTeams = $teamsRepo->getTeamsByPlayerId($player[0]['id']);
-        $rows        = [];
-        $row         = [];
-        foreach ($playerTeams as $team) {
-            $row[] = '/passe ' . $team['name'];
-            if (count($row) == 3) {
-                $rows[] = $row;
-                $row    = [];
-            }
-        }
-        if (count($row) != 0) {
-            $rows[] = $row;
-        }
-
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
-        $telegram->sendMessage(
-            $chatId,
-            "#segurQuePasse activar amb quin equip:",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-        exit;
-    }
-
-    elseif ($command === '/millorFinal') {
-        $actionsActivated = false;
-        if (!$actionsActivated) {
-            $telegram->sendMessage($chatId, "No disponible");
-            exit;
-        }
-
-        $player = $playersRepo->getPlayerByChatId($chatId);
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'bestFinal');
-
-        if (isset($args[1]) && $args[1] == 'borrar') {
-            $actionsRepo->updateAction($actions[0]['id'], json_encode([]));
-        }
-        if (isset($args[1]) && in_array($args[1], ['CHL', 'EUL', 'COL'])) {
-            if (is_array($actions) && count($actions) == 1) {
-                $actionsRepo->updateAction($actions[0]['id'], json_encode([$args[1]]));
-            } else {
-                $actionsRepo->addAction($player[0]['id'], $matchDay, 'bestFinal', json_encode([$args[1]]));
-            }
-        }
-
-        $actions = $actionsRepo->getActionsByPlayerId($player[0]['id'], $matchDay, 'bestFinal');
-        if (is_array($actions) && count($actions) == 1) {
-            $bestFinalData = json_decode($actions[0]['data'], true);
-            if (count($bestFinalData) != 0) {
-                $button        = '/millorFinal borrar';
-                $keyboard      = new ReplyKeyboardMarkup([[$button]], true, true);
-                $message       = "\nMillorFinal: " . $bestFinalData[0] . "\n";
-
-                $telegram->sendMessage(
-                    $chatId,
-                    $message,
-                    false,
-                    null,
-                    null,
-                    $keyboard
-                );
-                exit;
-            }
-        }
-
-        $butCHL = '/millorFinal CHL';
-        $butEUL = '/millorFinal EUL';
-        $butCOL = '/millorFinal COL';
-        $keyboard = new ReplyKeyboardMarkup([
-            [$butCHL, $butEUL, $butCOL]
-        ], true, true);
-
-        $telegram->sendMessage(
-            $chatId,
-            "#millorFinal:",
-            false,
-            null,
-            null,
-            $keyboard
         );
         exit;
     }

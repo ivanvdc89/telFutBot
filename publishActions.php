@@ -28,6 +28,10 @@ $matchDay    = currentMatchDay();
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
+// Regla de posició de tots els jugadors, d'una sola consulta: el pes del vot de
+// #millorFinal surt de la classificació general (players.points).
+$allowedVotes = $playersRepo->getAllowedVotesByPlayer();
+
 $message      = "Accions activades:\n";
 $allActions   = $actionsRepo->getActionsByMatchDay($matchDay);
 $actionsTexts = [
@@ -75,7 +79,9 @@ foreach ($allActions as $action) {
     $player = $playersRepo->getPlayerById($action['player_id']);
     if ($action['type'] == 'doubleOrNothing') {
         $doubleOrNothingData = json_decode($action['data'], true);
-        foreach ($doubleOrNothingData['teams'] as $teamId) {
+        $teamsVoted          = $doubleOrNothingData['teams'] ?? [];
+
+        foreach ($teamsVoted as $teamId) {
             if (isset($sumVotes[$teamId])) {
                 $sumVotes[$teamId] = $sumVotes[$teamId] + 10;
             } else {
@@ -85,21 +91,34 @@ foreach ($allActions as $action) {
             $doubleOrNothingMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
                         . $team[0]['name'] . "\n";
         }
-        if (count($doubleOrNothingData['teams']) > 0) {
+        if (count($teamsVoted) > 0) {
             $doubleOrNothingMessage .= "\n";
         }
     } elseif ($action['type'] == 'bestFinal') {
         $bestFinalData = json_decode($action['data'], true);
-            if (isset($bestFinalData['competition'])) {
-                $sumBestFinal[$bestFinalData['competition']] += $bestFinalData['points'];
-            }
+        $competition   = $bestFinalData['competition'] ?? ($bestFinalData[0] ?? null);
+
+        // El pes del vot és la regla de posició. Les files noves ja el porten
+        // desat amb la competició; per a les antigues es calcula amb la
+        // classificació general.
+        $votes = (int) ($bestFinalData['points']
+            ?? $allowedVotes[(int) $action['player_id']]
+            ?? Player::MIN_VOTES);
+
+        if ($competition !== null && isset($sumBestFinal[$competition])) {
+            $sumBestFinal[$competition] += $votes;
+        }
+
         $bestFinalMessage .= "-" . $player[0]['name'] .
-                             ": " . $bestFinalData['points'] .
+                             ": " . $votes .
                              " vots de " . $actionsTexts[$action['type']] .
-                             " a " . $bestFinalData['competition'] . "\n";
+                             " a " . $competition . "\n";
     } elseif ($action['type'] == 'kosAndShields') {
         $kosAndShieldsData = json_decode($action['data'], true);
-        foreach ($kosAndShieldsData['kos'] as $teamId) {
+        $kosVoted          = $kosAndShieldsData['kos'] ?? [];
+        $shields           = $kosAndShieldsData['shields'] ?? [];
+
+        foreach ($kosVoted as $teamId) {
             if (isset($sumKos[$teamId])) {
                 $sumKos[$teamId] = $sumKos[$teamId] + 10;
             } else {
@@ -108,21 +127,25 @@ foreach ($allActions as $action) {
             $team = $teamsRepo->getTeamById($teamId);
             $kosMessage .= "-" . $player[0]['name'] . ": 1 vot de KO a " . $team[0]['name'] . "\n";
         }
-        if (count($kosAndShieldsData['kos']) > 0) {
+        if (count($kosVoted) > 0) {
             $kosMessage .= "\n";
         }
 
-        foreach ($kosAndShieldsData['shields'] as $teamId) {
+        foreach ($shields as $teamId) {
             $team    = $teamsRepo->getTeamById($teamId);
             $shieldsMessage .= "-" . $player[0]['name'] . ": 1 escut a " . $team[0]['name'] . "\n";
         }
-        if (count($kosAndShieldsData['shields']) > 0) {
+        if (count($shields) > 0) {
             $shieldsMessage .= "\n";
         }
     } elseif ($action['type'] == 'sureToBeQualified') {
         $sureToBeQualifiedInfo = json_decode($action['data'], true);
-        $team = $teamsRepo->getTeamById($sureToBeQualifiedInfo[0]);
-        $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $team[0]['name'] . "\n";
+        $teamId                = $sureToBeQualifiedInfo['team'] ?? ($sureToBeQualifiedInfo[0] ?? null);
+
+        if ($teamId !== null) {
+            $team = $teamsRepo->getTeamById($teamId);
+            $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $team[0]['name'] . "\n";
+        }
     } else {
         $competitions = json_decode($action['data'], true);
         foreach ($competitions as $competition) {

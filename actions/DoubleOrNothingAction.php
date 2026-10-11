@@ -15,10 +15,16 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *     /dobleORes vot EQUIP    registra el vot
  *     /dobleORes borrar       esborra tots els vots
  *
- * AVÍS: la fila de l'acció ha de portar 'max' dins del JSON, que és el nombre
- * de vots que li toquen al jugador. Cap script del projecte no l'hi escriu: el
- * sembra algú a mà a la base de dades. Si falta, val 0 i l'acció es considera
- * completa de sortida, o sigui que no deixa votar.
+ * La fila d'accions del jugador la crea el bot la primera vegada que obre
+ * l'acció (abans l'havia de sembrar algú a mà a la base de dades) i porta un
+ * JSON {max, teams:[teamId, ...]}. 'max' és el nombre de vots que li toquen,
+ * calculat amb la regla de posició a partir de la classificació general
+ * (players.points): 1 vot per al líder i 1 més per cada 10 punts de diferència,
+ * fins a 4.
+ *
+ * El número es desa a la fila quan canvia, de manera que durant la jornada
+ * queda congelat amb la general que va veure el jugador; publishActions compta
+ * els vots amb el mateix valor.
  *
  * Una instància viu una sola petició del webhook: rep les dependències pel
  * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
@@ -80,18 +86,28 @@ class DoubleOrNothingAction
             return;
         }
 
-        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
-
-        // L'acció ha d'estar activada i tenir la seva fila a la base de dades;
-        // la fila no la crea el bot.
-        if (!$this->actionsActivated || count($actions) === 0) {
+        if (!$this->actionsActivated) {
             $this->telegram->sendMessage($this->chatId, "No disponible");
 
             return;
         }
 
-        $actionId = (int) $actions[0]['id'];
-        $data     = json_decode($actions[0]['data'], true);
+        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+
+        if (count($actions) === 0) {
+            // La fila la crea el bot la primera vegada que el jugador obre
+            // l'acció; abans l'havia de sembrar algú a mà a la base de dades.
+            $data     = $this->newRowData($playerId);
+            $actionId = (int) $this->actionsRepo->addAction(
+                $playerId,
+                $this->matchDay,
+                self::ACTION_TYPE,
+                json_encode($data)
+            );
+        } else {
+            $actionId = (int) $actions[0]['id'];
+            $data     = $this->withAllowedVotes($actionId, json_decode($actions[0]['data'], true), $playerId);
+        }
 
         // L'ordre importa i és el de sempre: primer esborrar, després comprovar
         // si ja té tots els vots, i només al final el menú.
@@ -237,10 +253,44 @@ class DoubleOrNothingAction
     }
 
     /**
+     * Contingut inicial de la fila: el màxim de vots i cap vot encara.
+     */
+    private function newRowData(int $playerId): array
+    {
+        return [
+            'max'   => $this->playersRepo->getAllowedVotes($playerId),
+            'teams' => [],
+        ];
+    }
+
+    /**
+     * Assegura que la fila porti el nombre de vots que li toquen al jugador.
+     *
+     * Surt de la classificació general (players.points) i es desa a la fila
+     * només quan canvia: així, mentre dura la jornada, el número queda congelat
+     * amb la general que va veure el jugador, i no es paga una escriptura a cada
+     * missatge.
+     */
+    private function withAllowedVotes(int $actionId, array $data, int $playerId): array
+    {
+        $allowedVotes = $this->playersRepo->getAllowedVotes($playerId);
+
+        if (($data['max'] ?? null) !== $allowedVotes) {
+            // 'max' al davant: la fila queda sempre amb la mateixa forma.
+            $data = ['max' => $allowedVotes] + $data;
+            $this->actionsRepo->updateAction($actionId, json_encode($data));
+        }
+
+        $data['teams'] = $data['teams'] ?? [];
+
+        return $data;
+    }
+
+    /**
      * Nombre de vots que li toquen al jugador, segons el JSON de la fila.
      *
-     * Si la fila no porta 'max' el resultat és 0, que és el que feia la
-     * comparació original amb null, però sense l'avís de PHP.
+     * withAllowedVotes() sempre l'hi deixa escrit abans de fer-lo servir; el 0
+     * només cobreix una fila que arribi sense 'max' per una via inesperada.
      */
     private function maxVotes(array $data): int
     {

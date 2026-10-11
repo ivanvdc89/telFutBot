@@ -47,9 +47,17 @@ class FakePlayer extends Player
 {
     public array $players = [];
 
+    /** @var array [player_id => punts acumulats], com a players.points */
+    public array $pointsByPlayer = [];
+
     public function getPlayerByChatId($chatId)
     {
         return isset($this->players[$chatId]) ? [$this->players[$chatId]] : [];
+    }
+
+    public function getPlayersPoints(): array
+    {
+        return $this->pointsByPlayer;
     }
 }
 
@@ -79,6 +87,7 @@ class FakeAction extends Action
 {
     public array $rows    = [];
     public array $updates = [];
+    public array $added   = [];
 
     public function getActionsByPlayerId(int $playerId, int $matchDay, string $type)
     {
@@ -89,6 +98,26 @@ class FakeAction extends Action
     {
         $this->updates[] = ['id' => $id, 'data' => json_decode($data, true)];
     }
+
+    public function addAction(int $playerId, int $matchDay, string $type, string $data)
+    {
+        $this->added[] = [
+            'playerId' => $playerId,
+            'matchDay' => $matchDay,
+            'type'     => $type,
+            'data'     => json_decode($data, true),
+        ];
+
+        $this->rows[] = [
+            'id'        => 34,
+            'player_id' => $playerId,
+            'match_day' => $matchDay,
+            'type'      => $type,
+            'data'      => $data,
+        ];
+
+        return 34;
+    }
 }
 
 // ---------- fixtures ----------
@@ -97,12 +126,27 @@ const CHAT_ID   = 555;
 const PLAYER_ID = 7;
 const MATCH_DAY = 2;
 
-function buildWorld(?array $actionData = ['max' => 3, 'teams' => []], bool $activated = true): array
+/**
+ * Classificació general on el jugador va $gap punts del líder.
+ * El segon jugador (8) fa de líder amb 100 punts.
+ */
+function standingsAtGap(int $gap): array
 {
+    return [PLAYER_ID => 100 - $gap, 8 => 100];
+}
+
+function buildWorld(
+    ?array $actionData = ['max' => 3, 'teams' => []],
+    bool $activated = true,
+    ?array $standings = null
+): array {
     $bot    = new FakeBot();
     $player = new FakePlayer();
     $team   = new FakeTeam();
     $action = new FakeAction();
+
+    // Per defecte el jugador va a 29 punts del líder, que són 3 vots: 1 + 2.
+    $player->pointsByPlayer = $standings ?? standingsAtGap(29);
 
     $player->players[CHAT_ID] = ['id' => PLAYER_ID, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
 
@@ -166,6 +210,19 @@ function flatKeyboard(?array $keyboard): array
     return $keyboard === null ? [] : array_merge(...$keyboard);
 }
 
+/**
+ * Els vots que el bot calcula per a un coixí concret amb el líder.
+ *
+ * Surt de la fila que DoubleOrNothingAction desa quan el 'max' de la fila no
+ * coincideix amb la classificació general.
+ */
+function allowedVotesForGap(int $gap): int
+{
+    [, $action] = runCommand(buildWorld(['teams' => []], true, standingsAtGap($gap)), '/dobleORes');
+
+    return $action->updates[0]['data']['max'];
+}
+
 // ---------- escenaris ----------
 
 echo "--- l'acció no està activada ---\n";
@@ -173,9 +230,26 @@ echo "--- l'acció no està activada ---\n";
 check('un sol missatge', count($sent), 1);
 check('text', $sent[0]['text'], 'No disponible');
 
-echo "\n--- activada però sense fila a la base de dades ---\n";
-[$sent] = runCommand(buildWorld(null, true), '/dobleORes');
-check('text', $sent[0]['text'], 'No disponible');
+echo "\n--- activada i sense fila: el bot la crea ---\n";
+// Abans calia que algú la sembrés a mà a la base de dades; si faltava, l'acció
+// responia "No disponible".
+[$sent, $action] = runCommand(buildWorld(null), '/dobleORes');
+check('ha creat la fila amb el màxim i cap vot', $action->added, [[
+    'playerId' => PLAYER_ID,
+    'matchDay' => MATCH_DAY,
+    'type'     => 'doubleOrNothing',
+    'data'     => ['max' => 3, 'teams' => []],
+]]);
+check('i mostra el menú de pots', $sent[0]['text'], 'Pots disponibles:');
+check('sense dependre de cap fila prèvia', $action->updates, []);
+
+echo "\n  i el jugador ja hi pot votar de seguida\n";
+[$sent, $action] = runCommand(buildWorld(null), '/dobleORes vot EquipA');
+check('text', $sent[0]['text'], 'Vot guardat');
+check('el vot va a la fila nova', $action->updates, [[
+    'id'   => 34,
+    'data' => ['max' => 3, 'teams' => [10]],
+]]);
 
 echo "\n--- jugador sense fitxa ---\n";
 $world = buildWorld(['max' => 3, 'teams' => []], true);
@@ -224,17 +298,17 @@ check('teclat', $sent[0]['keyboard'], [['/dobleORes', '/inici']]);
 check('esborra els equips i conserva el max', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
 
 echo "\n--- /dobleORes amb tots els vots fets ---\n";
-[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]]), '/dobleORes');
+[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes');
 check('dos missatges', count($sent), 2);
 check('llista els vots', $sent[0]['text'], "Vots màxims: 2\nEquipts votats:\n- EquipA\n- EquipB\n");
 check('avisa que ja està', $sent[1]['text'], 'Ja tens tots els vots fets');
 check('botó per esborrar', $sent[1]['keyboard'], [['/dobleORes borrar', '/inici']]);
 
 echo "\n  l'ordre dels guards es conserva\n";
-[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]]), '/dobleORes pot 3');
+[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes pot 3');
 check('amb els vots fets, "pot 3" no mostra equips', $sent[0]['text'], "Vots màxims: 2\nEquipts votats:\n- EquipA\n- EquipB\n");
 
-[$sent, $action] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]]), '/dobleORes borrar');
+[$sent, $action] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes borrar');
 check('però "borrar" sí que funciona', $sent[0]['text'], 'Vots borrats');
 check('i esborra', $action->updates[0]['data']['teams'], []);
 
@@ -242,10 +316,34 @@ echo "\n--- subcomandament desconegut ---\n";
 [$sent] = runCommand(buildWorld(), '/dobleORes aixòNoExisteix');
 check('mostra el menú en lloc de caure al missatge global', $sent[0]['text'], 'Pots disponibles:');
 
-echo "\n--- fila sense 'max' (el bloquejador conegut) ---\n";
-[$sent] = runCommand(buildWorld(['teams' => []]), '/dobleORes');
-check('es considera completa perquè max val 0', $sent[1]['text'], 'Ja tens tots els vots fets');
-check('i la llista surt sense número', $sent[0]['text'], "Vots màxims: \nEquipts votats:\n");
+echo "\n--- fila sense 'max': el calcula la classificació general ---\n";
+// Abans això era el bloquejador conegut: sense 'max' a la fila (el valor que
+// algú havia de sembrar a mà) l'acció es donava per completa i no es podia
+// votar. Ara surt de players.points.
+[$sent, $action] = runCommand(buildWorld(['teams' => []]), '/dobleORes');
+check('el bot calcula i desa el màxim', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
+check('i el jugador pot votar', $sent[0]['text'], 'Pots disponibles:');
+
+echo "\n  un 'max' desfasat es corregeix\n";
+[$sent, $action] = runCommand(buildWorld(['max' => 1, 'teams' => []]), '/dobleORes');
+check('passa de 1 a 3 vots', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
+
+echo "\n  si ja coincideix no s'escriu res\n";
+[$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => []]), '/dobleORes');
+check('cap escriptura', $action->updates, []);
+
+echo "\n--- regla de posició: 1 vot el líder i 1 més cada 10 punts, màxim 4 ---\n";
+check('el líder -> 1', allowedVotesForGap(0), 1);
+check('a 9 punts -> 1', allowedVotesForGap(9), 1);
+check('a 10 punts -> 2', allowedVotesForGap(10), 2);
+check('a 19 punts -> 2', allowedVotesForGap(19), 2);
+check('a 29 punts -> 3', allowedVotesForGap(29), 3);
+check('a 30 punts -> 4', allowedVotesForGap(30), 4);
+check('a 100 punts -> 4 (màxim)', allowedVotesForGap(100), 4);
+
+echo "\n  sense cap classificació calculada tothom té el mínim\n";
+[$sent, $action] = runCommand(buildWorld(['teams' => []], true, []), '/dobleORes');
+check('1 vot', $action->updates, [['id' => 33, 'data' => ['max' => 1, 'teams' => []]]]);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /dobleORes', DoubleOrNothingAction::handlesCommand('/dobleORes'), true);

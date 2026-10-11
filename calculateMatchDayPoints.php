@@ -50,6 +50,12 @@ $koTeams      = []; //[10,82];
 $classifiedTeams = [];
 
 $players = $playersRepo->getAllPlayers();
+
+// Foto de la classificació general abans de tocar-hi res: aquest script va
+// escrivint players.points jugador a jugador, i totes les validacions de
+// posició han de veure la mateixa general, que és la d'abans d'aquesta jornada.
+$allowedVotes = $playersRepo->getAllowedVotesByPlayer();
+
 foreach ($players as $player) {
     $playerId     = $player['id'];
     $lastMatchDay = $matchDayPlayerPointRepo->getLastMatchDayByPlayer($player['id']);
@@ -75,8 +81,14 @@ foreach ($players as $player) {
     $actions = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'sureToBeQualified');
     if (count($actions)>0) {
         $actionData = json_decode($actions[0]['data'], true);
-        $sureToBeQualifiedTeam = $actionData['team'];
-        $sureToBeQualifiedPoints = $actionData['points'];
+
+        // basic.php desa ['team' => id, 'points' => N]; les files antigues només
+        // portaven [id]. Els punts són la regla de posició (1 el líder i 1 més
+        // per cada 10 punts de diferència, màxim 4), no un valor del JSON.
+        $sureToBeQualifiedTeam   = (int) ($actionData['team'] ?? $actionData[0] ?? -1);
+        $sureToBeQualifiedPoints = (int) ($actionData['points']
+            ?? $allowedVotes[$playerId]
+            ?? Player::MIN_VOTES);
     }
 
     foreach ($playerTeams as $team) {
@@ -96,7 +108,7 @@ foreach ($players as $player) {
             $action = ["type" => "dobleORes", "result" => "Doble"];
             $totalPoints = 2 * $teamResult[0]['points'];
         }
-        if ($team['id'] === $sureToBeQualifiedTeam && array_key_exists($team['id'], $classifiedTeams)) {
+        if ((int) $team['id'] === $sureToBeQualifiedTeam && array_key_exists($team['id'], $classifiedTeams)) {
             $action = ["type" => "segurQuePasse", "result" => "YES"];
             $totalPoints = $teamResult[0]['points'] + $classifiedTeams[$team['id']] + $sureToBeQualifiedPoints;
         }

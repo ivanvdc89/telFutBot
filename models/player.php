@@ -1,5 +1,16 @@
 <?php
 class Player extends Connection {
+    /**
+     * Regla de posició: vots mínims i màxims que pot tenir un jugador.
+     */
+    public const MIN_VOTES = 1;
+    public const MAX_VOTES = 4;
+
+    /**
+     * Punts de diferència amb el líder que donen un vot més.
+     */
+    private const POINTS_PER_EXTRA_VOTE = 10;
+
     public function getPlayerByChatId($chatId){
         $connection= parent::connect();
         parent::set_names();
@@ -102,6 +113,56 @@ class Player extends Connection {
         }
 
         return $points;
+    }
+
+    /**
+     * Vots que li toquen al jugador segons la seva posició a la general.
+     *
+     * És la regla comuna de totes les accions que depenen de la classificació:
+     * #dobleORes i #kosAmbEscuts (quants vots pot fer), #millorFinal (pes del
+     * vot) i #segurQuePasse (punts que s'aposten). La norma diu 1 per al líder i
+     * 1 més per cada 10 punts de diferència, amb un màxim de 4.
+     *
+     * Un jugador sense puntuació calculada (points NULL, o sigui abans de la
+     * primera jornada) compta com el mínim: no se li inventa cap posició.
+     */
+    public function getAllowedVotes(int $playerId): int
+    {
+        $votes = $this->getAllowedVotesByPlayer();
+
+        return $votes[$playerId] ?? self::MIN_VOTES;
+    }
+
+    /**
+     * Els vots de tots els jugadors amb puntuació calculada, [player_id => vots].
+     *
+     * Es calcula d'una tacada perquè qui després mou la classificació
+     * (calculateMatchDayPoints) no barregi la general d'abans i la de després
+     * d'escriure-hi: tothom ha de veure la mateixa foto.
+     */
+    public function getAllowedVotesByPlayer(): array
+    {
+        $points       = $this->getPlayersPoints();
+        $leaderPoints = count($points) === 0 ? 0 : max($points);
+
+        $votes = [];
+        foreach ($points as $playerId => $playerPoints) {
+            $votes[$playerId] = self::allowedVotesForGap($leaderPoints - $playerPoints);
+        }
+
+        return $votes;
+    }
+
+    /**
+     * Vots que corresponen a una distància amb el líder.
+     */
+    private static function allowedVotesForGap(int $gap): int
+    {
+        if ($gap < 0) {
+            $gap = 0;
+        }
+
+        return min(self::MAX_VOTES, self::MIN_VOTES + intdiv($gap, self::POINTS_PER_EXTRA_VOTE));
     }
 }
 ?>
