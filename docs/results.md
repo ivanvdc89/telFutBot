@@ -47,7 +47,9 @@ pot canviar de font tocant només `getResults.php`.
 
 | Jornada | Ronda de kassiesa |
 | --- | --- |
-| 1-8 | `League Stage`, bloc 1-8 |
+| 1-8 | `League Stage` de la CHL i l'EUL, bloc 1-8 |
+| 2-7 | `League Stage` de la COL, bloc 1-6 |
+| 1 i 8 | (jornades simulades de la COL: tots els seus equips hi tenen 0) |
 | 9 | (fi de la fase de lliga, sense partits; la tanca `calculateEndLeaguePhasePoints.php`) |
 | 10-11 | `Knockout round play-offs`, anada i tornada |
 | 12-13 | `Round of 16` |
@@ -56,11 +58,22 @@ pot canviar de font tocant només `getResults.php`.
 | 18 | `Final` (partit únic) |
 | 19 | (fi del joc; el tanca `calculateEndGamePoints.php`) |
 
-El mapa és a `config/results.php` (`RESULTS_KNOCKOUT_ROUNDS`). Si la UEFA canvia
-el format, és l'únic lloc que s'ha de tocar.
+El mapa és a `config/results.php` (`RESULTS_LEAGUE_PHASE` i
+`RESULTS_KNOCKOUT_ROUNDS`). Si la UEFA canvia el format, és l'únic lloc que s'ha
+de tocar.
 
-**La Conference només juga 6 jornades de fase de lliga.** Per a les jornades 7 i
-8 `getResults.php` ho diu i no hi inscriu res.
+### La Conference només juga 6 jornades de lligueta
+
+El joc en té 8 per a tothom, perquè les tres competicions avancin juntes. La
+lligueta de la Conference ocupa les jornades **2 a 7**: els resultats de la seva
+primera ronda es desen a la jornada 2 del joc, i la 1 i la 8 són **jornades
+simulades**, en què tots els seus equips tenen un 0.
+
+A més, com que juga dues jornades menys, **a la lligueta de la Conference la
+victòria val 4 punts** en comptes de 3 (l'empat continua valent 1 i la derrota 0).
+Amb 6 partits, guanyar-los tots dona 24 punts, els mateixos que guanyar els 8 de
+la Champions o l'Europa League. A les eliminatòries la victòria torna a valer 3 a
+totes les competicions.
 
 ## Com s'executa
 

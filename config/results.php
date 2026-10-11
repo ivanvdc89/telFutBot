@@ -77,13 +77,79 @@ const RESULTS_KNOCKOUT_ROUNDS = [
 ];
 
 /**
- * Última jornada de la fase de lliga que té partits.
+ * La fase de lliga de cada competició.
  *
- * La Champions i l'Europa League en juguen 8; la Conference, només 6. Per a les
- * jornades 7 i 8 la Conference no té partits i getResults.php ho diu i no
- * n'insereix cap.
+ * 'from' i 'to' són les jornades del joc que ocupa la lligueta, i 'win_points'
+ * quants punts val una victòria en aquesta fase (l'empat sempre val 1 i la
+ * derrota 0).
+ *
+ * LA CONFERENCE NOMÉS JUGA 6 JORNADES DE LLIGUETA
+ *
+ * El joc en té 8 per a tothom, perquè les tres competicions avancin juntes.
+ * Per quadrar-ho, la lligueta de la Conference va de la jornada 2 a la 7: la 1
+ * i la 8 són jornades simulades, en què tots els seus equips tenen 0 punts.
+ * Els resultats de la seva primera ronda, doncs, es desen a la jornada 2 del
+ * joc (vegeu resultsLeagueRound()).
+ *
+ * I com que juga dues jornades menys, la victòria hi val 4 punts en comptes de
+ * 3. Amb 6 partits, guanyar-los tots dona 24 punts, exactament els mateixos que
+ * guanyar els 8 de la Champions o l'Europa League: la compensació és exacta.
+ *
+ * Això només val per a la lligueta. A les eliminatòries la victòria torna a
+ * valer 3 a totes les competicions.
  */
-const RESULTS_LEAGUE_STAGE_MATCH_DAYS = 8;
+const RESULTS_LEAGUE_PHASE = [
+    'CHL' => ['from' => 1, 'to' => 8, 'win_points' => 3],
+    'EUL' => ['from' => 1, 'to' => 8, 'win_points' => 3],
+    'COL' => ['from' => 2, 'to' => 7, 'win_points' => 4],
+];
+
+/** Primera i darrera jornada de la fase de lliga del joc (les tres competicions). */
+const RESULTS_LEAGUE_MATCH_DAYS = ['from' => 1, 'to' => 8];
+
+/** Cert si la jornada és de la fase de lliga del joc. */
+function resultsIsLeagueMatchDay(int $matchDay): bool
+{
+    return $matchDay >= RESULTS_LEAGUE_MATCH_DAYS['from'] && $matchDay <= RESULTS_LEAGUE_MATCH_DAYS['to'];
+}
+
+/**
+ * Ronda de la lligueta de kassiesa que toca a una jornada del joc.
+ *
+ * Torna null si aquella jornada no és de la lligueta d'aquella competició: o
+ * perquè és d'una eliminatòria, o perquè és una de les jornades simulades.
+ */
+function resultsLeagueRound(string $competition, int $matchDay): ?int
+{
+    $phase = RESULTS_LEAGUE_PHASE[$competition] ?? null;
+
+    if ($phase === null || $matchDay < $phase['from'] || $matchDay > $phase['to']) {
+        return null;
+    }
+
+    return $matchDay - $phase['from'] + 1;
+}
+
+/**
+ * Cert si és una jornada de lliga que aquella competició no juga.
+ *
+ * Són les jornades que el joc ha de donar per jugades amb tots els equips a 0
+ * (ara mateix, la 1 i la 8 de la Conference).
+ */
+function resultsIsSimulatedLeagueMatchDay(string $competition, int $matchDay): bool
+{
+    return resultsIsLeagueMatchDay($matchDay) && resultsLeagueRound($competition, $matchDay) === null;
+}
+
+/** Punts que val una victòria en una jornada: 4 a la lligueta de la Conference, 3 a la resta. */
+function resultsWinPoints(string $competition, int $matchDay): int
+{
+    if (resultsLeagueRound($competition, $matchDay) === null) {
+        return 3;
+    }
+
+    return RESULTS_LEAGUE_PHASE[$competition]['win_points'];
+}
 
 /**
  * Estats els equips dels quals NO participen al joc.

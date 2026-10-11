@@ -122,6 +122,11 @@ Final
 <tr>
 <td>Crystal Palace</td><td>Eng</td><td>Lech Poznan</td><td>Pol</td>
 <td class="result">4-0</td><td class="result"></td>
+</tr><tr>
+<td colspan="6"> &nbsp; </td>
+</tr><tr>
+<td>Ajax</td><td>Ned</td><td>Benfica</td><td>Por</td>
+<td class="result">2-1</td><td class="result"></td>
 </tr>
 </table>
 </body></html>
@@ -146,10 +151,23 @@ echo "\n--- cada competició va per separat ---\n";
 check("l'Europa League té el seu partit", simple($source->getMatches('EUL', 1)), [
     'Lillestrøm SK 1-2 União Torreense',
 ]);
-check('la Conference té el seu', simple($source->getMatches('COL', 1)), [
+
+echo "\n--- la lligueta de la Conference comença a la jornada 2 ---\n";
+// Té 6 jornades i el joc 8: la seva primera ronda es desa a la jornada 2, i la
+// 1 i la 8 les omple ResultsPlanner amb zeros.
+check('la jornada 1 no té partits de Conference', $source->getMatches('COL', 1), []);
+check('la primera ronda és la jornada 2', simple($source->getMatches('COL', 2)), [
     'Crystal Palace 4-0 Lech Poznan',
 ]);
-check('la Conference només té una jornada', $source->getMatches('COL', 2), []);
+check('la segona ronda és la jornada 3', simple($source->getMatches('COL', 3)), [
+    'Ajax 2-1 Benfica',
+]);
+check('la jornada 8 tampoc no té partits', $source->getMatches('COL', 8), []);
+check('i la setena no existeix al fixture', $source->getMatches('COL', 7), []);
+
+echo "\n--- a la Champions i a l'Europa League, la jornada 1 sí que és la primera ronda ---\n";
+check('la jornada 8 és l\'última ronda', count($source->getMatches('CHL', 8)), 0);
+check('i la jornada 1 és la primera', count($source->getMatches('CHL', 1)), 2);
 
 // ---------------------------------------------------------------- eliminatòries
 

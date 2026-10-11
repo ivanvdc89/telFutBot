@@ -130,17 +130,20 @@ class KassiesaResultsSource implements ResultsSource
             return [];
         }
 
-        if ($matchDay >= 1 && $matchDay <= RESULTS_LEAGUE_STAGE_MATCH_DAYS) {
-            return $this->leagueStageMatches($label, $matchDay);
+        // La lligueta de la Conference comença a la jornada 2 del joc, i la 1 i la
+        // 8 no es juguen (les omple ResultsPlanner amb zeros).
+        $round = resultsLeagueRound($competition, $matchDay);
+        if ($round !== null) {
+            return $this->leagueStageMatches($label, $round);
         }
 
         return $this->knockoutMatches($label, $matchDay);
     }
 
-    /** Bloc de la fase de lliga: el bloc 1 és la jornada 1. */
-    private function leagueStageMatches(string $label, int $matchDay): array
+    /** Bloc de la fase de lliga: el bloc 1 és la primera ronda de la lligueta. */
+    private function leagueStageMatches(string $label, int $round): array
     {
-        $block = $matchDay - 1;
+        $block = $round - 1;
         $rows  = $this->rounds[$label][RESULTS_LEAGUE_STAGE][$block] ?? [];
         $out   = [];
 

@@ -76,6 +76,8 @@ $teams = [
     ['id' => 52, 'name' => 'SpartaPraha', 'competition' => 'EUL'],
     ['id' => 7, 'name' => 'Arsenal', 'competition' => 'CHL'],
     ['id' => 3, 'name' => 'RealMadrid', 'competition' => 'CHL'],
+    ['id' => 75, 'name' => 'Ajax', 'competition' => 'COL'],
+    ['id' => 78, 'name' => 'Copenhagen', 'competition' => 'COL'],
 ];
 $resolver = new TeamNameResolver($teams, []);
 
@@ -146,10 +148,49 @@ check('i la competició', $plan['problems'][0]['competition'], 'EUL');
 echo "\n--- competicions sense partits ---\n";
 $plan = planner(['EUL' => [
     partit('Olympique Lyon', 'Fra', 1, 0, 'Sparta Praha', 'Cze'),
-]], $resolver)->plan(['EUL', 'COL'], 1);
+]], $resolver)->plan(['EUL', 'CHL'], 1);
 
 check('la que té partits no surt a la llista de buides', in_array('EUL', $plan['empty'], true), false);
-check('la que no en té, sí', $plan['empty'], ['COL']);
+check('la que no en té, sí', $plan['empty'], ['CHL']);
+check('i cap no és simulada', $plan['simulated'], []);
+
+// --------------------------------------------------- Conference: 6 jornades, no 8
+
+echo "\n--- la Conference no juga les jornades 1 i 8: tots els seus equips hi tenen 0 ---\n";
+foreach ([1, 8] as $simulatedMatchDay) {
+    $plan = planner([], $resolver)->plan(['COL'], $simulatedMatchDay);
+
+    check("la jornada $simulatedMatchDay és simulada", $plan['simulated'], ['COL']);
+    check("i dona 0 a tots els equips de COL", rowsText($plan), ['COL Ajax 0', 'COL Copenhagen 0']);
+    check('sense cap problema', $plan['problems'], []);
+}
+
+echo "\n--- i les altres competicions no simulen res ---\n";
+$plan = planner(['CHL' => [
+    partit('Arsenal', 'Eng', 1, 0, 'Real Madrid', 'Esp'),
+]], $resolver)->plan(['CHL'], 1);
+
+check('la jornada 1 de la Champions és de debò', $plan['simulated'], []);
+check('i guanyar-hi val 3', rowsText($plan), ['CHL Arsenal 3', 'CHL RealMadrid 0']);
+
+echo "\n--- a la lligueta de la Conference, guanyar val 4 ---\n";
+$plan = planner(['COL' => [
+    partit('Ajax', 'Ned', 2, 0, 'Copenhagen', 'Den'),
+]], $resolver)->plan(['COL'], 2);
+check('guanyar val 4 i perdre 0', rowsText($plan), ['COL Ajax 4', 'COL Copenhagen 0']);
+check('i la jornada 2 no és simulada', $plan['simulated'], []);
+
+$plan = planner(['COL' => [
+    partit('Ajax', 'Ned', 1, 1, 'Copenhagen', 'Den'),
+]], $resolver)->plan(['COL'], 2);
+check("l'empat continua valent 1", rowsText($plan), ['COL Ajax 1', 'COL Copenhagen 1']);
+
+echo "\n--- a les eliminatòries de la Conference torna a valer 3 ---\n";
+$plan = planner(['COL' => [
+    partit('Ajax', 'Ned', 2, 0, 'Copenhagen', 'Den'),
+]], $resolver)->plan(['COL'], 10);
+check('la victòria val 3', rowsText($plan), ['COL Ajax 3', 'COL Copenhagen 0']);
+check('i la jornada 10 no és simulada', $plan['simulated'], []);
 
 // --------------------------------------------------------------------- duplicats
 

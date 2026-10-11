@@ -46,16 +46,36 @@ final class ResultsPlanner
     /**
      * @param array<int, string> $competitions
      *
-     * @return array{matches:array<int, array>, rows:array<int, array>, problems:array<int, array>, empty:array<int, string>}
+     * @return array{matches:array<int, array>, rows:array<int, array>, problems:array<int, array>, empty:array<int, string>, simulated:array<int, string>}
      */
     public function plan(array $competitions, int $matchDay): array
     {
-        $matches  = [];
-        $problems = [];
-        $empty    = [];
+        $matches   = [];
+        $problems  = [];
+        $empty     = [];
+        $simulated = [];
+        $forced    = [];
 
         foreach ($competitions as $competition) {
             $sourceMatches = $this->source->getMatches($competition, $matchDay);
+
+            // Jornada de lliga que aquesta competició no juga (la Conference en té
+            // 6 i el joc 8): es dona per jugada i tots els seus equips hi tenen 0.
+            if ($sourceMatches === [] && resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {
+                $simulated[] = $competition;
+
+                foreach ($this->resolver->teamsInCompetition($competition) as $team) {
+                    $forced[$competition . '|' . $team['id']] = [
+                        'competition' => $competition,
+                        'teamId'      => $team['id'],
+                        'teamName'    => $team['name'],
+                        'points'      => 0,
+                        'label'       => 'jornada simulada',
+                    ];
+                }
+
+                continue;
+            }
 
             if ($sourceMatches === []) {
                 $empty[] = $competition;
@@ -63,15 +83,16 @@ final class ResultsPlanner
             }
 
             foreach ($sourceMatches as $match) {
-                $matches[] = $this->planMatch($competition, $match, $problems);
+                $matches[] = $this->planMatch($competition, $matchDay, $match, $problems);
             }
         }
 
         return [
-            'matches'  => $matches,
-            'rows'     => self::rows($matches),
-            'problems' => $problems,
-            'empty'    => $empty,
+            'matches'   => $matches,
+            'rows'      => array_values(self::rows($matches) + $forced),
+            'problems'  => $problems,
+            'empty'     => $empty,
+            'simulated' => $simulated,
         ];
     }
 
@@ -79,9 +100,14 @@ final class ResultsPlanner
      * @param array{home:string, away:string, home_country:string, away_country:string, home_goals:int, away_goals:int} $match
      * @param array<int, array>                                                                                        $problems
      */
-    private function planMatch(string $competition, array $match, array &$problems): array
+    private function planMatch(string $competition, int $matchDay, array $match, array &$problems): array
     {
-        [$homePoints, $awayPoints] = self::pointsFor($match['home_goals'], $match['away_goals']);
+        // A la lligueta de la Conference la victòria val 4 punts; a la resta, 3.
+        [$homePoints, $awayPoints] = self::pointsFor(
+            $match['home_goals'],
+            $match['away_goals'],
+            resultsWinPoints($competition, $matchDay)
+        );
 
         return [
             'competition' => $competition,
@@ -140,7 +166,7 @@ final class ResultsPlanner
      *
      * @param array<int, array> $matches
      *
-     * @return array<int, array{competition:string, teamId:int, teamName:string, points:int, label:string}>
+     * @return array<string, array{competition:string, teamId:int, teamName:string, points:int, label:string}> Claus: competició|equip.
      */
     private static function rows(array $matches): array
     {
@@ -154,7 +180,7 @@ final class ResultsPlanner
                     continue;
                 }
 
-                $key          = $match['competition'] . '|' . $planned['teamId'];
+                $key        = $match['competition'] . '|' . $planned['teamId'];
                 $rows[$key] = [
                     'competition' => $match['competition'],
                     'teamId'      => $planned['teamId'],
@@ -165,17 +191,22 @@ final class ResultsPlanner
             }
         }
 
-        return array_values($rows);
+        return $rows;
     }
 
-    /** Punts de cada equip segons el resultat, com a la resta del joc. */
-    private static function pointsFor(int $homeGoals, int $awayGoals): array
+    /**
+     * Punts de cada equip segons el resultat.
+     *
+     * La victòria val $winPoints (4 a la lligueta de la Conference, 3 a la
+     * resta); l'empat sempre val 1 i la derrota 0.
+     */
+    private static function pointsFor(int $homeGoals, int $awayGoals, int $winPoints): array
     {
         if ($homeGoals > $awayGoals) {
-            return [3, 0];
+            return [$winPoints, 0];
         }
         if ($awayGoals > $homeGoals) {
-            return [0, 3];
+            return [0, $winPoints];
         }
 
         return [1, 1];

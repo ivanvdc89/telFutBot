@@ -174,6 +174,25 @@ class TeamNameResolver
         ];
     }
 
+    /**
+     * Els equips d'una competició, amb el seu id i nom.
+     *
+     * El fan servir les jornades simulades, que han de donar un 0 a tots els
+     * equips de la competició.
+     *
+     * @return array<int, array{id:int, name:string}>
+     */
+    public function teamsInCompetition(string $competition): array
+    {
+        $teams = [];
+
+        foreach ($this->byCompetition[$competition] ?? [] as $team) {
+            $teams[] = ['id' => $team['id'], 'name' => $team['name']];
+        }
+
+        return $teams;
+    }
+
     /** @return array<int, array{id:int, name:string, norm:string}> */
     private function candidates(?string $competition): array
     {
