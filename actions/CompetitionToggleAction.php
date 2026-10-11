@@ -1,6 +1,7 @@
 <?php
 
-use TelegramBot\Api\BotApi;
+require_once(__DIR__ . '/ActionRowAction.php');
+
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
@@ -12,7 +13,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * normalitzar el comandament, el tipus, l'etiqueta i el nom de la variable de
  * la llista, eren 83 línies idèntiques amb zero diferències.
  *
- * Cada subclasse només ha de dir tres coses: command(), actionType() i label().
+ * Cada subclasse només ha de dir dues coses: commands() i actionType().
  *
  * El commutador no fa el mateix a tots els camins, i això es conserva tal com
  * estava:
@@ -27,12 +28,8 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * només oferia CHL i EUL tot i que les normes i calculateMatchDayPoints ja
  * parlaven de la Conference; ara surten les tres, definides a COMPETITIONS per
  * no haver-les de repetir al teclat i al missatge d'estat.
- *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
  */
-abstract class CompetitionToggleAction
+abstract class CompetitionToggleAction extends ActionRowAction
 {
     /**
      * Competicions que es poden activar, amb el nom que surt als missatges.
@@ -70,45 +67,9 @@ abstract class CompetitionToggleAction
      */
     private const MAX_USES_PER_SEASON = 3;
 
-    protected BotApi $telegram;
-    protected Player $playersRepo;
-    protected Action $actionsRepo;
-    protected int $chatId;
-    protected int $matchDay;
-    protected array $args;
-    protected bool $actionsActivated;
-
-    public function __construct(
-        BotApi $telegram,
-        Player $playersRepo,
-        Action $actionsRepo,
-        int $chatId,
-        int $matchDay,
-        array $args,
-        bool $actionsActivated
-    ) {
-        $this->telegram         = $telegram;
-        $this->playersRepo      = $playersRepo;
-        $this->actionsRepo      = $actionsRepo;
-        $this->chatId           = $chatId;
-        $this->matchDay         = $matchDay;
-        $this->args             = $args;
-        $this->actionsActivated = $actionsActivated;
-    }
-
-    /**
-     * Comandament que gestiona l'acció, per exemple '/malDia'.
-     */
-    abstract public static function command(): string;
-
-    /**
-     * Valor de la columna `type` a la taula actions, per exemple 'badDay'.
-     */
-    abstract protected function actionType(): string;
-
     /**
      * Etiqueta que surt als missatges, per exemple '#malDia'. Surt del grup, i
-     * per tant una subclasse només ha de declarar command() i actionType().
+     * per tant una subclasse només ha de declarar commands() i actionType().
      */
     protected function label(): string
     {
@@ -123,22 +84,9 @@ abstract class CompetitionToggleAction
         return self::GROUP[$type];
     }
 
-    public static function handlesCommand(string $command): bool
+    protected function handle(int $playerId): void
     {
-        return $command === static::command();
-    }
-
-    public function run(): void
-    {
-        $playerId = $this->getPlayerId();
-
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
-        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, $this->actionType());
+        $actions = $this->actionRows($playerId);
 
         if (count($actions) === 0) {
             $this->createOrShowMenu($playerId);
@@ -163,7 +111,7 @@ abstract class CompetitionToggleAction
     private function createOrShowMenu(int $playerId): void
     {
         if (!$this->actionsActivated) {
-            $this->telegram->sendMessage($this->chatId, "No disponible");
+            $this->sendNotAvailable();
 
             return;
         }
@@ -185,12 +133,7 @@ abstract class CompetitionToggleAction
 
             $list[] = $competition;
 
-            $this->actionsRepo->addAction(
-                $playerId,
-                $this->matchDay,
-                $this->actionType(),
-                json_encode($list)
-            );
+            $this->createActionRow($playerId, $list);
         }
 
         $this->sendMenu($list);
@@ -234,7 +177,7 @@ abstract class CompetitionToggleAction
             // encara que no s'hagi demanat ni activar ni desactivar res: és el
             // que feia el codi original.
             if ($save) {
-                $this->actionsRepo->updateAction((int) $action['id'], json_encode($list));
+                $this->saveActionRow((int) $action['id'], $list);
             }
 
             $keyboard       = new ReplyKeyboardMarkup($this->toggleRows($list), true, true);
@@ -273,7 +216,8 @@ abstract class CompetitionToggleAction
      */
     private function toggleRows(array $list): array
     {
-        $command = static::command();
+        // Aquestes accions només tenen un comandament.
+        $command = static::commands()[0];
         $rows    = [];
         $row     = [];
 
@@ -293,14 +237,6 @@ abstract class CompetitionToggleAction
         }
 
         return $rows;
-    }
-
-    /**
-     * Subcomandament: 'Activar', 'Desactivar' o res.
-     */
-    private function subCommand(): string
-    {
-        return (string) ($this->args[1] ?? '');
     }
 
     /**
@@ -384,37 +320,6 @@ abstract class CompetitionToggleAction
             "Ja has fet servir el " . $this->label() . " " . self::MAX_USES_PER_SEASON
                 . " vegades aquesta temporada, que és el màxim. Si en vols activar una altra, "
                 . "desactiva'n primer alguna."
-        );
-    }
-
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
         );
     }
 }

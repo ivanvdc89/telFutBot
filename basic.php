@@ -59,7 +59,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             SUBSTITUTIONS_OPEN,
             $args
         );
-        $substitutionAction->run($command);
+        $substitutionAction->run();
         exit;
     }
 

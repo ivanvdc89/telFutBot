@@ -11,9 +11,9 @@ require_once(__DIR__ . '/CompetitionToggleAction.php');
  */
 class BadDayAction extends CompetitionToggleAction
 {
-    public static function command(): string
+    protected static function commands(): array
     {
-        return '/malDia';
+        return ['/malDia'];
     }
 
     protected function actionType(): string

@@ -12,9 +12,9 @@ require_once(__DIR__ . '/CompetitionToggleAction.php');
  */
 class IAmTheBestAction extends CompetitionToggleAction
 {
-    public static function command(): string
+    protected static function commands(): array
     {
-        return '/socElMillor';
+        return ['/socElMillor'];
     }
 
     protected function actionType(): string

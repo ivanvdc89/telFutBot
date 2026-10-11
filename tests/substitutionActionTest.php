@@ -247,7 +247,7 @@ function runCommand(
         $bot, $player, $team, $sub, CHAT_ID, MATCH_DAY,
         $lastMatchDayWithChanges, $substitutionsOpen, $args
     );
-    $action->run($args[0]);
+    $action->run();
 
     return [$bot->sent, $sub];
 }

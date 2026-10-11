@@ -12,9 +12,9 @@ require_once(__DIR__ . '/CompetitionToggleAction.php');
  */
 class WinOrDieAction extends CompetitionToggleAction
 {
-    public static function command(): string
+    protected static function commands(): array
     {
-        return '/guanyarOMorir';
+        return ['/guanyarOMorir'];
     }
 
     protected function actionType(): string

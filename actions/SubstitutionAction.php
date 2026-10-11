@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/PlayerAction.php');
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -26,11 +28,10 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *      Amb 0 pendents la plantilla efectiva és la real, o sigui que el
  *      comportament d'un sol canvi no canvia.
  *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
+ * És l'única acció que no es desa a la taula actions i que té més d'un
+ * comandament; la resta de l'execució comuna és a PlayerAction.
  */
-class SubstitutionAction
+class SubstitutionAction extends PlayerAction
 {
     /**
      * Comandaments que gestiona aquesta acció.
@@ -69,15 +70,10 @@ class SubstitutionAction
      */
     private const FREE_CHANGE_MIN_GAP = 29;
 
-    private BotApi $telegram;
-    private Player $playersRepo;
     private Team $teamsRepo;
     private Substitution $substitutionsRepo;
-    private int $chatId;
-    private int $matchDay;
     private int $lastMatchDayWithChanges;
     private bool $substitutionsOpen;
-    private array $args;
 
     public function __construct(
         BotApi $telegram,
@@ -90,32 +86,22 @@ class SubstitutionAction
         bool $substitutionsOpen,
         array $args
     ) {
-        $this->telegram                = $telegram;
-        $this->playersRepo             = $playersRepo;
+        parent::__construct($telegram, $playersRepo, $chatId, $matchDay, $args);
+
         $this->teamsRepo               = $teamsRepo;
         $this->substitutionsRepo       = $substitutionsRepo;
-        $this->chatId                  = $chatId;
-        $this->matchDay                = $matchDay;
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
         $this->substitutionsOpen       = $substitutionsOpen;
-        $this->args                    = $args;
     }
 
-    public static function handlesCommand(string $command): bool
+    protected static function commands(): array
     {
-        return in_array($command, self::COMMANDS, true);
+        return self::COMMANDS;
     }
 
-    public function run(string $command): void
+    protected function handle(int $playerId): void
     {
-        $playerId = $this->getPlayerId();
-
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
+        $command = $this->command();
         $pending = $this->getPendingSubstitutions($playerId);
 
         if ($command === '/substitució') {
@@ -148,7 +134,7 @@ class SubstitutionAction
      */
     private function showSubstitution(int $playerId, array $pending): void
     {
-        if (($this->args[1] ?? '') === 'remove') {
+        if ($this->subCommand() === 'remove') {
             $this->removeSubstitutions($pending);
 
             return;
@@ -200,7 +186,7 @@ class SubstitutionAction
      */
     private function chooseOldTeam(int $playerId, array $pending): void
     {
-        $oldTeamName = (string) ($this->args[1] ?? '');
+        $oldTeamName = $this->subCommand();
 
         if (str_contains($oldTeamName, '_Pot_')) {
             $this->chooseOldTeamByEmptyPot($playerId, $pending);
@@ -255,7 +241,7 @@ class SubstitutionAction
      */
     private function chooseOldTeamByEmptyPot(int $playerId, array $pending): void
     {
-        $slot = $this->parseEmptyPotSlot((string) ($this->args[1] ?? ''));
+        $slot = $this->parseEmptyPotSlot($this->subCommand());
 
         if ($slot === null) {
             $this->telegram->sendMessage($this->chatId, "ERROR, l'equip no existeix");
@@ -289,7 +275,7 @@ class SubstitutionAction
      */
     private function chooseNewTeam(int $playerId, array $pending): void
     {
-        $newTeam = $this->teamsRepo->getTeamByName((string) ($this->args[1] ?? ''));
+        $newTeam = $this->teamsRepo->getTeamByName($this->subCommand());
         if (!is_array($newTeam) || count($newTeam) == 0) {
             $this->telegram->sendMessage($this->chatId, "ERROR, l'equip no existeix");
 
@@ -658,37 +644,5 @@ class SubstitutionAction
         return array_values(array_filter($pendingSubstitutions, function ($substitution) {
             return (int) $substitution['match_day'] === $this->matchDay;
         }));
-    }
-
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips: no té cap equip i no pot fer
-     * canvis. Abans això acabava en error fatal i l'usuari no rebia resposta.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
-        );
     }
 }

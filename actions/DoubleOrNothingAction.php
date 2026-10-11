@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/ActionRowAction.php');
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -7,8 +9,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * Acció #dobleORes (tipus doubleOrNothing).
  *
  * Permet votar equips: l'equip més votat de cada competició no suma res i el
- * segon més votat suma doble. Els vots es desen a la fila d'accions del jugador
- * com un JSON {max, teams:[teamId, ...]}.
+ * segon més votat suma doble.
  *
  *     /dobleORes              menú de pots
  *     /dobleORes pot N        equips del pot N per votar
@@ -20,17 +21,10 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * JSON {max, teams:[teamId, ...]}. 'max' és el nombre de vots que li toquen,
  * calculat amb la regla de posició a partir de la classificació general
  * (players.points): 1 vot per al líder i 1 més per cada 10 punts de diferència,
- * fins a 4.
- *
- * El número es desa a la fila quan canvia, de manera que durant la jornada
- * queda congelat amb la general que va veure el jugador; publishActions compta
- * els vots amb el mateix valor.
- *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
+ * fins a 4. El número es desa quan canvia, de manera que durant la jornada
+ * queda congelat amb la general que va veure el jugador.
  */
-class DoubleOrNothingAction
+class DoubleOrNothingAction extends ActionRowAction
 {
     /**
      * Comandament que gestiona aquesta acció.
@@ -42,14 +36,7 @@ class DoubleOrNothingAction
      */
     private const ACTION_TYPE = 'doubleOrNothing';
 
-    private BotApi $telegram;
-    private Player $playersRepo;
     private Team $teamsRepo;
-    private Action $actionsRepo;
-    private int $chatId;
-    private int $matchDay;
-    private array $args;
-    private bool $actionsActivated;
 
     public function __construct(
         BotApi $telegram,
@@ -61,49 +48,36 @@ class DoubleOrNothingAction
         array $args,
         bool $actionsActivated
     ) {
-        $this->telegram         = $telegram;
-        $this->playersRepo      = $playersRepo;
-        $this->teamsRepo        = $teamsRepo;
-        $this->actionsRepo      = $actionsRepo;
-        $this->chatId           = $chatId;
-        $this->matchDay         = $matchDay;
-        $this->args             = $args;
-        $this->actionsActivated = $actionsActivated;
+        parent::__construct($telegram, $playersRepo, $actionsRepo, $chatId, $matchDay, $args, $actionsActivated);
+
+        $this->teamsRepo = $teamsRepo;
     }
 
-    public static function handlesCommand(string $command): bool
+    protected static function commands(): array
     {
-        return $command === self::COMMAND;
+        return [self::COMMAND];
     }
 
-    public function run(): void
+    protected function actionType(): string
     {
-        $playerId = $this->getPlayerId();
+        return self::ACTION_TYPE;
+    }
 
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
+    protected function handle(int $playerId): void
+    {
         if (!$this->actionsActivated) {
-            $this->telegram->sendMessage($this->chatId, "No disponible");
+            $this->sendNotAvailable();
 
             return;
         }
 
-        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+        $actions = $this->actionRows($playerId);
 
         if (count($actions) === 0) {
             // La fila la crea el bot la primera vegada que el jugador obre
             // l'acció; abans l'havia de sembrar algú a mà a la base de dades.
             $data     = $this->newRowData($playerId);
-            $actionId = (int) $this->actionsRepo->addAction(
-                $playerId,
-                $this->matchDay,
-                self::ACTION_TYPE,
-                json_encode($data)
-            );
+            $actionId = $this->createActionRow($playerId, $data);
         } else {
             $actionId = (int) $actions[0]['id'];
             $data     = $this->withAllowedVotes($actionId, json_decode($actions[0]['data'], true), $playerId);
@@ -148,7 +122,7 @@ class DoubleOrNothingAction
     private function deleteVotes(int $actionId, array $data): void
     {
         $data['teams'] = [];
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $this->saveActionRow($actionId, $data);
 
         $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
         $this->telegram->sendMessage($this->chatId, "Vots borrats", false, null, null, $keyboard);
@@ -159,7 +133,7 @@ class DoubleOrNothingAction
      */
     private function registerVote(int $actionId, array $data): void
     {
-        $team = $this->teamsRepo->getTeamByName((string) ($this->args[2] ?? ''));
+        $team = $this->teamsRepo->getTeamByName($this->argument(2));
 
         if (count($team) === 0) {
             $this->telegram->sendMessage($this->chatId, "ERROR, l'equip no existeix");
@@ -168,7 +142,7 @@ class DoubleOrNothingAction
         }
 
         $data['teams'][] = $team[0]['id'];
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $this->saveActionRow($actionId, $data);
 
         $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
         $this->telegram->sendMessage($this->chatId, "Vot guardat", false, null, null, $keyboard);
@@ -215,7 +189,7 @@ class DoubleOrNothingAction
 
     private function sendPotTeams(): void
     {
-        $pot = $this->args[2] ?? '';
+        $pot = $this->argument(2);
 
         if (!is_numeric($pot) || $pot < 1 || $pot > 12) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
@@ -264,23 +238,10 @@ class DoubleOrNothingAction
     }
 
     /**
-     * Assegura que la fila porti el nombre de vots que li toquen al jugador.
-     *
-     * Surt de la classificació general (players.points) i es desa a la fila
-     * només quan canvia: així, mentre dura la jornada, el número queda congelat
-     * amb la general que va veure el jugador, i no es paga una escriptura a cada
-     * missatge.
+     * La fila sempre ha de portar la llista de vots.
      */
-    private function withAllowedVotes(int $actionId, array $data, int $playerId): array
+    protected function normalizeRow(array $data): array
     {
-        $allowedVotes = $this->playersRepo->getAllowedVotes($playerId);
-
-        if (($data['max'] ?? null) !== $allowedVotes) {
-            // 'max' al davant: la fila queda sempre amb la mateixa forma.
-            $data = ['max' => $allowedVotes] + $data;
-            $this->actionsRepo->updateAction($actionId, json_encode($data));
-        }
-
         $data['teams'] = $data['teams'] ?? [];
 
         return $data;
@@ -302,42 +263,4 @@ class DoubleOrNothingAction
         return $this->maxVotes($data) === count($data['teams'] ?? []);
     }
 
-    /**
-     * Subcomandament: 'pot', 'vot', 'borrar' o res.
-     */
-    private function subCommand(): string
-    {
-        return (string) ($this->args[1] ?? '');
-    }
-
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips: no té equip i no pot votar.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-    }
 }

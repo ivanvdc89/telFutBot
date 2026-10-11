@@ -1,6 +1,7 @@
 <?php
 
-use TelegramBot\Api\BotApi;
+require_once(__DIR__ . '/ActionRowAction.php');
+
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
@@ -17,12 +18,8 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * {competition: 'CHL', points: N}. publishActions compta el vot amb els punts
  * que hi ha desats, que són els que el jugador va veure. Les files antigues
  * només portaven ['CHL'] i es continuen llegint.
- *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
  */
-class BestFinalAction
+class BestFinalAction extends ActionRowAction
 {
     /**
      * Comandament que gestiona aquesta acció.
@@ -39,60 +36,31 @@ class BestFinalAction
      */
     private const COMPETITIONS = ['CHL', 'EUL', 'COL'];
 
-    private BotApi $telegram;
-    private Player $playersRepo;
-    private Action $actionsRepo;
-    private int $chatId;
-    private int $matchDay;
-    private array $args;
-    private bool $actionsActivated;
-
-    public function __construct(
-        BotApi $telegram,
-        Player $playersRepo,
-        Action $actionsRepo,
-        int $chatId,
-        int $matchDay,
-        array $args,
-        bool $actionsActivated
-    ) {
-        $this->telegram         = $telegram;
-        $this->playersRepo      = $playersRepo;
-        $this->actionsRepo      = $actionsRepo;
-        $this->chatId           = $chatId;
-        $this->matchDay         = $matchDay;
-        $this->args             = $args;
-        $this->actionsActivated = $actionsActivated;
+    protected static function commands(): array
+    {
+        return [self::COMMAND];
     }
 
-    public static function handlesCommand(string $command): bool
+    protected function actionType(): string
     {
-        return $command === self::COMMAND;
+        return self::ACTION_TYPE;
     }
 
-    public function run(): void
+    protected function handle(int $playerId): void
     {
-        $playerId = $this->getPlayerId();
-
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
         if (!$this->actionsActivated) {
-            $this->telegram->sendMessage($this->chatId, "No disponible");
+            $this->sendNotAvailable();
 
             return;
         }
 
-        $actions   = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+        $actions    = $this->actionRows($playerId);
         $subCommand = $this->subCommand();
 
         if ($subCommand === 'borrar') {
             // Sense fila no hi ha res a esborrar: es mostra el menú igualment.
             if (count($actions) > 0) {
-                $this->actionsRepo->updateAction((int) $actions[0]['id'], json_encode([]));
+                $this->saveActionRow((int) $actions[0]['id'], []);
             }
 
             $this->sendCompetitionMenu();
@@ -102,7 +70,7 @@ class BestFinalAction
 
         if (in_array($subCommand, self::COMPETITIONS, true)) {
             $this->saveVote($playerId, $actions, $subCommand);
-            $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+            $actions = $this->actionRows($playerId);
         }
 
         $competition = $this->chosenCompetition($actions);
@@ -123,18 +91,18 @@ class BestFinalAction
      */
     private function saveVote(int $playerId, array $actions, string $competition): void
     {
-        $data = json_encode([
+        $data = [
             'competition' => $competition,
             'points'      => $this->playersRepo->getAllowedVotes($playerId),
-        ]);
+        ];
 
         if (count($actions) > 0) {
-            $this->actionsRepo->updateAction((int) $actions[0]['id'], $data);
+            $this->saveActionRow((int) $actions[0]['id'], $data);
 
             return;
         }
 
-        $this->actionsRepo->addAction($playerId, $this->matchDay, self::ACTION_TYPE, $data);
+        $this->createActionRow($playerId, $data);
     }
 
     /**
@@ -184,42 +152,4 @@ class BestFinalAction
         );
     }
 
-    /**
-     * Subcomandament: 'borrar', una competició o res.
-     */
-    private function subCommand(): string
-    {
-        return (string) ($this->args[1] ?? '');
-    }
-
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-    }
 }

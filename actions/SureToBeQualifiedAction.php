@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/ActionRowAction.php');
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -26,10 +28,9 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * i es continuen llegint.
  *
  * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
+ * La fila només es crea quan el jugador tria equip: obrir el menú no escriu res.
  */
-class SureToBeQualifiedAction
+class SureToBeQualifiedAction extends ActionRowAction
 {
     /**
      * Comandaments que gestiona aquesta acció.
@@ -41,14 +42,7 @@ class SureToBeQualifiedAction
      */
     private const ACTION_TYPE = 'sureToBeQualified';
 
-    private BotApi $telegram;
-    private Player $playersRepo;
     private Team $teamsRepo;
-    private Action $actionsRepo;
-    private int $chatId;
-    private int $matchDay;
-    private array $args;
-    private bool $actionsActivated;
 
     public function __construct(
         BotApi $telegram,
@@ -60,38 +54,30 @@ class SureToBeQualifiedAction
         array $args,
         bool $actionsActivated
     ) {
-        $this->telegram         = $telegram;
-        $this->playersRepo      = $playersRepo;
-        $this->teamsRepo        = $teamsRepo;
-        $this->actionsRepo      = $actionsRepo;
-        $this->chatId           = $chatId;
-        $this->matchDay         = $matchDay;
-        $this->args             = $args;
-        $this->actionsActivated = $actionsActivated;
+        parent::__construct($telegram, $playersRepo, $actionsRepo, $chatId, $matchDay, $args, $actionsActivated);
+
+        $this->teamsRepo = $teamsRepo;
     }
 
-    public static function handlesCommand(string $command): bool
+    protected static function commands(): array
     {
-        return in_array($command, self::COMMANDS, true);
+        return self::COMMANDS;
     }
 
-    public function run(): void
+    protected function actionType(): string
     {
-        $playerId = $this->getPlayerId();
+        return self::ACTION_TYPE;
+    }
 
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
+    protected function handle(int $playerId): void
+    {
         if (!$this->actionsActivated) {
-            $this->telegram->sendMessage($this->chatId, "No disponible");
+            $this->sendNotAvailable();
 
             return;
         }
 
-        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+        $actions = $this->actionRows($playerId);
 
         // Amb una fila ja creada: es pot treure l'aposta o veure què hi ha ara
         // mateix. Amb un equip triat no se'n pot posar un altre de directe:
@@ -102,7 +88,7 @@ class SureToBeQualifiedAction
             $chosenTeamId = $data['team'] ?? ($data[0] ?? null);
 
             if ($this->subCommand() === 'Borrar') {
-                $this->actionsRepo->updateAction($actionId, json_encode([]));
+                $this->saveActionRow($actionId, []);
                 $this->sendTeamMenu($playerId);
 
                 return;
@@ -150,12 +136,12 @@ class SureToBeQualifiedAction
             return;
         }
 
-        $data = json_encode(['team' => $team[0]['id'], 'points' => $pointsAtStake]);
+        $data = ['team' => $team[0]['id'], 'points' => $pointsAtStake];
 
         if ($actionId === null) {
-            $this->actionsRepo->addAction($playerId, $this->matchDay, self::ACTION_TYPE, $data);
+            $this->createActionRow($playerId, $data);
         } else {
-            $this->actionsRepo->updateAction($actionId, $data);
+            $this->saveActionRow($actionId, $data);
         }
 
         $this->telegram->sendMessage(
@@ -218,45 +204,6 @@ class SureToBeQualifiedAction
             null,
             null,
             new ReplyKeyboardMarkup($rows, true, true)
-        );
-    }
-
-    /**
-     * Subcomandament: un nom d'equip, 'Borrar' o res.
-     */
-    private function subCommand(): string
-    {
-        return (string) ($this->args[1] ?? '');
-    }
-
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
         );
     }
 }

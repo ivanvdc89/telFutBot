@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/ActionRowAction.php');
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -22,12 +24,8 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * mà a la base de dades. 'max' és el nombre de vots que li toquen —els escuts
  * tenen el mateix límit— i surt de la classificació general (players.points):
  * 1 vot per al líder i 1 més per cada 10 punts de diferència, fins a 4.
- *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
  */
-class KosAndShieldsAction
+class KosAndShieldsAction extends ActionRowAction
 {
     /**
      * Comandament que gestiona aquesta acció.
@@ -44,14 +42,7 @@ class KosAndShieldsAction
      */
     private const COMPETITIONS = ['CHL', 'EUL', 'COL'];
 
-    private BotApi $telegram;
-    private Player $playersRepo;
     private Team $teamsRepo;
-    private Action $actionsRepo;
-    private int $chatId;
-    private int $matchDay;
-    private array $args;
-    private bool $actionsActivated;
 
     public function __construct(
         BotApi $telegram,
@@ -63,56 +54,43 @@ class KosAndShieldsAction
         array $args,
         bool $actionsActivated
     ) {
-        $this->telegram         = $telegram;
-        $this->playersRepo      = $playersRepo;
-        $this->teamsRepo        = $teamsRepo;
-        $this->actionsRepo      = $actionsRepo;
-        $this->chatId           = $chatId;
-        $this->matchDay         = $matchDay;
-        $this->args             = $args;
-        $this->actionsActivated = $actionsActivated;
+        parent::__construct($telegram, $playersRepo, $actionsRepo, $chatId, $matchDay, $args, $actionsActivated);
+
+        $this->teamsRepo = $teamsRepo;
     }
 
-    public static function handlesCommand(string $command): bool
+    protected static function commands(): array
     {
-        return $command === self::COMMAND;
+        return [self::COMMAND];
     }
 
-    public function run(): void
+    protected function actionType(): string
     {
-        $playerId = $this->getPlayerId();
+        return self::ACTION_TYPE;
+    }
 
-        if ($playerId === null) {
-            $this->sendNotRegistered();
-
-            return;
-        }
-
+    protected function handle(int $playerId): void
+    {
         if (!$this->actionsActivated) {
-            $this->telegram->sendMessage($this->chatId, "No disponible");
+            $this->sendNotAvailable();
 
             return;
         }
 
-        $actions = $this->actionsRepo->getActionsByPlayerId($playerId, $this->matchDay, self::ACTION_TYPE);
+        $actions = $this->actionRows($playerId);
 
         if (count($actions) === 0) {
             // La fila la crea el bot la primera vegada que el jugador obre
             // l'acció; abans l'havia de sembrar algú a mà a la base de dades.
             $data     = $this->newRowData($playerId);
-            $actionId = (int) $this->actionsRepo->addAction(
-                $playerId,
-                $this->matchDay,
-                self::ACTION_TYPE,
-                json_encode($data)
-            );
+            $actionId = $this->createActionRow($playerId, $data);
         } else {
             $actionId = (int) $actions[0]['id'];
             $data     = $this->withAllowedVotes($actionId, json_decode($actions[0]['data'], true), $playerId);
         }
 
         $maxVotes   = (int) $data['max'];
-        $subCommand = (string) ($this->args[1] ?? '');
+        $subCommand = $this->subCommand();
 
         // L'ordre importa i és el de sempre: primer esborrar, després comprovar
         // si ja està tot fet, i només al final cada camí.
@@ -165,23 +143,10 @@ class KosAndShieldsAction
     }
 
     /**
-     * Assegura que la fila porti el nombre de vots que li toquen al jugador, i
-     * que les llistes de kos i escuts existeixin.
-     *
-     * El màxim surt de la classificació general (players.points) i es desa a la
-     * fila només quan canvia: així, mentre dura la jornada, el número queda
-     * congelat amb la general que va veure el jugador.
+     * La fila sempre ha de portar les llistes de kos i d'escuts.
      */
-    private function withAllowedVotes(int $actionId, array $data, int $playerId): array
+    protected function normalizeRow(array $data): array
     {
-        $allowedVotes = $this->playersRepo->getAllowedVotes($playerId);
-
-        if (($data['max'] ?? null) !== $allowedVotes) {
-            // 'max' al davant: la fila queda sempre amb la mateixa forma.
-            $data = ['max' => $allowedVotes] + $data;
-            $this->actionsRepo->updateAction($actionId, json_encode($data));
-        }
-
         $data['kos']     = $data['kos'] ?? [];
         $data['shields'] = $data['shields'] ?? [];
 
@@ -195,7 +160,7 @@ class KosAndShieldsAction
     {
         $data['kos']     = [];
         $data['shields'] = [];
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $this->saveActionRow($actionId, $data);
 
         $this->telegram->sendMessage(
             $this->chatId,
@@ -281,7 +246,7 @@ class KosAndShieldsAction
             return;
         }
 
-        $pot = $this->args[2] ?? '';
+        $pot = $this->argument(2);
 
         if (!is_numeric($pot) || $pot < 1 || $pot > 12) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
@@ -312,7 +277,7 @@ class KosAndShieldsAction
             return;
         }
 
-        $team = $this->teamsRepo->getTeamByName((string) ($this->args[2] ?? ''));
+        $team = $this->teamsRepo->getTeamByName($this->argument(2));
 
         if (count($team) === 0) {
             $this->telegram->sendMessage($this->chatId, "ERROR, l'equip no existeix");
@@ -321,7 +286,7 @@ class KosAndShieldsAction
         }
 
         $data['kos'][] = $team[0]['id'];
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $this->saveActionRow($actionId, $data);
 
         $this->telegram->sendMessage($this->chatId, "Vot guardat", false, null, null, $this->simpleKeyboard());
         $this->telegram->sendMessage($this->chatId, $this->votesListText($data, $maxVotes));
@@ -339,7 +304,7 @@ class KosAndShieldsAction
             return;
         }
 
-        $target = (string) ($this->args[2] ?? '');
+        $target = $this->argument(2);
 
         if (in_array($target, self::COMPETITIONS, true)) {
             $this->sendShieldableTeams($playerId, $data, $target);
@@ -369,7 +334,7 @@ class KosAndShieldsAction
         }
 
         $data['shields'][] = $team[0]['id'];
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $this->saveActionRow($actionId, $data);
 
         $this->telegram->sendMessage($this->chatId, "Escut guardat", false, null, null, $this->simpleKeyboard());
         $this->telegram->sendMessage($this->chatId, $this->votesListText($data, $maxVotes));
@@ -477,35 +442,4 @@ class KosAndShieldsAction
         return $maxVotes === count($data['shields']);
     }
 
-    /**
-     * Id del jugador associat al xat, o null si encara no existeix.
-     */
-    private function getPlayerId(): ?int
-    {
-        $player = $this->playersRepo->getPlayerByChatId($this->chatId);
-
-        if (!isset($player[0]['id'])) {
-            return null;
-        }
-
-        return (int) $player[0]['id'];
-    }
-
-    /**
-     * El jugador encara no ha passat per /equips: no té cap equip i no pot
-     * votar ni escudar res. Abans això acabava en error fatal sense resposta.
-     */
-    private function sendNotRegistered(): void
-    {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
-
-        $this->telegram->sendMessage(
-            $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
-            false,
-            null,
-            null,
-            $keyboard
-        );
-    }
 }
