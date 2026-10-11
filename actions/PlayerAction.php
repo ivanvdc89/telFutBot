@@ -1,10 +1,13 @@
 <?php
 
+require_once(__DIR__ . '/CommandAction.php');
+
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
- * Base de totes les accions del bot.
+ * Base de les accions del bot que necessiten saber quin jugador hi ha darrere
+ * del xat.
  *
  * Totes comparteixen la mateixa execució: esbrinar quin jugador hi ha darrere
  * del xat i, si encara no ha passat per /equips, dir-l'hi. Això és run(), que
@@ -24,17 +27,13 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *         }
  *     }
  *
- * Una instància viu una sola petició del webhook: rep les dependències pel
- * constructor, i els mètodes retornen en lloc de cridar exit(), perquè qui
- * decideix acabar la petició és el router de basic.php.
+ * El que no depèn del jugador és a CommandAction, i el que no depèn de res
+ * (els pots de la temporada) a config/pots.php.
  */
-abstract class PlayerAction
+abstract class PlayerAction extends CommandAction
 {
-    protected BotApi $telegram;
     protected Player $playersRepo;
-    protected int $chatId;
     protected int $matchDay;
-    protected array $args;
 
     public function __construct(
         BotApi $telegram,
@@ -43,21 +42,10 @@ abstract class PlayerAction
         int $matchDay,
         array $args
     ) {
-        $this->telegram    = $telegram;
+        parent::__construct($telegram, $chatId, $args);
+
         $this->playersRepo = $playersRepo;
-        $this->chatId      = $chatId;
         $this->matchDay    = $matchDay;
-        $this->args        = $args;
-    }
-
-    /**
-     * Comandaments que gestiona l'acció, per exemple ['/kos'].
-     */
-    abstract protected static function commands(): array;
-
-    public static function handlesCommand(string $command): bool
-    {
-        return in_array($command, static::commands(), true);
     }
 
     /**
@@ -80,30 +68,6 @@ abstract class PlayerAction
      * El que fa l'acció, amb el jugador ja resolt.
      */
     abstract protected function handle(int $playerId): void;
-
-    /**
-     * Argument del missatge, o cadena buida si no hi és.
-     */
-    protected function argument(int $index): string
-    {
-        return (string) ($this->args[$index] ?? '');
-    }
-
-    /**
-     * El comandament que ha disparat l'acció.
-     */
-    protected function command(): string
-    {
-        return $this->argument(0);
-    }
-
-    /**
-     * Subcomandament: el segon mot del missatge, o cadena buida.
-     */
-    protected function subCommand(): string
-    {
-        return $this->argument(1);
-    }
 
     /**
      * Id del jugador associat al xat, o null si encara no existeix.

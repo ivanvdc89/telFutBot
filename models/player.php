@@ -68,6 +68,30 @@ class Player extends Connection {
     }
 
     /**
+     * Desa el nom del jugador, el que surt als anuncis i a /data players.
+     *
+     * El nom arriba ja normalitzat i validat per SettingsAction (config/
+     * settings.php): aquí només s'escriu. Es pot cridar sempre, també per
+     * canviar un nom que ja hi era.
+     */
+    public function updatePlayerName($playerId, $name) {
+        try {
+            $connection = parent::connect();
+
+            $sql  = "UPDATE players SET name = :name WHERE id = :player_id";
+            $stmt = $connection->prepare($sql);
+            $stmt->bindValue(':name', $name, PDO::PARAM_STR);
+            $stmt->bindValue(':player_id', $playerId, PDO::PARAM_INT);
+
+            return $stmt->execute();
+
+        } catch (PDOException $e) {
+            error_log("DB update error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Desa la puntuació acumulada del jugador després d'una jornada.
      *
      * És la classificació general en una sola xifra: el total que acumula
