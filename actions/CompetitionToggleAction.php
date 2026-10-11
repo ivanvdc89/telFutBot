@@ -318,8 +318,8 @@ abstract class CompetitionToggleAction extends ActionRowAction
         if ($takenBy !== null) {
             $this->telegram->sendMessage(
                 $this->chatId,
-                "A la " . self::COMPETITIONS[$competition] . " d'aquesta jornada ja hi tens el "
-                    . $takenBy . ". Només s'hi pot activar una de les tres accions."
+                "A la " . self::COMPETITIONS[$competition] . " d'aquesta jornada ja tens el "
+                    . $takenBy . " activat. Només se pot activar una de les tres accions."
             );
 
             return false;
@@ -358,8 +358,8 @@ abstract class CompetitionToggleAction extends ActionRowAction
         $this->telegram->sendMessage(
             $this->chatId,
             "Ja has fet servir el " . $this->label() . " " . self::MAX_USES_PER_SEASON
-                . " vegades aquesta temporada, que és el màxim. Si en vols activar una altra, "
-                . "desactiva'n primer alguna."
+                . " vegades esta temporada, que és el màxim. Si vols activar una altra, "
+                . "desactiva primer alguna si pots."
         );
     }
 }
