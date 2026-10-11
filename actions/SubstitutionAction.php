@@ -73,7 +73,6 @@ class SubstitutionAction
     private Player $playersRepo;
     private Team $teamsRepo;
     private Substitution $substitutionsRepo;
-    private MatchDayPlayerPoint $pointsRepo;
     private int $chatId;
     private int $matchDay;
     private int $lastMatchDayWithChanges;
@@ -85,7 +84,6 @@ class SubstitutionAction
         Player $playersRepo,
         Team $teamsRepo,
         Substitution $substitutionsRepo,
-        MatchDayPlayerPoint $pointsRepo,
         int $chatId,
         int $matchDay,
         int $lastMatchDayWithChanges,
@@ -96,7 +94,6 @@ class SubstitutionAction
         $this->playersRepo             = $playersRepo;
         $this->teamsRepo               = $teamsRepo;
         $this->substitutionsRepo       = $substitutionsRepo;
-        $this->pointsRepo              = $pointsRepo;
         $this->chatId                  = $chatId;
         $this->matchDay                = $matchDay;
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
@@ -609,23 +606,25 @@ class SubstitutionAction
      * Punts que costa el canvi: SUBSTITUTION_COST, o 0 si el jugador està a més
      * de FREE_CHANGE_MIN_GAP punts del líder.
      *
-     * Es calcula en el moment de registrar el canvi i es desa a la fila, perquè
-     * quedi congelat amb la classificació d'aquell moment (el líder i la
-     * distància canvien cada jornada). Si encara no hi ha cap classificació
-     * publicada, es tracta com a gratuït per no inventar un càrrec.
+     * La classificació és players.points, el total acumulat que hi deixa
+     * calculateMatchDayPoints.php després de cada jornada. Es calcula en el
+     * moment de registrar el canvi i es desa a la fila, perquè quedi congelat
+     * amb la classificació d'aquell moment (el líder i la distància canvien
+     * cada jornada). Si el jugador encara no té cap puntuació calculada, es
+     * tracta com a gratuït per no inventar un càrrec.
      */
     private function substitutionCost(int $playerId): int
     {
-        $totals = $this->pointsRepo->getLastTotalsByPlayer();
+        $points = $this->playersRepo->getPlayersPoints();
 
-        if (count($totals) === 0 || !isset($totals[$playerId])) {
+        if (count($points) === 0 || !isset($points[$playerId])) {
             return 0;
         }
 
-        $leaderTotal = max($totals);
-        $playerTotal = $totals[$playerId];
+        $leaderPoints = max($points);
+        $playerPoints = $points[$playerId];
 
-        return ($leaderTotal - $playerTotal) > self::FREE_CHANGE_MIN_GAP
+        return ($leaderPoints - $playerPoints) > self::FREE_CHANGE_MIN_GAP
             ? 0
             : self::SUBSTITUTION_COST;
     }

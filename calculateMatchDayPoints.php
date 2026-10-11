@@ -253,6 +253,9 @@ foreach ($players as $player) {
         }
     }
 
+    $matchDayTotal = $chlPointsAfterAction + $eulPointsAfterAction + $colPointsAfterAction;
+    $total         = $lastMatchDay['total'] + $matchDayTotal;
+
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
         $matchDay,
@@ -269,7 +272,15 @@ foreach ($players as $player) {
         $colPointsAfterAction,
         $colPointsAfterAction + $lastMatchDay['col_total'],
         '',
-        $chlPointsAfterAction + $eulPointsAfterAction + $colPointsAfterAction,
-        $lastMatchDay['total'] + $chlPointsAfterAction + $eulPointsAfterAction + $colPointsAfterAction
+        $matchDayTotal,
+        $total
     );
+
+    // players.points és la classificació general: el total acumulat després
+    // d'aquesta jornada. Només s'hi escriu si la jornada que s'està calculant és
+    // la darrera del jugador, perquè reprocessar una jornada antiga no ha de
+    // deixar la classificació actual amb valors vells.
+    if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {
+        $playersRepo->updatePlayerPoints($playerId, $total);
+    }
 }

@@ -9,7 +9,6 @@ require_once("config/matchDay.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
-require_once("models/matchDayPlayerPoint.php");
 require_once("actions/SubstitutionAction.php");
 
 use TelegramBot\Api\BotApi;
@@ -49,9 +48,17 @@ class FakePlayer extends Player
 {
     public array $players = [];
 
+    /** @var array [player_id => punts acumulats], com a players.points */
+    public array $pointsByPlayer = [];
+
     public function getPlayerByChatId($chatId)
     {
         return isset($this->players[$chatId]) ? [$this->players[$chatId]] : [];
+    }
+
+    public function getPlayersPoints(): array
+    {
+        return $this->pointsByPlayer;
     }
 }
 
@@ -116,17 +123,6 @@ class FakeSubstitution extends Substitution
     }
 }
 
-class FakePoints extends MatchDayPlayerPoint
-{
-    /** @var array [player_id => total acumulat] */
-    public array $lastTotals = [];
-
-    public function getLastTotalsByPlayer(): array
-    {
-        return $this->lastTotals;
-    }
-}
-
 // ---------- fixtures ----------
 
 const CHAT_ID   = 555;
@@ -172,10 +168,9 @@ function buildWorld(array $ownedPots, ?array $standings = null): array
     $player = new FakePlayer();
     $team   = new FakeTeam();
     $sub    = new FakeSubstitution();
-    $points = new FakePoints();
 
     // Per defecte el jugador va enganxat al líder, així que el canvi costa 6.
-    $points->lastTotals = $standings ?? [PLAYER_ID => 100, 8 => 95];
+    $player->pointsByPlayer = $standings ?? [PLAYER_ID => 100, 8 => 95];
 
     $player->players[CHAT_ID] = ['id' => PLAYER_ID, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
 
@@ -203,7 +198,7 @@ function buildWorld(array $ownedPots, ?array $standings = null): array
         $team->teamsByName[$t['name']] = $t;
     }
 
-    return [$bot, $player, $team, $sub, $points];
+    return [$bot, $player, $team, $sub];
 }
 
 // ---------- harness ----------
@@ -244,12 +239,12 @@ function runCommand(
     int $lastMatchDayWithChanges = LAST_MATCH_DAY_WITH_CHANGES,
     bool $substitutionsOpen = SUBSTITUTIONS_OPEN
 ): array {
-    [$bot, $player, $team, $sub, $points] = $world;
+    [$bot, $player, $team, $sub] = $world;
     $bot->sent = [];
     $args      = explode(' ', $text);
 
     $action = new SubstitutionAction(
-        $bot, $player, $team, $sub, $points, CHAT_ID, MATCH_DAY,
+        $bot, $player, $team, $sub, CHAT_ID, MATCH_DAY,
         $lastMatchDayWithChanges, $substitutionsOpen, $args
     );
     $action->run($args[0]);

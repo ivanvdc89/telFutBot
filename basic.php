@@ -10,7 +10,6 @@ require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
 require_once("models/action.php");
-require_once("models/matchDayPlayerPoint.php");
 require_once("actions/SubstitutionAction.php");
 require_once("actions/DoubleOrNothingAction.php");
 require_once("actions/BadDayAction.php");
@@ -33,7 +32,6 @@ $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
-$pointsRepo        = new MatchDayPlayerPoint();
 
 $matchDay = currentMatchDay();
 
@@ -56,7 +54,6 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
             $playersRepo,
             $teamsRepo,
             $substitutionsRepo,
-            $pointsRepo,
             (int) $chatId,
             $matchDay,
             LAST_MATCH_DAY_WITH_CHANGES,

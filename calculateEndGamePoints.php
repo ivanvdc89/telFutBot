@@ -30,6 +30,8 @@ foreach ($players as $player) {
     $eulPoints    = $playerId == 17 ? 20 : 0;
     $colPoints    = $playerId == 9 ? 20 : 0;
 
+    $total = $lastMatchDay['total'] + $chlPoints + $eulPoints + $colPoints;
+
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
         $matchDay,
@@ -47,6 +49,13 @@ foreach ($players as $player) {
         $colPoints + $lastMatchDay['col_total'],
         '',
         $chlPoints + $eulPoints + $colPoints,
-        $lastMatchDay['total'] + $chlPoints + $eulPoints + $colPoints
+        $total
     );
+
+    // players.points és la classificació general, i el final del joc també
+    // reparteix punts. Igual que a calculateMatchDayPoints.php, només s'hi
+    // escriu si aquesta és la darrera jornada del jugador.
+    if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {
+        $playersRepo->updatePlayerPoints($playerId, $total);
+    }
 }

@@ -72,6 +72,8 @@ foreach ($players as $player) {
         );
     }
 
+    $total = $lastMatchDay['total'] + $chlPoints + $eulPoints + $colPoints;
+
     $matchDayPlayerPointRepo->addMatchDayPlayerPoint(
         $playerId,
         $matchDay,
@@ -89,6 +91,15 @@ foreach ($players as $player) {
         $colPoints + $lastMatchDay['col_total'],
         '',
         $chlPoints + $eulPoints + $colPoints,
-        $lastMatchDay['total'] + $chlPoints + $eulPoints + $colPoints
+        $total
     );
+
+    // players.points és la classificació general. El final de la fase de lliga
+    // també reparteix punts, i el mercat segueix obert fins a les semifinals, així
+    // que la regla dels 29 ha de veure aquests punts. Igual que a
+    // calculateMatchDayPoints.php, només s'hi escriu si aquesta és la darrera
+    // jornada del jugador.
+    if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {
+        $playersRepo->updatePlayerPoints($playerId, $total);
+    }
 }
