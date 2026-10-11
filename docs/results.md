@@ -149,3 +149,6 @@ getResults -> applySubstitutions -> calculateMatchDayPoints -> publishSubstituti
 
 `getResults.php` ha d'anar **abans** de `calculateMatchDayPoints.php`: aquest
 llegeix `team_results` per repartir els punts.
+
+El termini de la jornada —tancar els canvis, aplicar-los, anunciar-los i obrir
+les accions— és a [termini-jornada.md](termini-jornada.md).
