@@ -1,6 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/../config/results.php');
 
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
@@ -28,6 +29,14 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * només oferia CHL i EUL tot i que les normes i calculateMatchDayPoints ja
  * parlaven de la Conference; ara surten les tres, definides a COMPETITIONS per
  * no haver-les de repetir al teclat i al missatge d'estat.
+ *
+ * LA CONFERENCE I LES JORNADES SIMULADES
+ *
+ * La lligueta de la Conference només té 6 jornades i el joc 8: les jornades 1 i
+ * 8 són simulades i tots els seus equips hi tenen 0 punts. No tindria cap sentit
+ * activar-hi res, així que en aquestes jornades la Conference no surt al teclat i
+ * `canActivateCompetition` la rebutja encara que s'hi arribi pel text. Una fila
+ * que ja existís (d'abans d'aquesta restricció) es mostra i es pot desactivar.
  */
 abstract class CompetitionToggleAction extends ActionRowAction
 {
@@ -221,7 +230,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
         $rows    = [];
         $row     = [];
 
-        foreach (array_keys(self::COMPETITIONS) as $competition) {
+        foreach (array_keys($this->selectableCompetitions($list)) as $competition) {
             $row[] = $command . ' '
                 . (in_array($competition, $list) ? 'Desactivar' : 'Activar')
                 . ' ' . $competition;
@@ -237,6 +246,26 @@ abstract class CompetitionToggleAction extends ActionRowAction
         }
 
         return $rows;
+    }
+
+    /**
+     * Competicions que aquesta jornada poden sortir al teclat.
+     *
+     * La Conference queda fora a les jornades simulades (vegeu la capçalera de
+     * la classe). Una competició que ja estigui activada sí que hi surt sempre:
+     * una fila antiga s'ha de poder desactivar encara que ja no es pugui activar.
+     */
+    private function selectableCompetitions(array $list): array
+    {
+        $selectable = [];
+
+        foreach (self::COMPETITIONS as $competition => $name) {
+            if (in_array($competition, $list, true) || !resultsIsSimulatedLeagueMatchDay($competition, $this->matchDay)) {
+                $selectable[$competition] = $name;
+            }
+        }
+
+        return $selectable;
     }
 
     /**
@@ -269,6 +298,17 @@ abstract class CompetitionToggleAction extends ActionRowAction
     {
         if (!isset(self::COMPETITIONS[$competition])) {
             $this->telegram->sendMessage($this->chatId, "ERROR, competició no vàlida");
+
+            return false;
+        }
+
+        // La Conference no juga les jornades simulades: no hi ha res a activar.
+        if (resultsIsSimulatedLeagueMatchDay($competition, $this->matchDay)) {
+            $this->telegram->sendMessage(
+                $this->chatId,
+                "La " . self::COMPETITIONS[$competition] . " no juga la jornada " . $this->matchDay
+                    . ", així que no hi pots activar el " . $this->label() . "."
+            );
 
             return false;
         }

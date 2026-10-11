@@ -4,6 +4,7 @@ include './vendor/autoload.php';
 
 require_once("config/connection.php");
 require_once("config/matchDay.php");
+require_once("config/results.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/matchDayTeamPoint.php");
@@ -162,6 +163,13 @@ foreach ($players as $player) {
     if (isset($actions[0])) {
         $actionData = json_decode($actions[0]['data'], true);
         foreach ($actionData as $competition) {
+            // Jornada simulada (la Conference a la 1 i a la 8): aquí no s'hi juga
+            // i l'acció no s'ha d'aplicar. El bot ja no deixa activar-la-hi, això
+            // cobreix les files que hi poguessin quedar d'abans.
+            if (resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {
+                continue;
+            }
+
             if ($competition === "CHL") {
                 if ($chlPoints > 5) {
                     $chlAction[] = ["type" => "malDia", "result" => "KO"];
@@ -196,6 +204,10 @@ foreach ($players as $player) {
     foreach ($actions as $action) {
         $actionData = json_decode($action['data'], true);
         foreach ($actionData as $competition) {
+            if (resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {
+                continue;
+            }
+
             if ($competition === "CHL") {
                 if ($chlPoints >= $bestCHL) {
                     $chlAction[]          = ["type" => "socElMillor", "result" => "OK"];
@@ -230,6 +242,10 @@ foreach ($players as $player) {
     foreach ($actions as $action) {
         $actionData = json_decode($action['data'], true);
         foreach ($actionData as $competition) {
+            if (resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {
+                continue;
+            }
+
             if ($competition === "CHL") {
                 $result               = -4 + $chlWins * 2;
                 $chlAction[]          = ["type" => "guanyarOMorir", "result" => $result];

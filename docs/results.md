@@ -75,6 +75,12 @@ Amb 6 partits, guanyar-los tots dona 24 punts, els mateixos que guanyar els 8 de
 la Champions o l'Europa League. A les eliminatòries la victòria torna a valer 3 a
 totes les competicions.
 
+I com que a les jornades 1 i 8 no s'hi juga res, **no s'hi poden activar accions
+de competició per a la COL**: el bot no ofereix el botó de la Conference i, si
+s'hi arriba escrivint la comanda, la rebutja dient per què. Si en quedés alguna
+fila d'abans de la restricció, `calculateMatchDayPoints.php` la ignora, de manera
+que no pot donar ni treure punts d'una jornada simulada.
+
 ## Com s'executa
 
 ```

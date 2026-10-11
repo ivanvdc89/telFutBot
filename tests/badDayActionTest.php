@@ -198,13 +198,13 @@ function checkContains(string $label, ?string $haystack, string $needle): void
 }
 
 /** @return array [missatges enviats, repo d'accions] */
-function runCommand(array $world, string $text): array
+function runCommand(array $world, string $text, int $matchDay = MATCH_DAY): array
 {
     [$bot, $player, $action, $activated] = $world;
     $bot->sent = [];
     $args      = explode(' ', $text);
 
-    $handler = new BadDayAction($bot, $player, $action, CHAT_ID, MATCH_DAY, $args, $activated);
+    $handler = new BadDayAction($bot, $player, $action, CHAT_ID, $matchDay, $args, $activated);
     $handler->run();
 
     return [$bot->sent, $action];
@@ -436,6 +436,41 @@ $world = buildWorld(null, true);
 [$sent, $action] = runCommand($world, '/malDia Activar XXX');
 check('text', $sent[0]['text'], 'ERROR, competició no vàlida');
 check('no crea cap fila', $action->added, []);
+
+echo "\n--- la Conference no juga les jornades 1 i 8: no s'hi pot activar res ---\n";
+foreach ([1, 8] as $simulated) {
+    echo "  jornada $simulated\n";
+
+    // Al menú, el botó de la Conference no hi és.
+    [$sent, $action] = runCommand(buildWorld(null, true), '/malDia', $simulated);
+    check('el teclat només ofereix CHL i EUL', $sent[0]['keyboard'], [['/malDia Activar CHL', '/malDia Activar EUL']]);
+    check('i no crea res', $action->added, []);
+
+    // Arribant-hi pel text, es rebutja amb el motiu.
+    [$sent, $action] = runCommand(buildWorld(null, true), '/malDia Activar COL', $simulated);
+    check('activar COL es rebutja', $action->added, []);
+    check(
+        'i diu per què',
+        $sent[0]['text'],
+        "La Conference League no juga la jornada $simulated, així que no hi pots activar el #malDia."
+    );
+
+    // Les altres dues competicions sí que es poden activar.
+    [$sent, $action] = runCommand(buildWorld(null, true), '/malDia Activar EUL', $simulated);
+    check('EUL sí que s\'activa', $action->added[0]['data'], ['EUL']);
+}
+
+echo "  una fila antiga de COL en una jornada simulada es pot desactivar\n";
+$world = buildWorld(null, true);
+[, , $action] = $world;
+seasonRow($action, 1, ['COL']);                  // fila d'abans de la restricció
+[$sent, $action] = runCommand($world, '/malDia', 1);
+check('es mostra l\'estat', $sent[0]['text'], "Actualment tens el #malDia:\n- Champions League: desactivat\n- Europa League: desactivat\n- Conference League: activat\n\nActivar o desactivar:");
+check('i el botó per treure-la hi és', $sent[0]['keyboard'], [['/malDia Activar CHL', '/malDia Activar EUL', '/malDia Desactivar COL']]);
+
+$action->updates = [];                           // el primer comandament ja n'havia desat una
+[$sent, $action] = runCommand($world, '/malDia Desactivar COL', 1);
+check('desactivar-la sí que es deixa', $action->updates, [['id' => 1, 'data' => []]]);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /malDia', BadDayAction::handlesCommand('/malDia'), true);
