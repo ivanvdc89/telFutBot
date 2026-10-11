@@ -77,10 +77,15 @@ La pàgina es desa a `files/cache/` i es reutilitza durant una hora, així que
 executar l'script diverses vegades no castiga el lloc. Si la xarxa falla, s'usa
 la còpia local encara que sigui antiga.
 
-`team_results` té una clau única `(team_id, match_day, competition)`, i
-l'escriptura és un `INSERT ... ON DUPLICATE KEY UPDATE`. Per tant, tornar a
-executar l'script per a la mateixa jornada actualitza els punts en comptes de
-duplicar files: no hi ha cap risc a repetir-lo.
+`team_results` té una clau única `(team_id, match_day, competition)` i
+**l'escriptura és només un `INSERT`**: els resultats no s'actualitzen mai. Si la
+jornada ja té files, `getResults.php` les detecta abans d'escriure res, diu quins
+equips ja hi són i s'atura. Per tornar a carregar una jornada cal esborrar-ne
+primer les files (l'error mateix indica l'SQL):
+
+```sql
+DELETE FROM team_results WHERE match_day = 3;
+```
 
 ## Els estats exclosos
 
