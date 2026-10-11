@@ -6,6 +6,7 @@
  *
  * La fan servir aquests scripts, que sempre han d'anar amb la mateixa jornada:
  *   - basic.php                    (el bot, recull accions i substitucions)
+ *   - getResults.php               (carrega els resultats de la jornada)
  *   - applySubstitutions.php       (aplica les substitucions a la plantilla)
  *   - calculateMatchDayPoints.php  (calcula els punts de la jornada)
  *   - publishSubstitutions.php     (anuncia al grup els canvis aplicats)
@@ -13,11 +14,11 @@
  *   - publishResults.php           (publica els resultats al grup)
  *
  * L'ordre dels passos de la jornada és:
- *   applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
- *                                                -> publishResults
- * Cada pas es pot tornar a executar pel seu compte: aplicar és idempotent i
- * anunciar no consumeix res, així que si un enviament a Telegram falla només
- * cal repetir aquell pas.
+ *   getResults -> applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
+ *                                                              -> publishResults
+ * Cada pas es pot tornar a executar pel seu compte: carregar resultats i
+ * aplicar substitucions són idempotents, i anunciar no consumeix res, així que
+ * si un enviament a Telegram falla només cal repetir aquell pas.
  *
  * NO la fan servir els scripts de final de fase, perquè la seva jornada és una
  * fita fixa i no la jornada en curs:
@@ -81,16 +82,35 @@ function currentMatchDay(): int
         return CURRENT_MATCH_DAY;
     }
 
-    $argument = $GLOBALS['argv'][1] ?? null;
+    return matchDayFromArguments(array_slice($GLOBALS['argv'], 1));
+}
 
-    if ($argument === null) {
-        return CURRENT_MATCH_DAY;
+/**
+ * La jornada que demana la línia de comandes.
+ *
+ * Agafa el primer argument que no sigui una opció (--dry-run, --force...). Així
+ * getResults.php pot acceptar banderes sense que es confonguin amb la jornada, i
+ * la resta d'scripts segueixen llegint el primer número.
+ *
+ * Si no hi ha cap número, torna la jornada en curs. Si n'hi ha un que no val,
+ * atura l'script: val més no fer res que calcular la jornada equivocada.
+ *
+ * @param array<int, string> $arguments Arguments després del nom de l'script.
+ */
+function matchDayFromArguments(array $arguments): int
+{
+    foreach ($arguments as $candidate) {
+        if (str_starts_with($candidate, '-')) {
+            continue;
+        }
+
+        if (!is_numeric($candidate) || (int) $candidate <= 0) {
+            fwrite(STDERR, "ERROR: la jornada ha de ser un número positiu (rebut: '$candidate').\n");
+            exit(1);
+        }
+
+        return (int) $candidate;
     }
 
-    if (!is_numeric($argument) || (int) $argument <= 0) {
-        fwrite(STDERR, "ERROR: la jornada ha de ser un número positiu (rebut: '$argument').\n");
-        exit(1);
-    }
-
-    return (int) $argument;
+    return CURRENT_MATCH_DAY;
 }
