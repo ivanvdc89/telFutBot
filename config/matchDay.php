@@ -16,9 +16,11 @@
  * L'ordre dels passos de la jornada és:
  *   getResults -> applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
  *                                                              -> publishResults
- * Cada pas es pot tornar a executar pel seu compte: carregar resultats i
- * aplicar substitucions són idempotents, i anunciar no consumeix res, així que
- * si un enviament a Telegram falla només cal repetir aquell pas.
+ * Cada pas es pot tornar a executar pel seu compte, amb una excepció: getResults
+ * no sobreescriu una jornada ja carregada (els resultats no s'actualitzen; si ja
+ * hi són, avisa i s'atura). Aplicar substitucions és idempotent i anunciar no
+ * consumeix res, així que si un enviament a Telegram falla només cal repetir
+ * aquell pas.
  *
  * NO la fan servir els scripts de final de fase, perquè la seva jornada és una
  * fita fixa i no la jornada en curs:
