@@ -1,10 +1,27 @@
 <?php
 
+/**
+ * Publica al grup el resum de les accions de la jornada en curs.
+ *
+ *     php publishActions.php
+ *
+ * Només llegeix: no escriu res a la base de dades, i per tant es pot tornar a
+ * executar sempre que calgui (reenvia el missatge sencer). Si no hi ha cap acció
+ * a la jornada no envia res.
+ *
+ * El missatge va per seccions, una per acció, amb el mateix ordre que
+ * /normes accions, i els resums de les accions de votació (#dobleORes,
+ * #kosAmbEscuts, #millorFinal) surten dels vots de la jornada. Els textos i els
+ * recomptes són a config/publishActions.php, que es pot provar sense base de
+ * dades.
+ */
+
 include './vendor/autoload.php';
 
 require_once("config/connection.php");
 require_once("config/secrets.php");
 require_once("config/matchDay.php");
+require_once("config/publishActions.php");
 require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/group.php");
@@ -19,215 +36,57 @@ use TelegramBot\Api\BotApi;
 
 $telegram = new BotApi(secret('telegram_token'));
 
-$groupRepo        = new Group();
-$playersRepo      = new Player();
-$teamsRepo        = new Team();
-$actionsRepo      = new Action();
+$groupRepo   = new Group();
+$playersRepo = new Player();
+$teamsRepo   = new Team();
+$actionsRepo = new Action();
 
 $matchDay    = currentMatchDay();
 $group       = $groupRepo->getGroup(1);
 $groupChatId = $group[0]['chat_id'];
 
-// Regla de posició de tots els jugadors, d'una sola consulta: el pes del vot de
-// #millorFinal surt de la classificació general (players.points).
+$allActions = $actionsRepo->getActionsByMatchDay($matchDay);
+
+if (count($allActions) === 0) {
+    echo "No hi ha cap acció activada a la jornada $matchDay: no s'envia res.\n";
+    exit;
+}
+
+// Tots els noms, d'una consulta per taula. El joc és petit i així no es repeteix
+// cap consulta per cada acció.
+$playerNames = [];
+foreach ($playersRepo->getAllPlayers() as $player) {
+    $name = (string) ($player['name'] ?? '');
+
+    $playerNames[(int) $player['id']] = $name !== '' ? $name : '#' . $player['id'];
+}
+
+$teamNames        = [];
+$teamCompetitions = [];
+foreach ($teamsRepo->getAllTeams() as $team) {
+    $teamNames[(int) $team['id']]        = (string) $team['name'];
+    $teamCompetitions[(int) $team['id']] = (string) $team['competition'];
+}
+
+// Regla de posició: els vots que li toquen a cada jugador segons la
+// classificació general. Les files noves ja porten els vots desats al JSON;
+// aquesta foto és per a les antigues, que només porten l'equip o la competició.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
-$message      = "Accions activades:\n";
-$allActions   = $actionsRepo->getActionsByMatchDay($matchDay);
-$actionsTexts = [
-    'badDay' => 'malDia',
-    'iAmTheBest' => 'socElMillor',
-    'winOrDie' => 'guanyarOMorir',
-    'doubleOrNothing' => 'dobleORes',
-    'kosAndShields' => 'kosAmbEscuts',
-    'sureToBeQualified' => 'segurQuePasse',
-    'bestFinal' => 'millorFinal',
-];
+$announcement = actionsAnnouncement(
+    $allActions,
+    $allowedVotes,
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    Player::MIN_VOTES
+);
 
-$doubleOrNothingActive = false;
-$doubleOrNothingMessage = "";
-$sumVotes = [
-    4 => 2,
-    10 => 1,
-    56 => 2,
-    57 => 1,
-    98 => 2,
-    88 => 1,
-];
-
-$kosAndShieldsActive = false;
-$kosMessage = "";
-$shieldsMessage = "";
-$sumKos = [
-    10 => 6, //arsenal    24 +19
-    4 => 5,  //bayern     21 +14
-    86 => 4, //strasbourg 21 +6
-    82 => 3, //rayo       17 +6 13
-    47 => 2, //braga      17 +6 11
-    57 => 1, //friburg    17 +6 10
-];
-
-$bestFinalActive = true;
-$bestFinalMessage = "";
-$sumBestFinal = [
-    'CHL' => 0,
-    'EUL' => 0,
-    'COL' => 0
-];
-
-foreach ($allActions as $action) {
-    $player = $playersRepo->getPlayerById($action['player_id']);
-    if ($action['type'] == 'doubleOrNothing') {
-        $doubleOrNothingData = json_decode($action['data'], true);
-        $teamsVoted          = $doubleOrNothingData['teams'] ?? [];
-
-        foreach ($teamsVoted as $teamId) {
-            if (isset($sumVotes[$teamId])) {
-                $sumVotes[$teamId] = $sumVotes[$teamId] + 10;
-            } else {
-                $sumVotes[$teamId] = 10;
-            }
-            $team = $teamsRepo->getTeamById($teamId);
-            $doubleOrNothingMessage .= "-" . $player[0]['name'] . ": 1 vot de " . $actionsTexts[$action['type']] . " a "
-                        . $team[0]['name'] . "\n";
-        }
-        if (count($teamsVoted) > 0) {
-            $doubleOrNothingMessage .= "\n";
-        }
-    } elseif ($action['type'] == 'bestFinal') {
-        $bestFinalData = json_decode($action['data'], true);
-        $competition   = $bestFinalData['competition'] ?? ($bestFinalData[0] ?? null);
-
-        // El pes del vot és la regla de posició. Les files noves ja el porten
-        // desat amb la competició; per a les antigues es calcula amb la
-        // classificació general.
-        $votes = (int) ($bestFinalData['points']
-            ?? $allowedVotes[(int) $action['player_id']]
-            ?? Player::MIN_VOTES);
-
-        if ($competition !== null && isset($sumBestFinal[$competition])) {
-            $sumBestFinal[$competition] += $votes;
-        }
-
-        $bestFinalMessage .= "-" . $player[0]['name'] .
-                             ": " . $votes .
-                             " vots de " . $actionsTexts[$action['type']] .
-                             " a " . $competition . "\n";
-    } elseif ($action['type'] == 'kosAndShields') {
-        $kosAndShieldsData = json_decode($action['data'], true);
-        $kosVoted          = $kosAndShieldsData['kos'] ?? [];
-        $shields           = $kosAndShieldsData['shields'] ?? [];
-
-        foreach ($kosVoted as $teamId) {
-            if (isset($sumKos[$teamId])) {
-                $sumKos[$teamId] = $sumKos[$teamId] + 10;
-            } else {
-                $sumKos[$teamId] = 10;
-            }
-            $team = $teamsRepo->getTeamById($teamId);
-            $kosMessage .= "-" . $player[0]['name'] . ": 1 vot de KO a " . $team[0]['name'] . "\n";
-        }
-        if (count($kosVoted) > 0) {
-            $kosMessage .= "\n";
-        }
-
-        foreach ($shields as $teamId) {
-            $team    = $teamsRepo->getTeamById($teamId);
-            $shieldsMessage .= "-" . $player[0]['name'] . ": 1 escut a " . $team[0]['name'] . "\n";
-        }
-        if (count($shields) > 0) {
-            $shieldsMessage .= "\n";
-        }
-    } elseif ($action['type'] == 'sureToBeQualified') {
-        $sureToBeQualifiedInfo = json_decode($action['data'], true);
-        $teamId                = $sureToBeQualifiedInfo['team'] ?? ($sureToBeQualifiedInfo[0] ?? null);
-
-        if ($teamId !== null) {
-            $team = $teamsRepo->getTeamById($teamId);
-            $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $team[0]['name'] . "\n";
-        }
-    } else {
-        $competitions = json_decode($action['data'], true);
-        foreach ($competitions as $competition) {
-            $message .= "-" . $player[0]['name'] . ": " . $actionsTexts[$action['type']] . " " . $competition . "\n";
-        }
-    }
-}
-
-if ($doubleOrNothingActive) {
-    $maxCHL      = 0;
-    $teamMaxCHL  = 0;
-    $max2CHL     = 0;
-    $teamMax2CHL = 0;
-    $maxEUL      = 0;
-    $teamMaxEUL  = 0;
-    $max2EUL     = 0;
-    $teamMax2EUL = 0;
-    $maxCOL      = 0;
-    $teamMaxCOL  = 0;
-    $max2COL     = 0;
-    $teamMax2COL = 0;
-    arsort($sumVotes);
-    foreach ($sumVotes as $teamId => $votes) {
-        $team = $teamsRepo->getTeamById($teamId);
-        if ($team[0]['competition'] == 'CHL') {
-            if ($votes > $maxCHL) {
-                $maxCHL     = $votes;
-                $teamMaxCHL = $team[0];
-            } elseif ($votes > $max2CHL) {
-                $max2CHL     = $votes;
-                $teamMax2CHL = $team[0];
-            }
-        }
-        if ($team[0]['competition'] == 'EUL') {
-            if ($votes > $maxEUL) {
-                $maxEUL     = $votes;
-                $teamMaxEUL = $team[0];
-            } elseif ($votes > $max2EUL) {
-                $max2EUL     = $votes;
-                $teamMax2EUL = $team[0];
-            }
-        }
-        if ($team[0]['competition'] == 'COL') {
-            if ($votes > $maxCOL) {
-                $maxCOL     = $votes;
-                $teamMaxCOL = $team[0];
-            } elseif ($votes > $max2COL) {
-                $max2COL     = $votes;
-                $teamMax2COL = $team[0];
-            }
-        }
-    }
-    $message .= "\n" . $doubleOrNothingMessage . "\n";
-    $message .= "-Res CHL: " . $teamMaxCHL['name'] . "\n";
-    $message .= "-Doble CHL: " . $teamMax2CHL['name'] . "\n";
-    $message .= "-Res EUL: " . $teamMaxEUL['name'] . "\n";
-    $message .= "-Doble EUL: " . $teamMax2EUL['name'] . "\n";
-    $message .= "-Res COL: " . $teamMaxCOL['name'] . "\n";
-    $message .= "-Doble COL: " . $teamMax2COL['name'] . "\n";
-}
-
-if ($kosAndShieldsActive) {
-    arsort($sumKos);
-    $numKos = 2;
-    $message .= "\n" . $kosMessage . "Amb més vots de KO:\n";
-    foreach ($sumKos as $teamId => $votes) {
-        $team = $teamsRepo->getTeamById($teamId);
-        $message .= "-Equip KO: " . $team[0]['name'] . "\n";
-        if(--$numKos == 0) {
-            break;
-        }
-    }
-    $message .= "\n" . $shieldsMessage . "\n";
-}
-
-if ($bestFinalActive) {
-    arsort($sumBestFinal);
-
-    $message .= "\n" . $bestFinalMessage . "\n";
-    $message .= "-Millor final (+6): CHL\n";
-    $message .= "-Final (+2): EUL\n";
-    $message .= "-Pitjor final (-2): COL\n";
-}
+$message = actionsPublishText($matchDay, $announcement);
 
 $telegram->sendMessage($groupChatId, $message);
+
+// El text també surt per consola: si Telegram no el mostra com s'esperava, aquí
+// es veu què s'ha enviat.
+echo "Publicades les accions de la jornada $matchDay (" . count($allActions) . " files):\n\n";
+echo $message . "\n";
