@@ -62,7 +62,13 @@ function partit(string $home, string $homeCountry, int $homeGoals, int $awayGoal
 function rowsText(array $plan): array
 {
     $rows = array_map(
-        static fn(array $row): string => sprintf('%s %s %d', $row['competition'], $row['teamName'], $row['points']),
+        static fn(array $row): string => sprintf(
+            '%s %s %d (%+d)',
+            $row['competition'],
+            $row['teamName'],
+            $row['points'],
+            $row['goalDifference']
+        ),
         $plan['rows']
     );
     sort($rows);
@@ -95,10 +101,31 @@ $plan = planner(['EUL' => [
 ]], $resolver)->plan(['EUL'], 1);
 
 check('tres punts al guanyador i cap al perdedor, i un a cada un a l\'empat', rowsText($plan), [
-    'EUL GNKDinamo 1',
-    'EUL Lyon 3',
-    'EUL SpartaPraha 1',
+    'EUL GNKDinamo 1 (+0)',
+    'EUL Lyon 3 (+2)',
+    'EUL SpartaPraha 1 (+0)',
 ]);
+
+// -------------------------------------------------------- diferència de gols
+
+echo "\n--- la diferència de gols: a favor menys en contra ---\n";
+$plan = planner(['EUL' => [
+    partit('Olympique Lyon', 'Fra', 1, 3, 'Sparta Praha', 'Cze'),
+]], $resolver)->plan(['EUL'], 1);
+
+check('qui guanya la té positiva i qui perd negativa', rowsText($plan), [
+    'EUL Lyon 0 (-2)',
+    'EUL SpartaPraha 3 (+2)',
+]);
+
+echo "\n--- i l'equip exclòs també la porta, encara que no es desi ---\n";
+$plan = planner(['EUL' => [
+    partit('Hapoel Beer-Sheva', 'Isr', 0, 2, 'GNK Dinamo', 'Cro'),
+]], $resolver)->plan(['EUL'], 1);
+
+check('la de l\'exclòs', $plan['matches'][0]['home']['goalDifference'], -2);
+check('i la del rival', $plan['matches'][0]['away']['goalDifference'], 2);
+check('que és l\'únic que es desa', rowsText($plan), ['EUL GNKDinamo 3 (+2)']);
 
 // ----------------------------------------------------------------------- exclosos
 
@@ -109,8 +136,8 @@ $plan = planner(['EUL' => [
 ]], $resolver)->plan(['EUL'], 1);
 
 check('el rival de l\'exclòs sí que es desa', rowsText($plan), [
-    'EUL GNKDinamo 1',
-    'EUL Lyon 0',
+    'EUL GNKDinamo 1 (+0)',
+    'EUL Lyon 0 (-1)',
 ]);
 check('i no és cap problema', $plan['problems'], []);
 check('l\'equip exclòs queda marcat', $plan['matches'][0]['home']['excluded'], true);
@@ -138,7 +165,7 @@ $plan = planner(['EUL' => [
     partit('Olympique Lyon', 'Fra', 2, 1, 'Equip Inventat', 'Atl'),
 ]], $resolver)->plan(['EUL'], 1);
 
-check('el resol·lubles es desa igualment', rowsText($plan), ['EUL Lyon 3']);
+check('el resol·lubles es desa igualment', rowsText($plan), ['EUL Lyon 3 (+1)']);
 check('i l\'altre queda com a problema', count($plan['problems']), 1);
 check('amb el seu nom', $plan['problems'][0]['name'], 'Equip Inventat');
 check('i la competició', $plan['problems'][0]['competition'], 'EUL');
@@ -161,7 +188,7 @@ foreach ([1, 8] as $simulatedMatchDay) {
     $plan = planner([], $resolver)->plan(['COL'], $simulatedMatchDay);
 
     check("la jornada $simulatedMatchDay és simulada", $plan['simulated'], ['COL']);
-    check("i dona 0 a tots els equips de COL", rowsText($plan), ['COL Ajax 0', 'COL Copenhagen 0']);
+    check("i dona 0 a tots els equips de COL", rowsText($plan), ['COL Ajax 0 (+0)', 'COL Copenhagen 0 (+0)']);
     check('sense cap problema', $plan['problems'], []);
 }
 
@@ -171,25 +198,25 @@ $plan = planner(['CHL' => [
 ]], $resolver)->plan(['CHL'], 1);
 
 check('la jornada 1 de la Champions és de debò', $plan['simulated'], []);
-check('i guanyar-hi val 3', rowsText($plan), ['CHL Arsenal 3', 'CHL RealMadrid 0']);
+check('i guanyar-hi val 3', rowsText($plan), ['CHL Arsenal 3 (+1)', 'CHL RealMadrid 0 (-1)']);
 
 echo "\n--- a la lligueta de la Conference, guanyar val 4 ---\n";
 $plan = planner(['COL' => [
     partit('Ajax', 'Ned', 2, 0, 'Copenhagen', 'Den'),
 ]], $resolver)->plan(['COL'], 2);
-check('guanyar val 4 i perdre 0', rowsText($plan), ['COL Ajax 4', 'COL Copenhagen 0']);
+check('guanyar val 4 i perdre 0', rowsText($plan), ['COL Ajax 4 (+2)', 'COL Copenhagen 0 (-2)']);
 check('i la jornada 2 no és simulada', $plan['simulated'], []);
 
 $plan = planner(['COL' => [
     partit('Ajax', 'Ned', 1, 1, 'Copenhagen', 'Den'),
 ]], $resolver)->plan(['COL'], 2);
-check("l'empat continua valent 1", rowsText($plan), ['COL Ajax 1', 'COL Copenhagen 1']);
+check("l'empat continua valent 1", rowsText($plan), ['COL Ajax 1 (+0)', 'COL Copenhagen 1 (+0)']);
 
 echo "\n--- a les eliminatòries de la Conference torna a valer 3 ---\n";
 $plan = planner(['COL' => [
     partit('Ajax', 'Ned', 2, 0, 'Copenhagen', 'Den'),
 ]], $resolver)->plan(['COL'], 10);
-check('la victòria val 3', rowsText($plan), ['COL Ajax 3', 'COL Copenhagen 0']);
+check('la victòria val 3', rowsText($plan), ['COL Ajax 3 (+2)', 'COL Copenhagen 0 (-2)']);
 check('i la jornada 10 no és simulada', $plan['simulated'], []);
 
 // --------------------------------------------------------------------- duplicats
@@ -206,7 +233,7 @@ echo "\n--- la competició filtra el traductor ---\n";
 $plan = planner(['CHL' => [
     partit('Sparta Praha', 'Cze', 1, 0, 'Arsenal', 'Eng'),
 ]], $resolver)->plan(['CHL'], 1);
-check('el de la CHL es resol', rowsText($plan), ['CHL Arsenal 0']);
+check('el de la CHL es resol', rowsText($plan), ['CHL Arsenal 0 (-1)']);
 check('i el de l\'EUL, no', count($plan['problems']), 1);
 check('i és el Sparta', $plan['problems'][0]['name'], 'Sparta Praha');
 

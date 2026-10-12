@@ -41,26 +41,57 @@ class TeamResult extends Connection {
     }
 
     /**
-     * Desa els punts d'un equip en una jornada.
+     * Cert si la taula team_results ja té la columna goal_difference.
+     *
+     * La columna es va afegir després de la resta: si la base de dades és
+     * d'abans i no s'hi ha aplicat l'ALTER, val més dir-ho clarament que no pas
+     * deixar que l'INSERT falli amb "Unknown column".
+     */
+    public function hasGoalDifferenceColumn(): bool
+    {
+        try {
+            $connection = parent::connect();
+
+            $sql  = "SHOW COLUMNS FROM team_results LIKE 'goal_difference';";
+            $stmt = $connection->prepare($sql);
+            $stmt->execute();
+
+            return count($stmt->fetchAll(pdo::FETCH_ASSOC)) > 0;
+
+        } catch (PDOException $e) {
+            error_log("DB error: " . $e->getMessage());
+
+            return false;
+        }
+    }
+
+    /**
+     * Desa els punts i la diferència de gols d'un equip en una jornada.
      *
      * Només INSERT: si l'equip ja té resultat en aquella jornada, la clau única
      * fa fallar la inserció, es deixa constància al registre d'errors i es torna
      * false. No s'actualitza res.
+     *
+     * $goalDifference és gols a favor menys gols en contra: positiva si l'equip
+     * va marcar més que el rival i negativa si en va rebre més. És el que després
+     * desempata els equips amb els mateixos punts a la classificació.
      */
     public function addTeamResult(
         int $teamId,
         int $teamPts,
+        int $goalDifference,
         int $matchday,
         string $competition
     ) {
         try {
             $connection = parent::connect();
 
-            $sql = "INSERT INTO team_results (team_id, points, match_day, competition)
-                    VALUES (:team_id, :points, :match_day, :competition)";
+            $sql = "INSERT INTO team_results (team_id, points, goal_difference, match_day, competition)
+                    VALUES (:team_id, :points, :goal_difference, :match_day, :competition)";
             $stmt = $connection->prepare($sql);
             $stmt->bindValue(':team_id', $teamId, PDO::PARAM_INT);
             $stmt->bindValue(':points', $teamPts, PDO::PARAM_INT);
+            $stmt->bindValue(':goal_difference', $goalDifference, PDO::PARAM_INT);
             $stmt->bindValue(':match_day', $matchday, PDO::PARAM_INT);
             $stmt->bindValue(':competition', $competition, PDO::PARAM_STR);
             $stmt->execute();

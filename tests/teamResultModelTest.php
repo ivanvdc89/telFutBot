@@ -53,10 +53,25 @@ check(
     true
 );
 check('quan l\'INSERT falla, torna false', str_contains($model, 'return false;'), true);
+check(
+    'i l\'INSERT desa els punts i la diferència de gols',
+    str_contains($model, 'goal_difference'),
+    true
+);
 
 echo "\n--- getResults avisa abans d'escriure ---\n";
 check('comprova què hi ha desat a la jornada', str_contains($app, 'getResultsByMatchDay'), true);
 check('i s\'atura sense escriure', str_contains($app, "no s'actualitzen"), true);
+check(
+    'i comprova que la taula tingui la columna nova',
+    str_contains($app, 'hasGoalDifferenceColumn'),
+    true
+);
+check(
+    'i passa la diferència de gols al model',
+    str_contains($app, "\$row['goalDifference']"),
+    true
+);
 
 echo "\n--- un xoc de clau única es reconeix ---\n";
 $duplicate = new PDOException("SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry '49-1-EUL' for key 'u_team_matchday'");

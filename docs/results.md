@@ -106,6 +106,55 @@ primer les files (l'error mateix indica l'SQL):
 DELETE FROM team_results WHERE match_day = 3;
 ```
 
+## Què s'hi desa
+
+Una fila per equip, jornada i competició, amb dues xifres del partit:
+
+| Columna | Què és |
+| --- | --- |
+| `points` | Els punts del partit: 3/1/0, i 4 per victòria a la lligueta de la Conference. |
+| `goal_difference` | Gols a favor **menys** gols en contra: positiva si l'equip va marcar més que el rival, zero si va empatar i negativa si en va rebre més. |
+
+La diferència de gols no reparteix punts al joc. És la matèria primera de la
+**classificació d'equips**: sumant-la per jornades (amb els punts) se sap qui va
+primer de cada competició, i això és el que desempata els equips que queden
+igualats — per exemple, per decidir quin equip queda KO quan hi ha empat de vots
+a `#kosAmbEscuts`.
+
+### Si la taula ja existia
+
+`database/team_results.sql` és l'esquema sencer (fa `DROP TABLE`), i per a una
+base de dades que ja existeix la columna s'hi afegeix amb:
+
+```sql
+ALTER TABLE team_results
+    ADD COLUMN goal_difference INT NOT NULL DEFAULT 0 AFTER points;
+```
+
+Les files que ja hi eren es queden amb `goal_difference = 0`, que no és la seva
+diferència de gols de debò. Per omplir-les, mira quines jornades tens carregades:
+
+```sql
+SELECT match_day, COUNT(*) FROM team_results GROUP BY match_day;
+```
+
+i torna-les a carregar, esborrant-les primer. El resultat és el mateix (la font no
+ha canviat), i aquest cop sí que s'hi desa la diferència:
+
+```sql
+DELETE FROM team_results WHERE match_day IN (1, 2);
+```
+```
+php getResults.php 1
+php getResults.php 2
+```
+
+No cal recalcular els punts dels jugadors: els punts dels partits són els
+mateixos, només s'hi afegeix la columna nova.
+
+Si t'oblides de l'`ALTER`, `getResults.php` no escriu res i ho diu: comprova que
+la columna hi sigui abans de fer res.
+
 ## Els estats exclosos
 
 Hi ha estats els equips dels quals **no participen al joc i no hi han de ser
