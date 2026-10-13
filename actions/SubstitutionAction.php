@@ -19,7 +19,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * Dues idees fan que les validacions siguin correctes amb diversos pendents:
  *
  *   1. Les pendents es filtren per la jornada en curs, no pel jugador sencer.
- *   2. Les regles de país i de "ja tens aquest equip" es calculen sobre la
+ *   2. Les regles de país i de "ja tens este equip" es calculen sobre la
  *      PLANTILLA EFECTIVA (la plantilla real amb tots els canvis pendents
  *      aplicats), no sobre la real. Si no fos així, dos canvis podrien acabar
  *      deixant dos equips del mateix país: per exemple, amb Espanya al pot 1 i
@@ -34,7 +34,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 class SubstitutionAction extends PlayerAction
 {
     /**
-     * Comandaments que gestiona aquesta acció.
+     * Comandaments que gestiona esta acció.
      */
     private const COMMANDS = ['/substitució', '/out', '/in'];
 
@@ -290,7 +290,7 @@ class SubstitutionAction extends PlayerAction
             return;
         }
 
-        // Com que aquesta competició encara no té cap canvi pendent, el pot que
+        // Com que esta competició encara no té cap canvi pendent, el pot que
         // es canvia és el de la plantilla real.
         $playerTeams = $this->teamsRepo->getTeamsByPlayerId($playerId);
         $oldTeam     = [
@@ -311,7 +311,7 @@ class SubstitutionAction extends PlayerAction
         $rosterIds = array_map(function ($team) { return (int) $team['id']; }, $roster);
 
         if (in_array((int) $newTeam[0]['id'], $rosterIds, true)) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, ja tens aquest equip");
+            $this->telegram->sendMessage($this->chatId, "ERROR, ja tens este equip");
 
             return;
         }
@@ -320,7 +320,7 @@ class SubstitutionAction extends PlayerAction
         $alreadyAddedCountries = array_diff($alreadyAddedCountries, [$oldTeam['country']]);
 
         if (in_array($newTeam[0]['country'], $alreadyAddedCountries)) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, ja tens un equip d'aquest país");
+            $this->telegram->sendMessage($this->chatId, "ERROR, ja tens un equip d'este país");
 
             return;
         }
@@ -578,7 +578,7 @@ class SubstitutionAction extends PlayerAction
     private function changesClosedReason(): ?string
     {
         if (!$this->substitutionsOpen) {
-            return "Els canvis estan tancats: el termini d'aquesta jornada s'ha acabat.";
+            return "Els canvis estan tancats: el termini d'esta jornada s'ha acabat.";
         }
 
         if ($this->matchDay > $this->lastMatchDayWithChanges) {

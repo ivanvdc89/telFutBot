@@ -8,7 +8,7 @@
  * primer de cada competició. La taula team_standings i l'script
  * calculateTeamStandings.php són els que hi posen les dades.
  *
- * ELS CRITERIS D'ORDRE, en aquest ordre
+ * ELS CRITERIS D'ORDRE, en este ordre
  *
  *   1. Punts (de més a menys).
  *   2. Diferència de gols (de més a menys).
@@ -36,7 +36,7 @@
  * hi compta: és la jornada del premi de final de fase, amb els equips que passen
  * i els eliminats (calculateEndLeaguePhasePoints.php).
  *
- * Si el format de la competició canvia, aquest número és el primer a ajustar.
+ * Si el format de la competició canvia, este número és el primer a ajustar.
  */
 const STANDINGS_LAST_MATCH_DAY = 8;
 

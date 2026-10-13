@@ -363,7 +363,7 @@ $sub->pending = [pendingRow(33, 'CHL', 101, 4)];
 check('amb el canvi de CHL viu: es permet', $sent[0]['text'], 'Substitució guardada: OwnedPot5 -> CandSpain5 (cost: 6 punts)');
 
 [$sent] = runCommand(buildWorld(range(1, 12)), '/in CandSpain5');
-check('sense el canvi de CHL: es rebutja', $sent[0]['text'], "ERROR, ja tens un equip d'aquest país");
+check('sense el canvi de CHL: es rebutja', $sent[0]['text'], "ERROR, ja tens un equip d'este país");
 
 echo "\n--- /substitució remove sense cap pendent ---\n";
 [$sent] = runCommand(buildWorld(range(1, 12)), '/substitució remove');
@@ -428,7 +428,7 @@ check('old_team_id = el del pot', $sub->added[0]['oldTeamId'], 101);
 
 echo "\n--- /in d'un equip que ja tens ---\n";
 [$sent, $sub] = runCommand(buildWorld(range(1, 12)), '/in OwnedPot5');
-check('text', $sent[0]['text'], 'ERROR, ja tens aquest equip');
+check('text', $sent[0]['text'], 'ERROR, ja tens este equip');
 check('no s\'ha guardat res', $sub->added, []);
 
 echo "\n--- /in d'un equip del mateix país que es deixa anar ---\n";
@@ -443,7 +443,7 @@ $team->teamsByPot[6][]          = $clash;
 $team->teamsById[60]            = $clash;
 $team->teamsByName['CandClash'] = $clash;
 [$sent, $sub] = runCommand($world, '/in CandClash');
-check('text', $sent[0]['text'], "ERROR, ja tens un equip d'aquest país");
+check('text', $sent[0]['text'], "ERROR, ja tens un equip d'este país");
 check('no s\'ha guardat res', $sub->added, []);
 
 // ---------------------------------------------------------------------------
@@ -458,7 +458,7 @@ $world = buildWorld(range(1, 12));
 [, , , $sub] = $world;
 $sub->pending = [pendingRow(33, 'CHL', 101, 4)];
 [$sent, $sub] = runCommand($world, '/in CandGermany5');
-check('text', $sent[0]['text'], "ERROR, ja tens un equip d'aquest país");
+check('text', $sent[0]['text'], "ERROR, ja tens un equip d'este país");
 check('no s\'ha guardat res', $sub->added, []);
 
 echo "  (b) sí que es pot agafar Espanya al pot 5: el pendent l'ha alliberada\n";
@@ -550,7 +550,7 @@ check('id eliminat', $sub->removed, [33]);
 
 echo "\n--- el termini tancat per l'administrador (SUBSTITUTIONS_OPEN = false) ---\n";
 // És el que passa cada jornada a les 23:59, just abans d'aplicar i publicar.
-$TANCAT = "Els canvis estan tancats: el termini d'aquesta jornada s'ha acabat.";
+$TANCAT = "Els canvis estan tancats: el termini d'esta jornada s'ha acabat.";
 
 [$sent] = runCommand(buildWorld(range(1, 12)), '/out OwnedPot1', LAST_MATCH_DAY_WITH_CHANGES, false);
 check('/out queda bloquejat', $sent[0]['text'], $TANCAT);

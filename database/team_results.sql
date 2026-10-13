@@ -23,7 +23,7 @@ CREATE TABLE team_results (
     match_day   INT NOT NULL,
     competition ENUM('CHL', 'EUL', 'COL') NOT NULL,
     -- Una sola fila per equip, jornada i competició. Els resultats no
-    -- s'actualitzen mai: aquesta clau fa que un segon intent de desar el mateix
+    -- s'actualitzen mai: esta clau fa que un segon intent de desar el mateix
     -- equip i la mateixa jornada falli, i getResults.php ho detecta, avisa i no
     -- escriu res.
     UNIQUE KEY u_team_matchday (team_id, match_day, competition)

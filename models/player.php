@@ -120,7 +120,7 @@ class Player extends Connection {
      * Puntuació de cada jugador, com a [player_id => points].
      *
      * Només hi surten els jugadors que ja tenen una jornada calculada: points
-     * val NULL fins al primer càlcul, i NULL no vol dir 0 punts. Amb aquesta
+     * val NULL fins al primer càlcul, i NULL no vol dir 0 punts. Amb esta
      * llista es pot saber qui va líder (el max) i quants punts té un jugador.
      */
     public function getPlayersPoints(): array

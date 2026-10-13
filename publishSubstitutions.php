@@ -2,7 +2,7 @@
 /**
  * Anuncia al grup les substitucions ja aplicades de la jornada en curs.
  *
- * No toca player_teams: això ho fa applySubstitutions.php. Aquest script només
+ * No toca player_teams: això ho fa applySubstitutions.php. Este script només
  * llegeix el que ja està aplicat i ho publica, i per tant es pot tornar a
  * executar sempre que calgui. Si l'enviament a Telegram falla, tornar-lo a
  * executar reenvia el missatge.

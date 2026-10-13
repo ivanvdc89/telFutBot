@@ -70,7 +70,7 @@ foreach ($teamsRepo->getAllTeams() as $team) {
 
 // Regla de posició: els vots que li toquen a cada jugador segons la
 // classificació general. Les files noves ja porten els vots desats al JSON;
-// aquesta foto és per a les antigues, que només porten l'equip o la competició.
+// esta foto és per a les antigues, que només porten l'equip o la competició.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
 $announcement = actionsAnnouncement(

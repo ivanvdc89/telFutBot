@@ -34,9 +34,9 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *
  * La lligueta de la Conference només té 6 jornades i el joc 8: les jornades 1 i
  * 8 són simulades i tots els seus equips hi tenen 0 punts. No tindria cap sentit
- * activar-hi res, així que en aquestes jornades la Conference no surt al teclat i
+ * activar-hi res, així que en estes jornades la Conference no surt al teclat i
  * `canActivateCompetition` la rebutja encara que s'hi arribi pel text. Una fila
- * que ja existís (d'abans d'aquesta restricció) es mostra i es pot desactivar.
+ * que ja existís (d'abans d'esta restricció) es mostra i es pot desactivar.
  */
 abstract class CompetitionToggleAction extends ActionRowAction
 {
@@ -53,7 +53,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
     ];
 
     /**
-     * Les tres accions que comparteixen aquesta base, amb l'etiqueta que surt
+     * Les tres accions que comparteixen esta base, amb l'etiqueta que surt
      * als missatges.
      *
      * És la llista del grup i, alhora, la font de label(): així el nom de cada
@@ -225,7 +225,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
      */
     private function toggleRows(array $list): array
     {
-        // Aquestes accions només tenen un comandament.
+        // Estes accions només tenen un comandament.
         $command = static::commands()[0];
         $rows    = [];
         $row     = [];
@@ -249,7 +249,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
     }
 
     /**
-     * Competicions que aquesta jornada poden sortir al teclat.
+     * Competicions que esta jornada poden sortir al teclat.
      *
      * La Conference queda fora a les jornades simulades (vegeu la capçalera de
      * la classe). Una competició que ja estigui activada sí que hi surt sempre:
@@ -269,7 +269,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
     }
 
     /**
-     * Competicions que el jugador té activades aquesta temporada amb aquesta
+     * Competicions que el jugador té activades esta temporada amb esta
      * acció, sumant totes les jornades.
      *
      * El límit és per acció: les 3 del #malDia són independents de les 3 del
@@ -288,9 +288,9 @@ abstract class CompetitionToggleAction extends ActionRowAction
     }
 
     /**
-     * Comprova que es pugui activar aquesta competició: que sigui una de les
+     * Comprova que es pugui activar esta competició: que sigui una de les
      * tres i que cap de les altres dues accions del grup no la tingui ja
-     * activada en aquesta mateixa jornada.
+     * activada en esta mateixa jornada.
      *
      * Si no es pot, envia el motiu i retorna false.
      */
@@ -318,7 +318,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
         if ($takenBy !== null) {
             $this->telegram->sendMessage(
                 $this->chatId,
-                "A la " . self::COMPETITIONS[$competition] . " d'aquesta jornada ja tens el "
+                "A la " . self::COMPETITIONS[$competition] . " d'esta jornada ja tens el "
                     . $takenBy . " activat. Només se pot activar una de les tres accions."
             );
 
@@ -329,8 +329,8 @@ abstract class CompetitionToggleAction extends ActionRowAction
     }
 
     /**
-     * Etiqueta de l'acció del grup que ja té aquesta competició activada en
-     * aquesta jornada, o null si no en té cap.
+     * Etiqueta de l'acció del grup que ja té esta competició activada en
+     * esta jornada, o null si no en té cap.
      *
      * Només mira la jornada en curs: la restricció és per competició i jornada,
      * no de temporada.

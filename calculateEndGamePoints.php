@@ -54,7 +54,7 @@ foreach ($players as $player) {
 
     // players.points és la classificació general, i el final del joc també
     // reparteix punts. Igual que a calculateMatchDayPoints.php, només s'hi
-    // escriu si aquesta és la darrera jornada del jugador.
+    // escriu si esta és la darrera jornada del jugador.
     if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {
         $playersRepo->updatePlayerPoints($playerId, $total);
     }

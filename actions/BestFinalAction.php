@@ -22,7 +22,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 class BestFinalAction extends ActionRowAction
 {
     /**
-     * Comandament que gestiona aquesta acció.
+     * Comandament que gestiona esta acció.
      */
     private const COMMAND = '/millorFinal';
 
@@ -108,7 +108,7 @@ class BestFinalAction extends ActionRowAction
     /**
      * La final votada, o null si no n'hi ha cap.
      *
-     * @param array $actions Files de l'acció d'aquest jugador i jornada.
+     * @param array $actions Files de l'acció d'este jugador i jornada.
      */
     private function chosenCompetition(array $actions): ?string
     {

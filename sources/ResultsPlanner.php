@@ -59,7 +59,7 @@ final class ResultsPlanner
         foreach ($competitions as $competition) {
             $sourceMatches = $this->source->getMatches($competition, $matchDay);
 
-            // Jornada de lliga que aquesta competició no juga (la Conference en té
+            // Jornada de lliga que esta competició no juga (la Conference en té
             // 6 i el joc 8): es dona per jugada i tots els seus equips hi tenen 0
             // punts i cap gol.
             if ($sourceMatches === [] && resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {

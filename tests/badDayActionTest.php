@@ -303,7 +303,7 @@ check('desactiva només la Conference', $action->updates, [['id' => 33, 'data' =
 check('text', $sent[0]['text'], "Actualment tens el #malDia:\n- Champions League: activat\n- Europa League: activat\n- Conference League: desactivat\n\nActivar o desactivar:");
 
 echo "\n--- més d'una fila a la base de dades ---\n";
-// No hauria de passar. El codi original no mirava el commutador en aquest cas.
+// No hauria de passar. El codi original no mirava el commutador en este cas.
 $world = buildWorld(['CHL'], false);
 [, , $action] = $world;
 $action->rows[] = [
@@ -327,7 +327,7 @@ $world = buildWorld(null, true);
 seasonRow($action, 1, ['CHL', 'EUL', 'COL']);   // les 3 a la jornada 1
 [$sent, $action] = runCommand($world, '/malDia Activar CHL');
 check('un sol missatge', count($sent), 1);
-checkContains('avisa del límit', $sent[0]['text'], 'Ja has fet servir el #malDia 3 vegades aquesta temporada');
+checkContains('avisa del límit', $sent[0]['text'], 'Ja has fet servir el #malDia 3 vegades esta temporada');
 check('no crea cap fila', $action->added, []);
 
 echo "  (b) amb 2 gastades, la tercera sí que es permet\n";
@@ -387,10 +387,10 @@ echo "\n--- una sola de les tres accions per competició i jornada ---\n";
 echo "  (a) si una altra acció ja té la competició, es rebutja\n";
 $world = buildWorld(null, true);
 [, , $action] = $world;
-otherActionRow($action, 'iAmTheBest', ['CHL']);   // el rival ocupa CHL aquesta jornada
+otherActionRow($action, 'iAmTheBest', ['CHL']);   // el rival ocupa CHL esta jornada
 [$sent, $action] = runCommand($world, '/malDia Activar CHL');
 check('un sol missatge', count($sent), 1);
-checkContains('diu quina altra acció la té', $sent[0]['text'], 'ja hi tens el #socElMillor');
+checkContains('diu quina altra acció la té', $sent[0]['text'], 'ja tens el #socElMillor activat');
 checkContains('i quina competició', $sent[0]['text'], 'Champions League');
 check('no crea cap fila', $action->added, []);
 
@@ -426,7 +426,7 @@ $world = buildWorld(['EUL'], true);              // fila pròpia amb EUL
 [, , $action] = $world;
 otherActionRow($action, 'winOrDie', ['CHL'], MATCH_DAY, 51);
 [$sent, $action] = runCommand($world, '/malDia Activar CHL');
-checkContains('rebutja i diu qui la té', $sent[0]['text'], 'ja hi tens el #guanyarOMorir');
+checkContains('rebutja i diu qui la té', $sent[0]['text'], 'ja tens el #guanyarOMorir activat');
 check('no escriu res', $action->updates, []);
 check('però tot seguit mostra l\'estat', count($sent), 2);
 

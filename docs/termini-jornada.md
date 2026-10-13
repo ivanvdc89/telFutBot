@@ -3,7 +3,7 @@
 Cada jornada té dos moments en què l'administrador toca el joc:
 
 - **El termini** (diumenge): es tanquen els canvis, s'apliquen, s'anuncien i
-  s'obren les accions de competició. És el que explica aquest document.
+  s'obren les accions de competició. És el que explica este document.
 - **El tancament** (després dels partits): es carreguen els resultats, es
   calculen els punts i es publica la classificació. Això és a
   [results.md](results.md) i a l'ordre que hi ha a `config/matchDay.php`.
@@ -29,7 +29,7 @@ toca fins que els canvis de la jornada estan aplicats** (vegeu el pas 2).
 | Moment | Interruptors | Què passa |
 | --- | --- | --- |
 | Durant la setmana | `SUBSTITUTIONS_OPEN = true`, `ACTIONS_OPEN = false` | Els jugadors fan els canvis. Al menú `/accions` només hi ha `/substitució`. |
-| Diumenge (el termini) | es tanquen els canvis i s'obren les accions | Els quatre passos d'aquest document. |
+| Diumenge (el termini) | es tanquen els canvis i s'obren les accions | Els quatre passos d'este document. |
 | Després dels partits | igual, amb les accions obertes | Resultats, punts i publicació. Al final: `CURRENT_MATCH_DAY + 1`, `SUBSTITUTIONS_OPEN = true`, `ACTIONS_OPEN = false`. |
 
 Mentre els canvis estan oberts, cada jugador pot tenir **un canvi per competició
@@ -68,7 +68,7 @@ define('SUBSTITUTIONS_OPEN', false);
 ```
 
 A partir d'aquí el bot ja no deixa fer canvis: `/out` i `/in` responen "Els
-canvis estan tancats: el termini d'aquesta jornada s'ha acabat." i `/accions`
+canvis estan tancats: el termini d'esta jornada s'ha acabat." i `/accions`
 deixa d'oferir `/substitució`.
 
 `/substitució` encara es pot demanar i encara mostra els canvis pendents, i
@@ -93,7 +93,7 @@ pendent diu "Cap substitució pendent per a la jornada N" i acaba bé. Si una
 actualització falla, desfà la transacció sencera i surt amb codi 1: no queda mai
 mig aplicat.
 
-> **No canviïs `CURRENT_MATCH_DAY` abans d'executar aquest pas.** L'script busca
+> **No canviïs `CURRENT_MATCH_DAY` abans d'executar este pas.** L'script busca
 > les substitucions pendents de la jornada en curs; amb un altre número no en
 > trobaria cap i les deixaria sense aplicar.
 
@@ -107,7 +107,7 @@ Envia al grup "Canvis realitzats:", amb el nom del jugador, l'equip que deixa,
 el que entra i el cost de cada canvi. Només llegeix el que ja està aplicat.
 
 Es pot tornar a executar sempre que calgui: si Telegram falla, es repeteix
-aquest pas i prou, sense tornar a aplicar res. Té una conseqüència que val la
+este pas i prou, sense tornar a aplicar res. Té una conseqüència que val la
 pena saber: **reenvia la llista sencera** de canvis aplicats de la jornada, no
 només els que faltaven anunciar.
 
@@ -121,7 +121,7 @@ define('ACTIONS_OPEN', true);
 
 Ara `/accions` ofereix `/malDia`, `/socElMillor` i `/guanyarOMorir`. Les altres
 comandes d'acció (`/dobleORes`, `/kos`, `/segurQuePasse`, `/millorFinal`) no
-surten al menú, però també depenen d'aquest interruptor: amb les accions
+surten al menú, però també depenen d'este interruptor: amb les accions
 tancades responen "No disponible".
 
 S'obre **després d'aplicar i publicar** els canvis, no abans: ningú no ha de
@@ -155,12 +155,12 @@ aquí.
 | `/out`, `/in` | Es guarda el canvi | El motiu del tancament, sense tocar res | Igual |
 | `/malDia`, `/socElMillor`, `/guanyarOMorir` | "No disponible" | "No disponible" | Menú d'activar i desactivar |
 
-Quan una d'aquestes tres accions ja té fila a la base de dades, el commutador
+Quan una d'estes tres accions ja té fila a la base de dades, el commutador
 només bloqueja la modificació: l'estat es mostra sempre, amb les accions obertes
 o tancades.
 
 Els dos motius de tancament són diferents i els missatges també: el termini de la
-jornada ("el termini d'aquesta jornada s'ha acabat") i la norma de les
+jornada ("el termini d'esta jornada s'ha acabat") i la norma de les
 semifinals ("no es poden fer canvis a partir de les semifinals").
 
 ## La resta de la jornada
@@ -203,7 +203,7 @@ no escriu res a la base de dades, així que es pot executar quan convingui.
   executar el pas 2 i el pas 3 (l'anunci repetirà la llista sencera).
 - **Semifinals.** A partir de la jornada següent a `LAST_MATCH_DAY_WITH_CHANGES`
   els canvis estan tancats per norma, amb l'interruptor obert o tancat. Si la
-  numeració de les eliminatòries canvia, aquest valor és el primer a ajustar.
+  numeració de les eliminatòries canvia, este valor és el primer a ajustar.
 
 ## Com comprovar-ho
 

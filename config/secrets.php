@@ -1,6 +1,6 @@
 <?php
 /**
- * Accés als secrets d'aquest servidor.
+ * Accés als secrets d'este servidor.
  *
  * ELS VALORS NO SÓN AL REPOSITORI. Viuen a config/secrets.values.php, que està
  * al .gitignore. Com que git no toca mai els fitxers que no trackeja, els
@@ -33,7 +33,7 @@ function secret(string $key, bool $allowEmpty = false): string
 
         if (!is_file($path)) {
             throw new RuntimeException(
-                "Falten els secrets d'aquest servidor: copia config/secrets.values.example.php "
+                "Falten els secrets d'este servidor: copia config/secrets.values.example.php "
                 . "a config/secrets.values.php i omple'l."
             );
         }

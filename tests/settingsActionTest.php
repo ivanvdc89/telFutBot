@@ -238,12 +238,12 @@ check('sense escriure', $player->updatedNames, []);
 
 echo "\n--- /nom repetit (el té un altre jugador) ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom Marta');
-check('error de nom ocupat', $sent[0]['text'], "ERROR, Aquest nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
+check('error de nom ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
 check('i no toca la BD', $player->updatedNames, []);
 
 echo "\n--- /nom repetit canviant majúscules ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom MARTA');
-check('també està ocupat', $sent[0]['text'], "ERROR, Aquest nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
+check('també està ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
 check('i no toca la BD', $player->updatedNames, []);
 
 echo "\n--- /nom canvia el nom del mateix jugador passant de majúscules ---\n";

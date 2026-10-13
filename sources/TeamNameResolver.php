@@ -28,7 +28,7 @@ require_once(__DIR__ . '/../config/teamAliases.php');
  * Si el millor candidat no arriba a MIN_SCORE, o si el segon és a prop
  * (MIN_MARGIN), el resultat surt com a no resolt. És deliberat: un equip
  * equivocat rep punts que no toquen i ningú no se n'adona. getResults.php
- * imprimeix aquests casos perquè s'afegixin a l'arxiu d'àlies.
+ * imprimeix estos casos perquè s'afegixin a l'arxiu d'àlies.
  *
  * Els candidats es filtren per competició: un equip només pot jugar la seva, i
  * això treu molta ambigüitat ("Sporting" és CP a la CHL i Braga a l'EUL).
@@ -217,7 +217,7 @@ class TeamNameResolver
     /** Minúscules i sense accents, però conservant la separació de paraules. */
     private static function transliterate(string $text): string
     {
-        // iconv no desfà aquests caràcters: se saben de bestreta.
+        // iconv no desfà estos caràcters: se saben de bestreta.
         $text = strtr($text, [
             'ø' => 'o', 'Ø' => 'O', 'æ' => 'ae', 'Æ' => 'AE', 'å' => 'a', 'Å' => 'A',
             'ß' => 'ss', 'đ' => 'd', 'ð' => 'd', 'þ' => 'th', 'ł' => 'l', 'ı' => 'i',

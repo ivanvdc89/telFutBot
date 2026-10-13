@@ -96,8 +96,8 @@ foreach ($players as $player) {
 
     // players.points és la classificació general. El final de la fase de lliga
     // també reparteix punts, i el mercat segueix obert fins a les semifinals, així
-    // que la regla dels 29 ha de veure aquests punts. Igual que a
-    // calculateMatchDayPoints.php, només s'hi escriu si aquesta és la darrera
+    // que la regla dels 29 ha de veure estos punts. Igual que a
+    // calculateMatchDayPoints.php, només s'hi escriu si esta és la darrera
     // jornada del jugador.
     if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {
         $playersRepo->updatePlayerPoints($playerId, $total);

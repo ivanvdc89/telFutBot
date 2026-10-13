@@ -3,7 +3,7 @@
 /**
  * Carrega a team_results els resultats d'una jornada llegits d'una font pública.
  *
- * ABANS: els partits estaven enganxats a mà dins d'aquest fitxer. Cada jornada
+ * ABANS: els partits estaven enganxats a mà dins d'este fitxer. Cada jornada
  * calia buscar els resultats, retallar-los i enganxar-los, i després executar
  * l'script. Ara es descarreguen de kassiesa.net i s'hi passen sols.
  *
@@ -73,9 +73,9 @@ Opcions:
   --dry-run                 No escriu res; ensenya què faria.
   --force                   Desa els partits que es resolen encara que n'hi hagi de no resolts.
   --refresh                 Ignora la còpia local i torna a descarregar la pàgina.
-  --competition=CHL,EUL,COL Processa només aquestes competicions (per defecte, les tres).
+  --competition=CHL,EUL,COL Processa només estes competicions (per defecte, les tres).
   --source=FITXER           Llegeix els resultats d'un fitxer HTML local en comptes de la xarxa.
-  --help                    Aquesta ajuda.
+  --help                    Esta ajuda.
 
 Sense jornada, s'usa CURRENT_MATCH_DAY de config/matchDay.php.
 
@@ -232,7 +232,7 @@ foreach ($plan['simulated'] as $competition) {
     $teams = count(array_filter($planned, static fn(array $row): bool => $row['competition'] === $competition));
 
     printf(
-        "%-3s jornada simulada: aquesta competició no juga la jornada %d; %d equips hi tenen 0.\n",
+        "%-3s jornada simulada: esta competició no juga la jornada %d; %d equips hi tenen 0.\n",
         $competition,
         $matchDay,
         $teams
@@ -240,7 +240,7 @@ foreach ($plan['simulated'] as $competition) {
 }
 
 foreach ($withoutMatches as $competition) {
-    echo sprintf("%-3s cap partit publicat encara per a aquesta jornada.\n", $competition);
+    echo sprintf("%-3s cap partit publicat encara per a esta jornada.\n", $competition);
 }
 
 if ($excludedCount > 0) {
@@ -274,7 +274,7 @@ if ($planned === []) {
 
 // ------------------------------------------------ resultats ja desats (jornada)
 
-// Un resultat desat no es pot canviar: si aquesta jornada ja té files, no
+// Un resultat desat no es pot canviar: si esta jornada ja té files, no
 // s'escriu res. Es mira per (equip, competició), que és la clau única de la
 // taula, i es fa abans d'obrir la transacció per no deixar-hi res a mitges.
 $existing = [];
@@ -307,7 +307,7 @@ if ($alreadyLoaded !== []) {
     }
 
     echo "\nNo s'ha desat res: els resultats d'una jornada no s'actualitzen.\n";
-    echo "Si de debò s'ha de tornar a carregar, esborra primer les files d'aquesta jornada\n";
+    echo "Si de debò s'ha de tornar a carregar, esborra primer les files d'esta jornada\n";
     echo "i torna a executar:\n";
     echo "  DELETE FROM team_results WHERE match_day = $matchDay;\n";
     echo "(si només vols una competició, afegeix-hi AND competition = 'CHL', 'EUL' o 'COL')\n";

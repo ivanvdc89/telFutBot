@@ -55,7 +55,7 @@ class TeamStanding extends Connection {
      *
      * La classificació és un recanvi complet, no una actualització fila a fila:
      * primer s'esborra tot i després s'hi tornen a posar les files. Qui crida
-     * aquest mètode ha d'haver obert una transacció (com fan els altres
+     * este mètode ha d'haver obert una transacció (com fan els altres
      * scripts): si una inserció falla, torna false i la transacció de fora desfà
      * també l'esborrat, de manera que la taula no queda mai a mitges.
      *

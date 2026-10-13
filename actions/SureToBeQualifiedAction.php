@@ -33,7 +33,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 class SureToBeQualifiedAction extends ActionRowAction
 {
     /**
-     * Comandaments que gestiona aquesta acció.
+     * Comandaments que gestiona esta acció.
      */
     private const COMMANDS = ['/segurQuePasse', '/passe'];
 

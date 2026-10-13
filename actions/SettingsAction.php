@@ -27,7 +27,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 class SettingsAction extends PlayerAction
 {
     /**
-     * Comandaments que gestiona aquesta acció.
+     * Comandaments que gestiona esta acció.
      */
     private const COMMANDS = ['/configuració', '/settings', '/nom', '/name'];
 
@@ -99,7 +99,7 @@ class SettingsAction extends PlayerAction
         }
 
         if ($this->isNameTaken($name, $playerId)) {
-            $this->sendNameError("Aquest nom ja és d'un altre jugador.");
+            $this->sendNameError("Este nom ja és d'un altre jugador.");
 
             return;
         }

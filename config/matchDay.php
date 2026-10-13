@@ -2,9 +2,9 @@
 /**
  * Única font de veritat de la jornada en curs.
  *
- * PER PASSAR DE JORNADA, EDITA NOMÉS EL VALOR DE CURRENT_MATCH_DAY D'AQUEST FITXER.
+ * PER PASSAR DE JORNADA, EDITA NOMÉS EL VALOR DE CURRENT_MATCH_DAY D'ESTE FITXER.
  *
- * La fan servir aquests scripts, que sempre han d'anar amb la mateixa jornada:
+ * La fan servir estos scripts, que sempre han d'anar amb la mateixa jornada:
  *   - basic.php                    (el bot, recull accions i substitucions)
  *   - getResults.php               (carrega els resultats de la jornada)
  *   - applySubstitutions.php       (aplica les substitucions a la plantilla)
@@ -27,7 +27,7 @@
  *   - calculateEndLeaguePhasePoints.php  (final de la fase de lliga)
  *   - calculateEndGamePoints.php         (final del joc)
  *
- * Per reprocessar una jornada antiga sense tocar aquest fitxer, els scripts de
+ * Per reprocessar una jornada antiga sense tocar este fitxer, els scripts de
  * CLI accepten el número de jornada com a primer argument:
  *   php publishActions.php 15
  * (El bot no ho pot sobreescriure mai: per web sempre s'usa la constant.)
@@ -39,8 +39,8 @@ define('CURRENT_MATCH_DAY', 2);
  * Darrera jornada en què es poden fer canvis d'equips.
  *
  * Les normes diuen que no es poden fer canvis a partir de les semifinals, així
- * que aquest valor ha de ser l'última jornada que es juga abans d'elles. El bot
- * bloqueja /out i /in a partir de la jornada següent a aquesta.
+ * que este valor ha de ser l'última jornada que es juga abans d'elles. El bot
+ * bloqueja /out i /in a partir de la jornada següent a esta.
  *
  * Surt de la numeració que ja fan servir els scripts de final de fase:
  * calculateEndLeaguePhasePoints.php tanca la fase de lliga a la 9 i
@@ -48,7 +48,7 @@ define('CURRENT_MATCH_DAY', 2);
  * i tornada, queden play-in (10-11), octaus (12-13), quarts (14-15), semifinals
  * (16-17) i final (18-19). Per tant l'última jornada amb mercat obert és la 15.
  *
- * COMPROVA-HO: si la numeració de les eliminatòries canvia, aquest número és el
+ * COMPROVA-HO: si la numeració de les eliminatòries canvia, este número és el
  * primer que s'ha d'ajustar.
  */
 define('LAST_MATCH_DAY_WITH_CHANGES', 15);
@@ -64,7 +64,7 @@ define('LAST_MATCH_DAY_WITH_CHANGES', 15);
  *   canvis, perquè ningú no triï accions sobre una plantilla que encara ha de
  *   canviar.
  *
- * El menú /accions i els handlers surten d'aquests dos valors, així que tancar
+ * El menú /accions i els handlers surten d'estos dos valors, així que tancar
  * una cosa la treu de la llista tot sol: no hi ha cap llista per editar.
  *
  * ORDRE DEL TERMINI D'UNA JORNADA:
@@ -73,7 +73,7 @@ define('LAST_MATCH_DAY_WITH_CHANGES', 15);
  *   3. php publishSubstitutions.php
  *   4. ACTIONS_OPEN = true
  * Canviar CURRENT_MATCH_DAY abans del pas 2 faria que el pas 2 no trobés les
- * substitucions pendents d'aquesta jornada, i es perdrien.
+ * substitucions pendents d'esta jornada, i es perdrien.
  */
 define('SUBSTITUTIONS_OPEN', true);
 define('ACTIONS_OPEN', false);

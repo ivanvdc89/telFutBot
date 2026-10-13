@@ -10,7 +10,7 @@
  *
  * LA FONT: kassiesa.net (les dades de Bert Kassies).
  *
- * És una pàgina HTML, no una API, però és la que millor encaixa amb aquest joc:
+ * És una pàgina HTML, no una API, però és la que millor encaixa amb este joc:
  *
  *   - Cobreix les tres competicions en un sol fitxer, separades per una capçalera
  *     ("CHAMPIONS LEAGUE", "EUROPA LEAGUE", "CONFERENCE LEAGUE").
@@ -25,7 +25,7 @@
  * Les alternatives (Wikipedia i les APIs de pagament) es descarten perquè el
  * joc no en treu res a canvi: vegeu docs/results.md.
  *
- * AQUEST FITXER NOMÉS TÉ CONFIGURACIÓ. Per canviar de temporada, toca
+ * ESTE FITXER NOMÉS TÉ CONFIGURACIÓ. Per canviar de temporada, toca
  * RESULTS_SEASON i, si la UEFA canvia el format, el mapa d'eliminatòries.
  */
 
@@ -80,7 +80,7 @@ const RESULTS_KNOCKOUT_ROUNDS = [
  * La fase de lliga de cada competició.
  *
  * 'from' i 'to' són les jornades del joc que ocupa la lligueta, i 'win_points'
- * quants punts val una victòria en aquesta fase (l'empat sempre val 1 i la
+ * quants punts val una victòria en esta fase (l'empat sempre val 1 i la
  * derrota 0).
  *
  * LA CONFERENCE NOMÉS JUGA 6 JORNADES DE LLIGUETA

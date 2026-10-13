@@ -1,7 +1,7 @@
 <?php
 // Prova funcional d'IAmTheBestAction amb dobles (sense BD ni Telegram).
 // La lògica compartida ja la cobreix badDayActionTest.php; aquí es comprova que
-// la parametrització d'aquesta acció sigui la correcta.
+// la parametrització d'esta acció sigui la correcta.
 // S'executa des de l'arrel del projecte: php tests/iamTheBestActionTest.php
 
 include './vendor/autoload.php';

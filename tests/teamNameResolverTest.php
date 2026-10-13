@@ -3,7 +3,7 @@
 /**
  * El traductor de noms de kassiesa.net als noms de la taula teams.
  *
- * Aquesta és la part que pot fer més mal: si un equip es confon amb un altre,
+ * Esta és la part que pot fer més mal: si un equip es confon amb un altre,
  * rep punts que no toquen i ningú no se n'adona. Per això les proves no miren
  * només els casos fàcils, sinó també que:
  *

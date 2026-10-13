@@ -28,7 +28,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 class KosAndShieldsAction extends ActionRowAction
 {
     /**
-     * Comandament que gestiona aquesta acció.
+     * Comandament que gestiona esta acció.
      */
     private const COMMAND = '/kos';
 

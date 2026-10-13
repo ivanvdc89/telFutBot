@@ -52,9 +52,9 @@ $classifiedTeams = [];
 
 $players = $playersRepo->getAllPlayers();
 
-// Foto de la classificació general abans de tocar-hi res: aquest script va
+// Foto de la classificació general abans de tocar-hi res: este script va
 // escrivint players.points jugador a jugador, i totes les validacions de
-// posició han de veure la mateixa general, que és la d'abans d'aquesta jornada.
+// posició han de veure la mateixa general, que és la d'abans d'esta jornada.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
 foreach ($players as $player) {
@@ -305,7 +305,7 @@ foreach ($players as $player) {
     );
 
     // players.points és la classificació general: el total acumulat després
-    // d'aquesta jornada. Només s'hi escriu si la jornada que s'està calculant és
+    // d'esta jornada. Només s'hi escriu si la jornada que s'està calculant és
     // la darrera del jugador, perquè reprocessar una jornada antiga no ha de
     // deixar la classificació actual amb valors vells.
     if (!isset($lastMatchDay['match_day']) || $matchDay >= (int) $lastMatchDay['match_day']) {

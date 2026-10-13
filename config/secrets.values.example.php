@@ -1,10 +1,10 @@
 <?php
 /**
- * PLANTILLA dels secrets. Aquest fitxer SÍ que és al repositori, així que no hi
+ * PLANTILLA dels secrets. Este fitxer SÍ que és al repositori, així que no hi
  * posis mai cap valor real.
  *
  * Copia'l a config/secrets.values.php, que està al .gitignore, i omple els
- * valors d'aquest servidor. Es fa una sola vegada: els git pull no el toquen.
+ * valors d'este servidor. Es fa una sola vegada: els git pull no el toquen.
  *
  *     cp config/secrets.values.example.php config/secrets.values.php
  */

@@ -8,7 +8,7 @@
  *
  *     php applySubstitutions.php
  *
- * Aquesta separació existeix perquè l'anunci sigui reintentable: si l'enviament
+ * Esta separació existeix perquè l'anunci sigui reintentable: si l'enviament
  * a Telegram falla, es torna a executar el publicador i prou, sense haver de
  * tornar a aplicar els canvis ni arriscar-se a perdre'ls.
  *

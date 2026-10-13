@@ -4,14 +4,14 @@
  * Una font de resultats.
  *
  * El joc només necessita una cosa: donada una competició i una jornada, els
- * partits que s'hi van jugar amb el resultat de cada un. Aquesta interfície és
+ * partits que s'hi van jugar amb el resultat de cada un. Esta interfície és
  * el contracte, i getResults.php no sap d'on surten les dades.
  *
  * Avui només hi ha KassiesaResultsSource. Si mai cal canviar a una API, n'hi ha
  * prou de fer una altra implementació i canviar-la a getResults.php: ni el
  * càlcul de punts ni la resolució de noms no s'han de tocar.
  *
- * Un partit és un array amb aquestes claus:
+ * Un partit és un array amb estes claus:
  *
  *   home          nom de l'equip local, tal com el dona la font
  *   away          nom de l'equip visitant

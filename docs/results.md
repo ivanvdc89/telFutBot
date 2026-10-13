@@ -9,7 +9,7 @@ buscar-los i enganxar-los al fitxer: es descarreguen d'una web pública.
 
 És la base de dades de partits de Bert Kassies, la referència de facto dels
 coeficients UEFA des de fa dècades. És una pàgina HTML, no una API, però és la
-que encaixa millor amb aquest joc:
+que encaixa millor amb este joc:
 
 - **Les tres competicions en un sol fitxer**, separades per una capçalera
   (`CHAMPIONS LEAGUE`, `EUROPA LEAGUE`, `CONFERENCE LEAGUE`).
@@ -147,7 +147,7 @@ SELECT match_day, COUNT(*) FROM team_results GROUP BY match_day;
 ```
 
 i torna-les a carregar, esborrant-les primer. El resultat és el mateix (la font no
-ha canviat), i aquest cop sí que s'hi desen els gols:
+ha canviat), i este cop sí que s'hi desen els gols:
 
 ```sql
 DELETE FROM team_results WHERE match_day IN (1, 2);
@@ -241,7 +241,7 @@ getResults -> calculateTeamStandings -> applySubstitutions -> calculateMatchDayP
                                                            -> publishResults
 ```
 
-`getResults.php` ha d'anar **abans** de `calculateMatchDayPoints.php`: aquest
+`getResults.php` ha d'anar **abans** de `calculateMatchDayPoints.php`: este
 llegeix `team_results` per repartir els punts. `calculateTeamStandings.php` també
 va després de `getResults.php`, perquè només llegeix `team_results`.
 

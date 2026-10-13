@@ -26,7 +26,7 @@ const RESERVED_PLAYER_NAMES = ['all'];
 /**
  * El teclat de /configuració.
  *
- * /nom sense argument no canvia res: torna a mostrar aquest mateix text, que és
+ * /nom sense argument no canvia res: torna a mostrar este mateix text, que és
  * on s'explica com es fa.
  *
  * @return array Files de botons.

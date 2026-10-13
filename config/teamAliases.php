@@ -8,7 +8,7 @@
  * la taula teams. El valor es busca per nom normalitzat, així que les
  * majúscules i els accents no hi importen.
  *
- * Aquest fitxer és l'escapatòria per als casos que el matcher automàtic no pot
+ * Este fitxer és l'escapatòria per als casos que el matcher automàtic no pot
  * resoldre: noms en una altra llengua, abreviatures o equips que la font
  * anomena d'una manera que no comparteix cap tros amb el nom de la BD. Quan
  * getResults.php no troba un equip, imprimeix el nom de la font i els

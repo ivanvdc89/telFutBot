@@ -39,7 +39,7 @@ abstract class ActionRowAction extends PlayerAction
     abstract protected function actionType(): string;
 
     /**
-     * L'acció no està disponible en aquesta fase.
+     * L'acció no està disponible en esta fase.
      */
     protected function sendNotAvailable(): void
     {
@@ -47,7 +47,7 @@ abstract class ActionRowAction extends PlayerAction
     }
 
     /**
-     * Files de l'acció d'aquest jugador i jornada (normalment cap o una).
+     * Files de l'acció d'este jugador i jornada (normalment cap o una).
      */
     protected function actionRows(int $playerId): array
     {
@@ -55,7 +55,7 @@ abstract class ActionRowAction extends PlayerAction
     }
 
     /**
-     * Crea la fila de l'acció per a aquest jugador i jornada.
+     * Crea la fila de l'acció per a este jugador i jornada.
      *
      * @return int Id de la fila nova.
      */

@@ -4,7 +4,7 @@
  * El traductor de noms contra la taula teams de debò.
  *
  * La prova de TeamNameResolverTest.php fa servir una llista inventada per
- * provar les regles. Aquesta fa servir la taula real de la temporada 2026/2027
+ * provar les regles. Esta fa servir la taula real de la temporada 2026/2027
  * (tests/fixtures/teams-2027.php) i els noms tal com surten a la pàgina de
  * kassiesa, que és on es veu si el joc funciona o no:
  *
@@ -188,7 +188,7 @@ foreach ($expected as $competition => $pairs) {
     echo "\n";
 }
 
-echo "--- i aquests no s'han de resoldre mai (estats exclosos) ---\n";
+echo "--- i estos no s'han de resoldre mai (estats exclosos) ---\n";
 foreach ($missing as $competition => $names) {
     foreach ($names as $name) {
         check(sprintf('[%s] %s queda pendent', $competition, $name), $resolver->resolve($name, $competition), null);
