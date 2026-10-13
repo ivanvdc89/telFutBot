@@ -41,11 +41,23 @@ class TeamResult extends Connection {
     }
 
     /**
-     * Les sumes de cada equip fins a una jornada: punts i gols.
+     * Les sumes de cada equip fins a una jornada, per a la classificació.
      *
      * És la matèria primera de la classificació d'equips
      * (calculateTeamStandings.php). Torna una fila per equip, amb la competició,
      * els punts, els gols a favor i en contra i quantes jornades s'hi han sumat.
+     *
+     * ELS PUNTS NO SÓN ELS DEL JOC
+     *
+     * team_results.points són els punts que el joc reparteix al jugador, i a la
+     * lligueta de la Conference la victòria en val 4 (el joc ho compensa perquè
+     * juga 6 jornades i no 8). La classificació, en canvi, ha de ser la de la
+     * competició, on la victòria val 3 a tot arreu: per això els punts es tornen
+     * a calcular del resultat de cada partit (3/1/0) i no es fa sum(points).
+     *
+     * I per això també es mira si el joc hi va donar punts: les jornades
+     * simulades de la Conference (jornades 1 i 8) són files 0-0 amb 0 punts i no
+     * són cap empat, mentre que un 0-0 de debò en dona 1.
      *
      * Els àlies de l'SQL no poden ser paraules reservades: gf i gc, per exemple,
      * fan fallar la consulta.
@@ -55,7 +67,12 @@ class TeamResult extends Connection {
         $connection= parent::connect();
         parent::set_names();
         $sql="select team_id, competition,
-                     sum(points) as total_points,
+                     sum(case
+                           when points = 0 then 0
+                           when goals_for > goals_against then 3
+                           when goals_for = goals_against then 1
+                           else 0
+                         end) as standing_points,
                      sum(goals_for) as total_goals_for,
                      sum(goals_against) as total_goals_against,
                      count(*) as match_days
@@ -70,7 +87,7 @@ class TeamResult extends Connection {
         foreach ($sql->fetchAll(pdo::FETCH_ASSOC) as $row) {
             $totals[(int) $row['team_id']] = [
                 'competition'   => (string) $row['competition'],
-                'points'        => (int) $row['total_points'],
+                'points'        => (int) $row['standing_points'],
                 'goals_for'     => (int) $row['total_goals_for'],
                 'goals_against' => (int) $row['total_goals_against'],
                 'match_days'    => (int) $row['match_days'],

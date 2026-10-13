@@ -14,6 +14,10 @@ CREATE TABLE team_standings (
     -- Posició a la classificació de la seva competició: 1 és el primer.
     -- Es desa calculada perquè el desempat sigui una sola consulta.
     ranking INT NOT NULL,
+    -- Punts de la COMPETICIÓ (3/1/0), no els del joc: a la lligueta de la
+    -- Conference el joc en dona 4 per victòria (perquè juga 6 jornades i no 8) i
+    -- a la competició en valen 3. Les jornades simulades de la Conference no
+    -- n'aporten cap.
     points INT NOT NULL DEFAULT 0,
     goals_for INT NOT NULL DEFAULT 0,
     goals_against INT NOT NULL DEFAULT 0,

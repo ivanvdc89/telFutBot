@@ -176,6 +176,12 @@ php calculateTeamStandings.php
 - **Només compten les 8 primeres jornades** (`STANDINGS_LAST_MATCH_DAY`, a
   `config/standings.php`). Les eliminatòries no hi entren, i la jornada 9 tampoc:
   és la del premi de final de fase (`calculateEndLeaguePhasePoints.php`).
+- **Els punts són els de la competició** (3/1/0), no els del joc. A la lligueta de
+  la Conference el joc dona 4 punts per victòria, perquè juga 6 jornades i no 8;
+  a la competició en valen 3, i la classificació ha de ser la de la competició.
+  Per això no se suma `team_results.points` sinó que es torna a calcular el
+  resultat de cada partit. Les jornades simulades de la Conference (0-0 amb 0
+  punts) no compten com un empat.
 - **L'ordre** és punts, diferència de gols, gols a favor, pot (el cap de sèrie) i
   nom. Els tres primers són els criteris de la UEFA; el pot i el nom són el
   desempat final, perquè dos equips absolutament idèntics quedin sempre en el

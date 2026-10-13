@@ -20,6 +20,12 @@
  *      sempre en el mateix ordre i el desempat sigui reproduïble.
  *
  * LES POSICIONS SÓN PER COMPETICIÓ: cada equip es classifica amb els seus.
+ *
+ * ELS PUNTS QUE ARRIBEN SÓN ELS DE LA COMPETICIÓ (3/1/0), no els del joc: a la
+ * lligueta de la Conference el joc dona 4 punts per victòria, perquè juga 6
+ * jornades i no 8, i a la competició en valen 3. Els calcula
+ * getTotalsUpToMatchDay() (models/teamResult.php) a partir del resultat de cada
+ * partit.
  */
 
 /**

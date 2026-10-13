@@ -117,8 +117,11 @@ check(
 // ------------------------------------------------------- paraules reservades
 
 echo "\n--- cap paraula reservada d'SQL ---\n";
-$resultModel   = file_get_contents(__DIR__ . '/../models/teamResult.php');
-$standingModel = file_get_contents(__DIR__ . '/../models/teamStanding.php');
+// php_strip_whitespace treu els comentaris: el que es mira és el codi. Si no, la
+// mateixa documentació que explica que no s'ha de fer servir "gf" faria fallar
+// la comprovació.
+$resultModel   = php_strip_whitespace(__DIR__ . '/../models/teamResult.php');
+$standingModel = php_strip_whitespace(__DIR__ . '/../models/teamStanding.php');
 $schema        = file_get_contents(__DIR__ . '/../database/team_standings.sql');
 
 // gf i gc són les que van fer fallar la consulta de la classificació: com que
@@ -136,6 +139,28 @@ check('la posició es diu ranking', str_contains($schema, 'ranking INT NOT NULL'
 check(
     'i l\'agregat fa servir total_goals_for',
     str_contains($resultModel, 'as total_goals_for'),
+    true
+);
+
+echo "\n--- els punts són els de la competició, no els del joc ---\n";
+check(
+    'l\'agregat es calcula el resultat de cada partit',
+    str_contains($resultModel, 'as standing_points'),
+    true
+);
+check(
+    'i no suma els punts del joc (a la COL en valen 4)',
+    stripos($resultModel, 'sum(points)') === false,
+    true
+);
+check(
+    'la victòria val 3 a tot arreu',
+    str_contains($resultModel, 'then 3'),
+    true
+);
+check(
+    'i una jornada simulada (0-0 amb 0 punts) no compta com un empat',
+    str_contains($resultModel, 'when points = 0 then 0'),
     true
 );
 
