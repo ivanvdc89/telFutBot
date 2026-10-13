@@ -169,6 +169,7 @@ Quan s'han jugat els partits, i sempre amb la jornada encara sense canviar:
 
 ```
 php getResults.php                 # carrega els resultats de la jornada
+php calculateTeamStandings.php     # recalcula la classificació d'equips
 php calculateMatchDayPoints.php    # reparteix els punts
 php publishResults.php             # classificació, punts i millors
 php publishActions.php             # resum de les accions de la jornada
@@ -179,6 +180,10 @@ del pas 2 també: `calculateMatchDayPoints.php` llegeix les substitucions de la
 jornada i en descompta el cost, i llegeix la plantilla per repartir els punts.
 Si una fila quedés pendent, el cost es cobraria igualment sense que l'equip
 hagués canviat.
+
+`calculateTeamStandings.php` també va després de `getResults.php`, perquè només
+llegeix `team_results`. Es pot executar quan convingui: reescriu la taula sencera
+i no toca res més.
 
 `publishActions.php` només llegeix i envia el resum de les accions de la jornada:
 no escriu res a la base de dades, així que es pot executar quan convingui.

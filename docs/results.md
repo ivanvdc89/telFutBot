@@ -163,6 +163,36 @@ mateixos, només s'hi afegeixen les columnes noves.
 Si t'oblides de l'`ALTER`, `getResults.php` no escriu res i ho diu: comprova que
 les columnes hi siguin abans de fer res.
 
+## La classificació d'equips
+
+`calculateTeamStandings.php` suma `team_results` i desa la classificació a
+`team_standings`, una taula **derivada**: no s'hi escriu mai a mà i es pot
+esborrar i tornar a calcular sempre que calgui.
+
+```
+php calculateTeamStandings.php
+```
+
+- **Només compten les 8 primeres jornades** (`STANDINGS_LAST_MATCH_DAY`, a
+  `config/standings.php`). Les eliminatòries no hi entren, i la jornada 9 tampoc:
+  és la del premi de final de fase (`calculateEndLeaguePhasePoints.php`).
+- **L'ordre** és punts, diferència de gols, gols a favor, pot (el cap de sèrie) i
+  nom. Els tres primers són els criteris de la UEFA; el pot i el nom són el
+  desempat final, perquè dos equips absolutament idèntics quedin sempre en el
+  mateix ordre.
+- **La posició** (`ranking`) es desa calculada i és dins de cada competició: 1 és
+  el primer de la seva. Amb això, els desempats per vots de `#dobleORes` i
+  `#kosAmbEscuts` (quin equip queda KO quan hi ha els mateixos vots, quin és el
+  segon més votat...) es resolen amb una sola consulta, que és per a què existeix
+  la taula.
+
+Per crear-la (a una base de dades que encara no la té) i omplir-la:
+
+```
+mysql -u usuari -p base_de_dades < database/team_standings.sql
+php calculateTeamStandings.php
+```
+
 ## Els estats exclosos
 
 Hi ha estats els equips dels quals **no participen al joc i no hi han de ser
@@ -200,12 +230,14 @@ el valor, el nom exacte de la taula `teams`. Després, torna a executar
 ## Ordre dels passos de la jornada
 
 ```
-getResults -> applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
+getResults -> calculateTeamStandings -> applySubstitutions -> calculateMatchDayPoints
+                                                           -> publishSubstitutions
                                                            -> publishResults
 ```
 
 `getResults.php` ha d'anar **abans** de `calculateMatchDayPoints.php`: aquest
-llegeix `team_results` per repartir els punts.
+llegeix `team_results` per repartir els punts. `calculateTeamStandings.php` també
+va després de `getResults.php`, perquè només llegeix `team_results`.
 
 El termini de la jornada —tancar els canvis, aplicar-los, anunciar-los i obrir
 les accions— és a [termini-jornada.md](termini-jornada.md).

@@ -41,6 +41,46 @@ class TeamResult extends Connection {
     }
 
     /**
+     * Les sumes de cada equip fins a una jornada: punts i gols.
+     *
+     * És la matèria primera de la classificació d'equips
+     * (calculateTeamStandings.php). Torna una fila per equip, amb la competició,
+     * els punts, els gols a favor i en contra i quantes jornades s'hi han sumat.
+     *
+     * Els àlies de l'SQL no poden ser paraules reservades: gf i gc, per exemple,
+     * fan fallar la consulta.
+     */
+    public function getTotalsUpToMatchDay(int $lastMatchDay): array
+    {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select team_id, competition,
+                     sum(points) as total_points,
+                     sum(goals_for) as total_goals_for,
+                     sum(goals_against) as total_goals_against,
+                     count(*) as match_days
+              from team_results
+              where match_day <= ?
+              group by team_id, competition;";
+        $sql=$connection->prepare($sql);
+        $sql->bindValue(1, $lastMatchDay, PDO::PARAM_INT);
+        $sql->execute();
+
+        $totals = [];
+        foreach ($sql->fetchAll(pdo::FETCH_ASSOC) as $row) {
+            $totals[(int) $row['team_id']] = [
+                'competition'   => (string) $row['competition'],
+                'points'        => (int) $row['total_points'],
+                'goals_for'     => (int) $row['total_goals_for'],
+                'goals_against' => (int) $row['total_goals_against'],
+                'match_days'    => (int) $row['match_days'],
+            ];
+        }
+
+        return $totals;
+    }
+
+    /**
      * Cert si la taula team_results ja té les columnes dels gols.
      *
      * Les columnes es van afegir després de la resta: si la base de dades és
