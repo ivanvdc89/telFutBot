@@ -78,6 +78,32 @@ class MatchDayPlayerPoint extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * L'acumulat d'un jugador que encara no ha jugat cap jornada.
+     *
+     * Porta els quatre totals a zero, perquè els scripts de càlcul els puguen
+     * sumar sense comprovar si existeixen, i NO porta 'match_day': els qui
+     * miren si el jugador ja havia jugat abans ho distingeixen amb isset(), i
+     * eixa comprovació és la que decidix si s'actualitza la classificació
+     * general (players.points).
+     */
+    public static function emptyTotals(): array
+    {
+        return [
+            'chl_total' => 0,
+            'eul_total' => 0,
+            'col_total' => 0,
+            'total'     => 0,
+        ];
+    }
+
+    /**
+     * L'última jornada calculada del jugador, amb els seus acumulats.
+     *
+     * A la jornada 1 (o a la primera jornada d'un jugador afegit més tard) no
+     * hi ha cap fila prèvia: aleshores torna emptyTotals() en compte de null,
+     * que és el que esperen els scripts que hi sumen els punts d'esta jornada.
+     */
     public function getLastMatchDayByPlayer(int $playerId): array
     {
         $connection= parent::connect();
@@ -86,7 +112,9 @@ class MatchDayPlayerPoint extends Connection {
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
         $sql->execute();
-        return $sql->fetchAll(pdo::FETCH_ASSOC)[0];
+        $lastMatchDay = $sql->fetch(pdo::FETCH_ASSOC);
+
+        return $lastMatchDay === false ? self::emptyTotals() : $lastMatchDay;
     }
 }
 ?>
