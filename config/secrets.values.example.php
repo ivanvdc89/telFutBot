@@ -1,6 +1,6 @@
 <?php
 /**
- * PLANTILLA dels secrets. Este fitxer SÍ que és al repositori, així que no hi
+ * PLANTILLA dels secrets. Este fitxer SÍ que és al repositori, aixina que no hi
  * posis mai cap valor real.
  *
  * Copia'l a config/secrets.values.php, que està al .gitignore, i omple els

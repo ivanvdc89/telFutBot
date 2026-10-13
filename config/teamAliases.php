@@ -5,7 +5,7 @@
  *
  * La clau és el nom de la font normalitzat (minúscules, sense accents ni
  * espais, vegeu TeamNameResolver::normalize) i el valor, el nom de l'equip a
- * la taula teams. El valor es busca per nom normalitzat, així que les
+ * la taula teams. El valor es busca per nom normalitzat, aixina que les
  * majúscules i els accents no hi importen.
  *
  * Este fitxer és l'escapatòria per als casos que el matcher automàtic no pot

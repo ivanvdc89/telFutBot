@@ -81,8 +81,8 @@ abstract class ActionRowAction extends PlayerAction
      * Assegura que la fila porti el nombre de vots que li toquen al jugador.
      *
      * Surt de la classificació general (players.points) i es desa només quan
-     * canvia: així, mentre dura la jornada, el número queda congelat amb la
-     * general que va veure el jugador, i publishActions compta els vots amb el
+     * canvia: aixina, mentre dura la jornada, el número queda congelat amb la
+     * general que va vore el jugador, i publishActions compta els vots amb el
      * mateix valor.
      */
     protected function withAllowedVotes(int $actionId, array $data, int $playerId): array

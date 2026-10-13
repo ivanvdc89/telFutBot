@@ -88,7 +88,7 @@ const RESULTS_KNOCKOUT_ROUNDS = [
  * El joc en té 8 per a tothom, perquè les tres competicions avancin juntes.
  * Per quadrar-ho, la lligueta de la Conference va de la jornada 2 a la 7: la 1
  * i la 8 són jornades simulades, en què tots els seus equips tenen 0 punts.
- * Els resultats de la seva primera ronda, doncs, es desen a la jornada 2 del
+ * Els resultats de la seua primera ronda, doncs, es desen a la jornada 2 del
  * joc (vegeu resultsLeagueRound()).
  *
  * I com que juga dues jornades menys, la victòria hi val 4 punts en comptes de
@@ -156,7 +156,7 @@ function resultsWinPoints(string $competition, int $matchDay): int
  *
  * Els equips de l'estat d'Israel no són a la taula teams ni hi han de ser mai.
  * Quan un partit en porta un, a team_results només s'hi desa el rival: els seus
- * punts només depenen del resultat, així que es poden calcular igual i el partit
+ * punts només depenen del resultat, aixina que es poden calcular igual i el partit
  * no ha de bloquejar la jornada.
  *
  * La clau és el codi que kassiesa posa a la columna de país del partit (tres

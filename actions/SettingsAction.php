@@ -71,7 +71,7 @@ class SettingsAction extends PlayerAction
      * /nom <nom>: desa el nom del jugador.
      *
      * Sense argument no és cap error: es torna a mostrar la configuració, que és
-     * on s'explica com s'envia el nom. Així el botó /nom del teclat sempre fa
+     * on s'explica com s'envia el nom. Aixina el botó /nom del teclat sempre fa
      * alguna cosa útil.
      */
     private function setName(int $playerId): void

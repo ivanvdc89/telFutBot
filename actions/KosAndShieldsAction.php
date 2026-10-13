@@ -126,7 +126,7 @@ class KosAndShieldsAction extends ActionRowAction
 
         // Sense argument, o amb un subcomandament que no existeix: abans un
         // subcomandament desconegut queia fins al missatge global "Comença
-        // utilitzant els botons -> /inici", que no hi té res a veure.
+        // utilitzant els botons -> /inici", que no hi té res a vore.
         $this->sendMenu();
     }
 

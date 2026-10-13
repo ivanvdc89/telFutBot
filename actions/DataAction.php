@@ -156,7 +156,7 @@ class DataAction extends CommandAction
     }
 
     /**
-     * /data players: els participants, amb botons per veure'n la plantilla.
+     * /data players: els participants, amb botons per vore'n la plantilla.
      */
     private function showPlayers(): void
     {

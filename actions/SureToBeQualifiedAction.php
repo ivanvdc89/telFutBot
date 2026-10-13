@@ -23,7 +23,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *
  * La tria es desa a la fila d'accions del jugador com un JSON
  * {team: teamId, points: N}. Els punts es desen amb l'equip perquè
- * calculateMatchDayPoints els sumi tal com els va veure el jugador, i no amb la
+ * calculateMatchDayPoints els sumi tal com els va vore el jugador, i no amb la
  * general de després de la jornada. Les files antigues només portaven [teamId]
  * i es continuen llegint.
  *
@@ -79,7 +79,7 @@ class SureToBeQualifiedAction extends ActionRowAction
 
         $actions = $this->actionRows($playerId);
 
-        // Amb una fila ja creada: es pot treure l'aposta o veure què hi ha ara
+        // Amb una fila ja creada: es pot treure l'aposta o vore què hi ha ara
         // mateix. Amb un equip triat no se'n pot posar un altre de directe:
         // primer s'ha de treure l'aposta, com feia el codi original.
         if (count($actions) > 0) {

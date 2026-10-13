@@ -7,7 +7,7 @@ require_once(__DIR__ . '/../config/teamAliases.php');
  *
  * El problema: kassiesa escriu "Olympique Lyon", "Omonia Nicosia" o "Sparta
  * Praha", i la taula teams guarda "Lyon", "Omonia" i "SpartaPrague". No hi ha
- * cap clau comuna, així que s'ha de semblar els noms.
+ * cap clau comuna, aixina que s'ha de semblar els noms.
  *
  * COM ES SEMBLA
  *
@@ -30,7 +30,7 @@ require_once(__DIR__ . '/../config/teamAliases.php');
  * equivocat rep punts que no toquen i ningú no se n'adona. getResults.php
  * imprimeix estos casos perquè s'afegixin a l'arxiu d'àlies.
  *
- * Els candidats es filtren per competició: un equip només pot jugar la seva, i
+ * Els candidats es filtren per competició: un equip només pot jugar la seua, i
  * això treu molta ambigüitat ("Sporting" és CP a la CHL i Braga a l'EUL).
  */
 class TeamNameResolver

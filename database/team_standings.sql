@@ -11,7 +11,7 @@ CREATE TABLE team_standings (
     id INT AUTO_INCREMENT PRIMARY KEY,
     team_id INT NOT NULL,
     competition ENUM('CHL', 'EUL', 'COL') NOT NULL,
-    -- Posició a la classificació de la seva competició: 1 és el primer.
+    -- Posició a la classificació de la seua competició: 1 és el primer.
     -- Es desa calculada perquè el desempat sigui una sola consulta.
     ranking INT NOT NULL,
     -- Punts de la COMPETICIÓ (3/1/0), no els del joc: a la lligueta de la

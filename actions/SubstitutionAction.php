@@ -21,7 +21,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *   1. Les pendents es filtren per la jornada en curs, no pel jugador sencer.
  *   2. Les regles de país i de "ja tens este equip" es calculen sobre la
  *      PLANTILLA EFECTIVA (la plantilla real amb tots els canvis pendents
- *      aplicats), no sobre la real. Si no fos així, dos canvis podrien acabar
+ *      aplicats), no sobre la real. Si no fos aixina, dos canvis podrien acabar
  *      deixant dos equips del mateix país: per exemple, amb Espanya al pot 1 i
  *      França al pot 5, podries demanar pot 1 -> Alemanya i, tot seguit,
  *      pot 5 -> Alemanya, perquè la plantilla real encara no conté Alemanya.
@@ -392,7 +392,7 @@ class SubstitutionAction extends PlayerAction
         $emptyPots   = self::EMPTY_POT_SLOTS;
 
         foreach ($playerTeams as $team) {
-            // Un pot ocupat no és mai un forat, encara que la seva competició
+            // Un pot ocupat no és mai un forat, encara que la seua competició
             // estigui bloquejada per un canvi pendent.
             unset($emptyPots[$team['pot'] - 1]);
 

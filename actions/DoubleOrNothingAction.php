@@ -22,7 +22,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * calculat amb la regla de posició a partir de la classificació general
  * (players.points): 1 vot per al líder i 1 més per cada 10 punts de diferència,
  * fins a 4. El número es desa quan canvia, de manera que durant la jornada
- * queda congelat amb la general que va veure el jugador.
+ * queda congelat amb la general que va vore el jugador.
  */
 class DoubleOrNothingAction extends ActionRowAction
 {
@@ -112,7 +112,7 @@ class DoubleOrNothingAction extends ActionRowAction
         // Sense argument, o amb un subcomandament que no existeix. Abans un
         // subcomandament desconegut no encaixava enlloc i l'execució queia fins
         // al missatge global "Comença utilitzant els botons -> /inici", que no
-        // hi té res a veure; ara torna a mostrar el menú.
+        // hi té res a vore; ara torna a mostrar el menú.
         $this->sendPotMenu();
     }
 

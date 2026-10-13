@@ -35,7 +35,7 @@ class Action extends Connection {
      *
      * Les accions que s'activen per competició (#malDia, #socElMillor,
      * #guanyarOMorir) només en poden tenir una per competició i jornada, i per
-     * comprovar-ho cal veure què hi ha activat a la jornada en curs amb les
+     * comprovar-ho cal vore què hi ha activat a la jornada en curs amb les
      * altres dues.
      */
     public function getActionsByPlayerAndMatchDay(int $playerId, int $matchDay){

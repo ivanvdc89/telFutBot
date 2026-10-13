@@ -218,7 +218,7 @@ $world = buildWorld(null, true);
 [, , $action] = $world;
 seasonRow($action, 1, ['CHL', 'EUL', 'COL']);   // les 3 gastades
 [$sent, $action] = runCommand($world, '/socElMillor Activar CHL');
-check('avisa del límit amb la seva etiqueta', str_contains($sent[0]['text'], 'Ja has fet servir el #socElMillor 3 vegades'), true);
+check('avisa del límit amb la seua etiqueta', str_contains($sent[0]['text'], 'Ja has fet servir el #socElMillor 3 vegades'), true);
 check('i no crea cap fila', $action->added, []);
 
 echo "\n";

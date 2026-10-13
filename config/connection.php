@@ -9,7 +9,7 @@ class Connection{
      *
      * Abans cada crida a connect() obria una PDO nova, i això tenia dos
      * problemes: una connexió per consulta, i que una transacció no podia
-     * abastar més d'un model, perquè cada un tindria la seva connexió. Ara tots
+     * abastar més d'un model, perquè cada un tindria la seua connexió. Ara tots
      * els models comparteixen la mateixa, i per tant beginTransaction() des
      * d'un model cobreix les consultes de tots.
      */

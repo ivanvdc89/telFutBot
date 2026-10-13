@@ -268,7 +268,7 @@ check('text amb les dues activades', $sent[0]['text'], "Actualment tens el #malD
 check('els dos botons girats', $sent[0]['keyboard'], [['/malDia Desactivar CHL', '/malDia Desactivar EUL', '/malDia Activar COL']]);
 
 echo "\n--- /malDia Desactivar CHL sobre CHL+EUL ---\n";
-// array_diff conserva les claus, així que el JSON desat queda {\"1\":\"EUL\"} en
+// array_diff conserva les claus, aixina que el JSON desat queda {\"1\":\"EUL\"} en
 // lloc de [\"EUL\"]. Funciona perquè tots els consumidors recorren la llista,
 // però és un wart: un array_values ho normalitzaria.
 [$sent, $action] = runCommand(buildWorld(['CHL', 'EUL'], true), '/malDia Desactivar CHL');
@@ -452,7 +452,7 @@ foreach ([1, 8] as $simulated) {
     check(
         'i diu per què',
         $sent[0]['text'],
-        "La Conference League no juga la jornada $simulated, així que no hi pots activar el #malDia."
+        "La Conference League no juga la jornada $simulated, aixina que no hi pots activar el #malDia."
     );
 
     // Les altres dues competicions sí que es poden activar.

@@ -169,7 +169,7 @@ function buildWorld(array $ownedPots, ?array $standings = null): array
     $team   = new FakeTeam();
     $sub    = new FakeSubstitution();
 
-    // Per defecte el jugador va enganxat al líder, així que el canvi costa 6.
+    // Per defecte el jugador va enganxat al líder, aixina que el canvi costa 6.
     $player->pointsByPlayer = $standings ?? [PLAYER_ID => 100, 8 => 95];
 
     $player->players[CHAT_ID] = ['id' => PLAYER_ID, 'chat_id' => CHAT_ID, 'name' => 'Tester'];

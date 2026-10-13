@@ -140,7 +140,7 @@ class Player extends Connection {
     }
 
     /**
-     * Vots que li toquen al jugador segons la seva posició a la general.
+     * Vots que li toquen al jugador segons la seua posició a la general.
      *
      * És la regla comuna de totes les accions que depenen de la classificació:
      * #dobleORes i #kosAmbEscuts (quants vots pot fer), #millorFinal (pes del
@@ -162,7 +162,7 @@ class Player extends Connection {
      *
      * Es calcula d'una tacada perquè qui després mou la classificació
      * (calculateMatchDayPoints) no barregi la general d'abans i la de després
-     * d'escriure-hi: tothom ha de veure la mateixa foto.
+     * d'escriure-hi: tothom ha de vore la mateixa foto.
      */
     public function getAllowedVotesByPlayer(): array
     {

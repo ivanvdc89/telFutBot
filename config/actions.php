@@ -3,7 +3,7 @@
 /**
  * El teclat del menú /accions, a partir dels interruptors de la temporada.
  *
- * És aquí i no dins de basic.php perquè així es pot provar: el menú és el que
+ * És aquí i no dins de basic.php perquè aixina es pot provar: el menú és el que
  * veuen els jugadors, i una llista mal mesclada es nota de seguida.
  *
  * La idea és que NO hi hagi cap llista escrita a mà: tancar una fase la treu

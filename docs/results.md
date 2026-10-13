@@ -16,7 +16,7 @@ que encaixa millor amb este joc:
 - **Cada partit porta els dos equips, el país i els dos resultats** de
   l'eliminatòria (anada i tornada) en dues columnes.
 - **Les jornades hi són explícites.** La fase de lliga són blocs separats per
-  una fila buida (el bloc 1 és la jornada 1), i cada eliminatòria té la seva
+  una fila buida (el bloc 1 és la jornada 1), i cada eliminatòria té la seua
   capçalera (`Knockout round play-offs`, `Round of 16`, `Quarter Finals`...).
   Això dona un mapa 1:1 amb la numeració de jornades del joc.
 - **Els noms dels equips són els anglesos habituals**, que és exactament el que
@@ -65,7 +65,7 @@ de tocar.
 ### La Conference només juga 6 jornades de lligueta
 
 El joc en té 8 per a tothom, perquè les tres competicions avancin juntes. La
-lligueta de la Conference ocupa les jornades **2 a 7**: els resultats de la seva
+lligueta de la Conference ocupa les jornades **2 a 7**: els resultats de la seua
 primera ronda es desen a la jornada 2 del joc, i la 1 i la 8 són **jornades
 simulades**, en què tots els seus equips tenen un 0.
 
@@ -92,7 +92,7 @@ php getResults.php 10 --competition=CHL,EUL
 php getResults.php --source=files/cache/kassiesa-2027.html
 ```
 
-La pàgina es desa a `files/cache/` i es reutilitza durant una hora, així que
+La pàgina es desa a `files/cache/` i es reutilitza durant una hora, aixina que
 executar l'script diverses vegades no castiga el lloc. Si la xarxa falla, s'usa
 la còpia local encara que sigui antiga.
 
@@ -115,7 +115,7 @@ Una fila per equip, jornada i competició, amb el resultat del partit:
 | `points` | Els punts del partit: 3/1/0, i 4 per victòria a la lligueta de la Conference. |
 | `goals_for` | Els gols que va marcar l'equip. |
 | `goals_against` | Els gols que va rebre. |
-| `goal_difference` | `goals_for` − `goals_against`. Es desa calculada perquè la classificació la pugui sumar directament, però no és una dada nova: la calcula el model a partir de les altres dues, així que no pot quedar descompensada amb el resultat. |
+| `goal_difference` | `goals_for` − `goals_against`. Es desa calculada perquè la classificació la pugui sumar directament, però no és una dada nova: la calcula el model a partir de les altres dues, aixina que no pot quedar descompensada amb el resultat. |
 
 Els gols no reparteixen punts al joc. Són la matèria primera de la
 **classificació d'equips**: sumant per jornades se sap qui va primer de cada
@@ -187,7 +187,7 @@ php calculateTeamStandings.php
   desempat final, perquè dos equips absolutament idèntics quedin sempre en el
   mateix ordre.
 - **La posició** (`ranking`) es desa calculada i és dins de cada competició: 1 és
-  el primer de la seva. Amb això, els desempats per vots de `#dobleORes` i
+  el primer de la seua. Amb això, els desempats per vots de `#dobleORes` i
   `#kosAmbEscuts` (quin equip queda KO quan hi ha els mateixos vots, quin és el
   segon més votat...) es resolen amb una sola consulta, que és per a què existeix
   la taula.
@@ -208,7 +208,7 @@ qualsevol equip israelià que aparegui en el futur (Maccabi Tel-Aviv, Maccabi
 Haifa...) queda exclòs tot sol.
 
 D'un partit on juga un equip exclòs **només es desa el rival**: els seus punts
-només depenen del resultat (3/1/0), així que es calculen igual. El partit no
+només depenen del resultat (3/1/0), aixina que es calculen igual. El partit no
 atura res ni surt com a error; a l'informe hi surt marcat amb `EXCLÒS`. Si els
 dos equips són exclosos, no es desa cap fila.
 

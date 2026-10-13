@@ -35,7 +35,7 @@ toca fins que els canvis de la jornada estan aplicats** (vegeu el pas 2).
 Mentre els canvis estan oberts, cada jugador pot tenir **un canvi per competició
 i jornada** (fins a tres pendents alhora: CHL, EUL i COL). Cada canvi costa **6
 punts**, i és **gratis** per als jugadors que estan a més de 29 punts del líder;
-el cost es calcula quan es registra el canvi i queda desat a la seva fila.
+el cost es calcula quan es registra el canvi i queda desat a la seua fila.
 `/substitució remove` els esborra tots de cop: esborrar-ne un de sol podria
 deixar els altres en una combinació il·legal de països, i per això no existeix.
 
@@ -47,7 +47,7 @@ scripts de la jornada són només de CLI: si es demanen per URL responen 403.
 ### 0. Comprovar d'on es parteix
 
 `CURRENT_MATCH_DAY` ha de ser la jornada dels canvis que s'apliquen (per
-exemple, la 2). Si es vol veure què hi ha pendent abans de tocar res:
+exemple, la 2). Si es vol vore què hi ha pendent abans de tocar res:
 
 ```sql
 SELECT id, player_id, competition, old_team_id, new_team_id, points_cost
@@ -186,7 +186,7 @@ llegeix `team_results`. Es pot executar quan convingui: reescriu la taula sencer
 i no toca res més.
 
 `publishActions.php` només llegeix i envia el resum de les accions de la jornada:
-no escriu res a la base de dades, així que es pot executar quan convingui.
+no escriu res a la base de dades, aixina que es pot executar quan convingui.
 
 ## Si alguna cosa falla
 

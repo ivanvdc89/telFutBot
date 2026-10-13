@@ -52,7 +52,7 @@ if (count($allActions) === 0) {
     exit;
 }
 
-// Tots els noms, d'una consulta per taula. El joc és petit i així no es repeteix
+// Tots els noms, d'una consulta per taula. El joc és petit i aixina no es repeteix
 // cap consulta per cada acció.
 $playerNames = [];
 foreach ($playersRepo->getAllPlayers() as $player) {

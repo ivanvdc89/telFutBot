@@ -6,7 +6,7 @@ use TelegramBot\Api\BotApi;
  * Base de totes les accions del bot.
  *
  * Una acció és un comandament (o uns quants) del xat privat: declara quins
- * atén a commands() i fa la seva feina a run(). Res més. Qui decideix acabar la
+ * atén a commands() i fa la seua feina a run(). Res més. Qui decideix acabar la
  * petició és el router de basic.php, i per això cap acció no crida exit().
  *
  *     class MevaAccio extends CommandAction

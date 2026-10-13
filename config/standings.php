@@ -85,7 +85,7 @@ function standingsCompare(array $rowA, array $teamA, array $rowB, array $teamB):
 }
 
 /**
- * Les files de team_standings: una per equip, amb la seva posició.
+ * Les files de team_standings: una per equip, amb la seua posició.
  *
  * @param array<int, array{competition:string, points:int, goals_for:int, goals_against:int, match_days:int}> $totals Sumes per equip (team_id => fila), tal com surten de team_results.
  * @param array<int, array{pot:int, name:string}>                                                              $teams  Els equips (team_id => pot i nom).

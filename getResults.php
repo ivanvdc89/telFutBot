@@ -26,7 +26,7 @@
  * team_results té una clau única (equip, jornada, competició). Si una jornada ja
  * té resultats desats, l'script ho detecta abans d'escriure res, imprimeix quins
  * equips ja hi són i s'atura: no actualitza cap punt. Per tornar a carregar una
- * jornada cal esborrar primer les seves files (l'error mateix indica l'SQL).
+ * jornada cal esborrar primer les seues files (l'error mateix indica l'SQL).
  *
  * ELS EQUIPS EXCLOSOS
  *

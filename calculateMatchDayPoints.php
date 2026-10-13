@@ -54,7 +54,7 @@ $players = $playersRepo->getAllPlayers();
 
 // Foto de la classificació general abans de tocar-hi res: este script va
 // escrivint players.points jugador a jugador, i totes les validacions de
-// posició han de veure la mateixa general, que és la d'abans d'esta jornada.
+// posició han de vore la mateixa general, que és la d'abans d'esta jornada.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
 foreach ($players as $player) {

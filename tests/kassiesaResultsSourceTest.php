@@ -153,7 +153,7 @@ check("l'Europa League té el seu partit", simple($source->getMatches('EUL', 1))
 ]);
 
 echo "\n--- la lligueta de la Conference comença a la jornada 2 ---\n";
-// Té 6 jornades i el joc 8: la seva primera ronda es desa a la jornada 2, i la
+// Té 6 jornades i el joc 8: la seua primera ronda es desa a la jornada 2, i la
 // 1 i la 8 les omple ResultsPlanner amb zeros.
 check('la jornada 1 no té partits de Conference', $source->getMatches('COL', 1), []);
 check('la primera ronda és la jornada 2', simple($source->getMatches('COL', 2)), [

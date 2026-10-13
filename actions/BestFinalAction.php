@@ -16,7 +16,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *
  * La tria es desa a la fila d'accions del jugador com un JSON
  * {competition: 'CHL', points: N}. publishActions compta el vot amb els punts
- * que hi ha desats, que són els que el jugador va veure. Les files antigues
+ * que hi ha desats, que són els que el jugador va vore. Les files antigues
  * només portaven ['CHL'] i es continuen llegint.
  */
 class BestFinalAction extends ActionRowAction

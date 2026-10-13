@@ -57,7 +57,7 @@ $totals = [
     6  => ['competition' => 'CHL', 'points' => 3, 'goals_for' => 2, 'goals_against' => 2, 'match_days' => 3],
     7  => ['competition' => 'CHL', 'points' => 3, 'goals_for' => 2, 'goals_against' => 2, 'match_days' => 3],
     5  => ['competition' => 'CHL', 'points' => 3, 'goals_for' => 2, 'goals_against' => 2, 'match_days' => 3],
-    // Una altra competició: la seva classificació comença de nou.
+    // Una altra competició: la seua classificació comença de nou.
     8  => ['competition' => 'EUL', 'points' => 12, 'goals_for' => 7, 'goals_against' => 1, 'match_days' => 4],
     9  => ['competition' => 'EUL', 'points' => 0, 'goals_for' => 1, 'goals_against' => 6, 'match_days' => 4],
     // I un equip del qual no sabem ni el pot ni el nom: no ha de petar.

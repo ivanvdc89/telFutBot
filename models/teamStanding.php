@@ -9,7 +9,7 @@
  * (quin equip queda KO amb els mateixos vots, quin és el segon més votat...) amb
  * una sola consulta, i perquè la classificació es pugui mirar quan calgui.
  *
- * La posició (ranking) és dins de cada competició: 1 és el primer de la seva.
+ * La posició (ranking) és dins de cada competició: 1 és el primer de la seua.
  */
 class TeamStanding extends Connection {
     /**

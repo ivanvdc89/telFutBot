@@ -131,7 +131,7 @@ class TeamResult extends Connection {
      * false. No s'actualitza res.
      *
      * La diferència de gols no s'hi passa: es calcula aquí a partir dels gols a
-     * favor i en contra, que són les dades de debò. Així la columna desada no pot
+     * favor i en contra, que són les dades de debò. Aixina la columna desada no pot
      * quedar mai descompensada amb el resultat del partit.
      */
     public function addTeamResult(

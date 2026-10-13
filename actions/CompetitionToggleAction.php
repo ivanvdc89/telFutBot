@@ -34,7 +34,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *
  * La lligueta de la Conference només té 6 jornades i el joc 8: les jornades 1 i
  * 8 són simulades i tots els seus equips hi tenen 0 punts. No tindria cap sentit
- * activar-hi res, així que en estes jornades la Conference no surt al teclat i
+ * activar-hi res, aixina que en estes jornades la Conference no surt al teclat i
  * `canActivateCompetition` la rebutja encara que s'hi arribi pel text. Una fila
  * que ja existís (d'abans d'esta restricció) es mostra i es pot desactivar.
  */
@@ -56,7 +56,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
      * Les tres accions que comparteixen esta base, amb l'etiqueta que surt
      * als missatges.
      *
-     * És la llista del grup i, alhora, la font de label(): així el nom de cada
+     * És la llista del grup i, alhora, la font de label(): aixina el nom de cada
      * acció és en un sol lloc. Només se'n pot activar UNA per competició i
      * jornada, i per comprovar-ho cal conèixer les altres dues.
      */
@@ -307,7 +307,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
             $this->telegram->sendMessage(
                 $this->chatId,
                 "La " . self::COMPETITIONS[$competition] . " no juga la jornada " . $this->matchDay
-                    . ", així que no hi pots activar el " . $this->label() . "."
+                    . ", aixina que no hi pots activar el " . $this->label() . "."
             );
 
             return false;
@@ -338,7 +338,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
     private function competitionTakenBy(int $playerId, string $competition): ?string
     {
         foreach ($this->actionsRepo->getActionsByPlayerAndMatchDay($playerId, $this->matchDay) as $row) {
-            // La meva pròpia acció no em bloqueja.
+            // La meua pròpia acció no em bloqueja.
             if ($row['type'] === $this->actionType() || !isset(self::GROUP[$row['type']])) {
                 continue;
             }

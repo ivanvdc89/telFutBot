@@ -4,9 +4,9 @@
  * Els resultats d'una jornada no s'actualitzen mai.
  *
  * Esta prova és estàtica pel que fa a addTeamResult: sense base de dades no
- * es pot executar l'INSERT, així que es comprova el que hi ha escrit al model.
+ * es pot executar l'INSERT, aixina que es comprova el que hi ha escrit al model.
  * És una salvaguarda contra la temptació de tornar a posar-hi un
- * "ON DUPLICATE KEY UPDATE" perquè "així es pot repetir l'script": si els punts
+ * "ON DUPLICATE KEY UPDATE" perquè "aixina es pot repetir l'script": si els punts
  * d'una jornada ja calculada es poguessin canviar per darrere, la classificació
  * deixaria de quadrar i ningú no se n'adonaria.
  *

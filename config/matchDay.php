@@ -19,10 +19,10 @@
  * Cada pas es pot tornar a executar pel seu compte, amb una excepció: getResults
  * no sobreescriu una jornada ja carregada (els resultats no s'actualitzen; si ja
  * hi són, avisa i s'atura). Aplicar substitucions és idempotent i anunciar no
- * consumeix res, així que si un enviament a Telegram falla només cal repetir
+ * consumeix res, aixina que si un enviament a Telegram falla només cal repetir
  * aquell pas.
  *
- * NO la fan servir els scripts de final de fase, perquè la seva jornada és una
+ * NO la fan servir els scripts de final de fase, perquè la seua jornada és una
  * fita fixa i no la jornada en curs:
  *   - calculateEndLeaguePhasePoints.php  (final de la fase de lliga)
  *   - calculateEndGamePoints.php         (final del joc)
@@ -38,7 +38,7 @@ define('CURRENT_MATCH_DAY', 2);
 /**
  * Darrera jornada en què es poden fer canvis d'equips.
  *
- * Les normes diuen que no es poden fer canvis a partir de les semifinals, així
+ * Les normes diuen que no es poden fer canvis a partir de les semifinals, aixina
  * que este valor ha de ser l'última jornada que es juga abans d'elles. El bot
  * bloqueja /out i /in a partir de la jornada següent a esta.
  *
@@ -64,7 +64,7 @@ define('LAST_MATCH_DAY_WITH_CHANGES', 15);
  *   canvis, perquè ningú no triï accions sobre una plantilla que encara ha de
  *   canviar.
  *
- * El menú /accions i els handlers surten d'estos dos valors, així que tancar
+ * El menú /accions i els handlers surten d'estos dos valors, aixina que tancar
  * una cosa la treu de la llista tot sol: no hi ha cap llista per editar.
  *
  * ORDRE DEL TERMINI D'UNA JORNADA:
@@ -90,7 +90,7 @@ function currentMatchDay(): int
 /**
  * La jornada que demana la línia de comandes.
  *
- * Agafa el primer argument que no sigui una opció (--dry-run, --force...). Així
+ * Agafa el primer argument que no sigui una opció (--dry-run, --force...). Aixina
  * getResults.php pot acceptar banderes sense que es confonguin amb la jornada, i
  * la resta d'scripts segueixen llegint el primer número.
  *
