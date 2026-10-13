@@ -54,8 +54,13 @@ check(
 );
 check('quan l\'INSERT falla, torna false', str_contains($model, 'return false;'), true);
 check(
-    'i l\'INSERT desa els punts i la diferència de gols',
-    str_contains($model, 'goal_difference'),
+    'i l\'INSERT desa els punts i els gols',
+    str_contains($model, 'goals_for') && str_contains($model, 'goals_against'),
+    true
+);
+check(
+    'i la diferència de gols la calcula ell, perquè no pugui anar descompensada',
+    str_contains($model, '$goalsFor - $goalsAgainst'),
     true
 );
 
@@ -63,13 +68,13 @@ echo "\n--- getResults avisa abans d'escriure ---\n";
 check('comprova què hi ha desat a la jornada', str_contains($app, 'getResultsByMatchDay'), true);
 check('i s\'atura sense escriure', str_contains($app, "no s'actualitzen"), true);
 check(
-    'i comprova que la taula tingui la columna nova',
-    str_contains($app, 'hasGoalDifferenceColumn'),
+    'i comprova que la taula tingui les columnes noves',
+    str_contains($app, 'hasGoalColumns'),
     true
 );
 check(
-    'i passa la diferència de gols al model',
-    str_contains($app, "\$row['goalDifference']"),
+    'i passa els gols al model',
+    str_contains($app, "\$row['goalsFor']") && str_contains($app, "\$row['goalsAgainst']"),
     true
 );
 

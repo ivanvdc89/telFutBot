@@ -8,9 +8,9 @@
  * l'script. Ara es descarreguen de kassiesa.net i s'hi passen sols.
  *
  * De cada equip s'hi desen els punts del partit (3/1/0, o 4 a la lligueta de la
- * Conference) i la diferència de gols, que és gols a favor menys gols en contra:
- * positiva si l'equip va marcar més que el rival i negativa si en va rebre més.
- * És el que després desempata la classificació d'equips.
+ * Conference) i els gols que va marcar i que va rebre. Sumant-ho per jornades
+ * surt la classificació d'equips: els punts, i la diferència de gols per
+ * desempatar els qui en tenen els mateixos.
  *
  * COM S'USA
  *
@@ -174,13 +174,16 @@ $resolver  = new TeamNameResolver($teamsRepo->getAllTeams(), require __DIR__ . '
 $planner   = new ResultsPlanner($source, $resolver, array_keys(RESULTS_EXCLUDED_COUNTRIES));
 $resultsRepo = new TeamResult();
 
-// goal_difference es va afegir després de la resta de team_results. Si la base
-// de dades no la té, s'atura aquí: val més un missatge clar que no pas un INSERT
-// que falli amb "Unknown column" a mig escriure.
-if (!$resultsRepo->hasGoalDifferenceColumn()) {
-    fwrite(STDERR, "ERROR: la taula team_results no té la columna goal_difference.\n\n");
-    fwrite(STDERR, "Si la base de dades és d'abans de la columna, aplica-hi l'ALTER:\n");
-    fwrite(STDERR, "  ALTER TABLE team_results ADD COLUMN goal_difference INT NOT NULL DEFAULT 0 AFTER points;\n\n");
+// Les columnes dels gols es van afegir després de la resta de team_results. Si
+// la base de dades no les té, s'atura aquí: val més un missatge clar que no pas
+// un INSERT que falli amb "Unknown column" a mig escriure.
+if (!$resultsRepo->hasGoalColumns()) {
+    fwrite(STDERR, "ERROR: la taula team_results no té les columnes dels gols.\n\n");
+    fwrite(STDERR, "Si la base de dades és d'abans de les columnes, aplica-hi l'ALTER:\n");
+    fwrite(STDERR, "  ALTER TABLE team_results\n");
+    fwrite(STDERR, "      ADD COLUMN goals_for INT NOT NULL DEFAULT 0 AFTER points,\n");
+    fwrite(STDERR, "      ADD COLUMN goals_against INT NOT NULL DEFAULT 0 AFTER goals_for,\n");
+    fwrite(STDERR, "      ADD COLUMN goal_difference INT NOT NULL DEFAULT 0 AFTER goals_against;\n\n");
     fwrite(STDERR, "Si és nova, carrega database/team_results.sql. Tot plegat és a docs/results.md.\n");
     exit(1);
 }
@@ -209,13 +212,15 @@ foreach ($plan['matches'] as $match) {
         } elseif ($plannedSide['teamId'] === null) {
             $parts[] = $plannedSide['source'] . ' NO RESOLT';
         } else {
-            // Els punts i la diferència de gols que s'hi desaran, per poder-ho
-            // repassar abans no s'escrigui res.
+            // Els punts i els gols que s'hi desaran, per poder-ho repassar abans
+            // no s'escrigui res.
             $parts[] = sprintf(
-                '%s %d pts (%+d)',
+                '%s %d pts (%d-%d, %+d)',
                 $plannedSide['teamName'],
                 $plannedSide['points'],
-                $plannedSide['goalDifference']
+                $plannedSide['goalsFor'],
+                $plannedSide['goalsAgainst'],
+                $plannedSide['goalsFor'] - $plannedSide['goalsAgainst']
             );
         }
     }
@@ -289,13 +294,15 @@ if ($alreadyLoaded !== []) {
     foreach ($alreadyLoaded as $row) {
         $old = $existing[$row['teamId'] . '|' . $row['competition']];
         printf(
-            "  %-3s %-18s ja té %d pts i %+d de diferència (ara en tindria %d i %+d)\n",
+            "  %-3s %-18s ja té %d pts i %d-%d de gols (ara en tindria %d i %d-%d)\n",
             $row['competition'],
             $row['teamName'],
             $old['points'],
-            $old['goal_difference'],
+            $old['goals_for'],
+            $old['goals_against'],
             $row['points'],
-            $row['goalDifference']
+            $row['goalsFor'],
+            $row['goalsAgainst']
         );
     }
 
@@ -325,7 +332,7 @@ $resultsRepo->beginTransaction();
 
 try {
     foreach ($planned as $row) {
-        if ($resultsRepo->addTeamResult($row['teamId'], $row['points'], $row['goalDifference'], $matchDay, $row['competition']) === false) {
+        if ($resultsRepo->addTeamResult($row['teamId'], $row['points'], $row['goalsFor'], $row['goalsAgainst'], $matchDay, $row['competition']) === false) {
             throw new RuntimeException(
                 "no s'ha pogut desar {$row['teamName']} ({$row['competition']}, jornada $matchDay). "
                 . "Si ja tenia resultat, el registre d'errors del servidor ho diu."

@@ -61,18 +61,19 @@ final class ResultsPlanner
 
             // Jornada de lliga que aquesta competició no juga (la Conference en té
             // 6 i el joc 8): es dona per jugada i tots els seus equips hi tenen 0
-            // punts i 0 de diferència de gols.
+            // punts i cap gol.
             if ($sourceMatches === [] && resultsIsSimulatedLeagueMatchDay($competition, $matchDay)) {
                 $simulated[] = $competition;
 
                 foreach ($this->resolver->teamsInCompetition($competition) as $team) {
                     $forced[$competition . '|' . $team['id']] = [
-                        'competition'    => $competition,
-                        'teamId'         => $team['id'],
-                        'teamName'       => $team['name'],
-                        'points'         => 0,
-                        'goalDifference' => 0,
-                        'label'          => 'jornada simulada',
+                        'competition'  => $competition,
+                        'teamId'       => $team['id'],
+                        'teamName'     => $team['name'],
+                        'points'       => 0,
+                        'goalsFor'     => 0,
+                        'goalsAgainst' => 0,
+                        'label'        => 'jornada simulada',
                     ];
                 }
 
@@ -111,9 +112,9 @@ final class ResultsPlanner
             resultsWinPoints($competition, $matchDay)
         );
 
-        // La diferència de gols és a favor de cada equip: el local suma els seus
-        // gols menys els del visitant, i el visitant al revés. Serveix per
-        // desempatar la classificació d'equips.
+        // Els gols de cada equip són els del partit: el local va marcar els
+        // "home" i en va rebre els "away", i el visitant al revés. D'aquí en
+        // surt la diferència de gols de la classificació.
         return [
             'competition' => $competition,
             'label'       => sprintf('%s %d-%d %s', $match['home'], $match['home_goals'], $match['away_goals'], $match['away']),
@@ -122,7 +123,8 @@ final class ResultsPlanner
                 $match['home'],
                 $match['home_country'],
                 $homePoints,
-                $match['home_goals'] - $match['away_goals'],
+                $match['home_goals'],
+                $match['away_goals'],
                 $problems
             ),
             'away'        => $this->planSide(
@@ -130,7 +132,8 @@ final class ResultsPlanner
                 $match['away'],
                 $match['away_country'],
                 $awayPoints,
-                $match['away_goals'] - $match['home_goals'],
+                $match['away_goals'],
+                $match['home_goals'],
                 $problems
             ),
         ];
@@ -142,17 +145,19 @@ final class ResultsPlanner
         string $name,
         string $country,
         int $points,
-        int $goalDifference,
+        int $goalsFor,
+        int $goalsAgainst,
         array &$problems
     ): array {
         if (isset($this->excludedCountries[$country])) {
             return [
-                'source'         => $name,
-                'excluded'       => true,
-                'teamId'         => null,
-                'teamName'       => null,
-                'points'         => $points,
-                'goalDifference' => $goalDifference,
+                'source'       => $name,
+                'excluded'     => true,
+                'teamId'       => null,
+                'teamName'     => null,
+                'points'       => $points,
+                'goalsFor'     => $goalsFor,
+                'goalsAgainst' => $goalsAgainst,
             ];
         }
 
@@ -166,23 +171,25 @@ final class ResultsPlanner
             ];
 
             return [
-                'source'         => $name,
-                'excluded'       => false,
-                'teamId'         => null,
-                'teamName'       => null,
-                'points'         => $points,
-                'goalDifference' => $goalDifference,
-                'problem'        => true,
+                'source'       => $name,
+                'excluded'     => false,
+                'teamId'       => null,
+                'teamName'     => null,
+                'points'       => $points,
+                'goalsFor'     => $goalsFor,
+                'goalsAgainst' => $goalsAgainst,
+                'problem'      => true,
             ];
         }
 
         return [
-            'source'         => $name,
-            'excluded'       => false,
-            'teamId'         => $result['id'],
-            'teamName'       => $result['name'],
-            'points'         => $points,
-            'goalDifference' => $goalDifference,
+            'source'       => $name,
+            'excluded'     => false,
+            'teamId'       => $result['id'],
+            'teamName'     => $result['name'],
+            'points'       => $points,
+            'goalsFor'     => $goalsFor,
+            'goalsAgainst' => $goalsAgainst,
         ];
     }
 
@@ -194,7 +201,7 @@ final class ResultsPlanner
      *
      * @param array<int, array> $matches
      *
-     * @return array<string, array{competition:string, teamId:int, teamName:string, points:int, goalDifference:int, label:string}> Claus: competició|equip.
+     * @return array<string, array{competition:string, teamId:int, teamName:string, points:int, goalsFor:int, goalsAgainst:int, label:string}> Claus: competició|equip.
      */
     private static function rows(array $matches): array
     {
@@ -210,12 +217,13 @@ final class ResultsPlanner
 
                 $key        = $match['competition'] . '|' . $planned['teamId'];
                 $rows[$key] = [
-                    'competition'    => $match['competition'],
-                    'teamId'         => $planned['teamId'],
-                    'teamName'       => $planned['teamName'],
-                    'points'         => $planned['points'],
-                    'goalDifference' => $planned['goalDifference'],
-                    'label'          => $match['label'],
+                    'competition'  => $match['competition'],
+                    'teamId'       => $planned['teamId'],
+                    'teamName'     => $planned['teamName'],
+                    'points'       => $planned['points'],
+                    'goalsFor'     => $planned['goalsFor'],
+                    'goalsAgainst' => $planned['goalsAgainst'],
+                    'label'        => $match['label'],
                 ];
             }
         }

@@ -41,22 +41,23 @@ class TeamResult extends Connection {
     }
 
     /**
-     * Cert si la taula team_results ja té la columna goal_difference.
+     * Cert si la taula team_results ja té les columnes dels gols.
      *
-     * La columna es va afegir després de la resta: si la base de dades és
+     * Les columnes es van afegir després de la resta: si la base de dades és
      * d'abans i no s'hi ha aplicat l'ALTER, val més dir-ho clarament que no pas
      * deixar que l'INSERT falli amb "Unknown column".
      */
-    public function hasGoalDifferenceColumn(): bool
+    public function hasGoalColumns(): bool
     {
         try {
             $connection = parent::connect();
 
-            $sql  = "SHOW COLUMNS FROM team_results LIKE 'goal_difference';";
+            $sql  = "SHOW COLUMNS FROM team_results
+                     WHERE Field IN ('goals_for', 'goals_against', 'goal_difference');";
             $stmt = $connection->prepare($sql);
             $stmt->execute();
 
-            return count($stmt->fetchAll(pdo::FETCH_ASSOC)) > 0;
+            return count($stmt->fetchAll(pdo::FETCH_ASSOC)) === 3;
 
         } catch (PDOException $e) {
             error_log("DB error: " . $e->getMessage());
@@ -66,32 +67,37 @@ class TeamResult extends Connection {
     }
 
     /**
-     * Desa els punts i la diferència de gols d'un equip en una jornada.
+     * Desa els punts i els gols d'un equip en una jornada.
      *
      * Només INSERT: si l'equip ja té resultat en aquella jornada, la clau única
      * fa fallar la inserció, es deixa constància al registre d'errors i es torna
      * false. No s'actualitza res.
      *
-     * $goalDifference és gols a favor menys gols en contra: positiva si l'equip
-     * va marcar més que el rival i negativa si en va rebre més. És el que després
-     * desempata els equips amb els mateixos punts a la classificació.
+     * La diferència de gols no s'hi passa: es calcula aquí a partir dels gols a
+     * favor i en contra, que són les dades de debò. Així la columna desada no pot
+     * quedar mai descompensada amb el resultat del partit.
      */
     public function addTeamResult(
         int $teamId,
         int $teamPts,
-        int $goalDifference,
+        int $goalsFor,
+        int $goalsAgainst,
         int $matchday,
         string $competition
     ) {
         try {
             $connection = parent::connect();
 
-            $sql = "INSERT INTO team_results (team_id, points, goal_difference, match_day, competition)
-                    VALUES (:team_id, :points, :goal_difference, :match_day, :competition)";
+            $sql = "INSERT INTO team_results
+                        (team_id, points, goals_for, goals_against, goal_difference, match_day, competition)
+                    VALUES
+                        (:team_id, :points, :goals_for, :goals_against, :goal_difference, :match_day, :competition)";
             $stmt = $connection->prepare($sql);
             $stmt->bindValue(':team_id', $teamId, PDO::PARAM_INT);
             $stmt->bindValue(':points', $teamPts, PDO::PARAM_INT);
-            $stmt->bindValue(':goal_difference', $goalDifference, PDO::PARAM_INT);
+            $stmt->bindValue(':goals_for', $goalsFor, PDO::PARAM_INT);
+            $stmt->bindValue(':goals_against', $goalsAgainst, PDO::PARAM_INT);
+            $stmt->bindValue(':goal_difference', $goalsFor - $goalsAgainst, PDO::PARAM_INT);
             $stmt->bindValue(':match_day', $matchday, PDO::PARAM_INT);
             $stmt->bindValue(':competition', $competition, PDO::PARAM_STR);
             $stmt->execute();

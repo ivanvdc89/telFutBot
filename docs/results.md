@@ -108,38 +108,46 @@ DELETE FROM team_results WHERE match_day = 3;
 
 ## Què s'hi desa
 
-Una fila per equip, jornada i competició, amb dues xifres del partit:
+Una fila per equip, jornada i competició, amb el resultat del partit:
 
 | Columna | Què és |
 | --- | --- |
 | `points` | Els punts del partit: 3/1/0, i 4 per victòria a la lligueta de la Conference. |
-| `goal_difference` | Gols a favor **menys** gols en contra: positiva si l'equip va marcar més que el rival, zero si va empatar i negativa si en va rebre més. |
+| `goals_for` | Els gols que va marcar l'equip. |
+| `goals_against` | Els gols que va rebre. |
+| `goal_difference` | `goals_for` − `goals_against`. Es desa calculada perquè la classificació la pugui sumar directament, però no és una dada nova: la calcula el model a partir de les altres dues, així que no pot quedar descompensada amb el resultat. |
 
-La diferència de gols no reparteix punts al joc. És la matèria primera de la
-**classificació d'equips**: sumant-la per jornades (amb els punts) se sap qui va
-primer de cada competició, i això és el que desempata els equips que queden
-igualats — per exemple, per decidir quin equip queda KO quan hi ha empat de vots
-a `#kosAmbEscuts`.
+Els gols no reparteixen punts al joc. Són la matèria primera de la
+**classificació d'equips**: sumant per jornades se sap qui va primer de cada
+competició (punts) i qui té millor diferència de gols, que és el que desempata
+els equips que queden igualats — per exemple, per decidir quin equip queda KO
+quan hi ha empat de vots a `#kosAmbEscuts`.
+
+Els gols a favor i en contra es guarden **en cru** i no només la diferència:
+si algun dia cal l'ordre complet de la UEFA (diferència de gols → gols a favor →
+...), la dada ja hi és i no cal tornar a baixar els resultats.
 
 ### Si la taula ja existia
 
 `database/team_results.sql` és l'esquema sencer (fa `DROP TABLE`), i per a una
-base de dades que ja existeix la columna s'hi afegeix amb:
+base de dades que ja existeix les columnes s'hi afegeixen amb:
 
 ```sql
 ALTER TABLE team_results
-    ADD COLUMN goal_difference INT NOT NULL DEFAULT 0 AFTER points;
+    ADD COLUMN goals_for INT NOT NULL DEFAULT 0 AFTER points,
+    ADD COLUMN goals_against INT NOT NULL DEFAULT 0 AFTER goals_for,
+    ADD COLUMN goal_difference INT NOT NULL DEFAULT 0 AFTER goals_against;
 ```
 
-Les files que ja hi eren es queden amb `goal_difference = 0`, que no és la seva
-diferència de gols de debò. Per omplir-les, mira quines jornades tens carregades:
+Les files que ja hi eren es queden amb tots els gols a 0, que no és el seu
+resultat de debò. Per omplir-les, mira quines jornades tens carregades:
 
 ```sql
 SELECT match_day, COUNT(*) FROM team_results GROUP BY match_day;
 ```
 
 i torna-les a carregar, esborrant-les primer. El resultat és el mateix (la font no
-ha canviat), i aquest cop sí que s'hi desa la diferència:
+ha canviat), i aquest cop sí que s'hi desen els gols:
 
 ```sql
 DELETE FROM team_results WHERE match_day IN (1, 2);
@@ -150,10 +158,10 @@ php getResults.php 2
 ```
 
 No cal recalcular els punts dels jugadors: els punts dels partits són els
-mateixos, només s'hi afegeix la columna nova.
+mateixos, només s'hi afegeixen les columnes noves.
 
 Si t'oblides de l'`ALTER`, `getResults.php` no escriu res i ho diu: comprova que
-la columna hi sigui abans de fer res.
+les columnes hi siguin abans de fer res.
 
 ## Els estats exclosos
 
