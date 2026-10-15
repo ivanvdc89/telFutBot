@@ -271,5 +271,11 @@ Telegram (`tests/publishResultsTest.php`): un missatge per jugador, un amb la
 classificació general i els millors de cada competició, i un amb la classificació
 de la jornada. Les posicions es calculen amb els empats compartits (1, 1, 3).
 
+Les dos classificacions van dins d'un **bloc de codi** de Telegram (`<pre>`, amb
+`parse_mode = HTML`): és l'única manera que la columna dels punts comence tota al
+mateix lloc, perquè fora d'un bloc Telegram fa servir una font d'amplària
+variable i els espais no alineen res. El nom més llarg marca l'amplària de la
+columna, i els punts van alineats a la dreta.
+
 El termini de la jornada —tancar els canvis, aplicar-los, anunciar-los i obrir
 les accions— és a [termini-jornada.md](termini-jornada.md).

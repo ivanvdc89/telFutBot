@@ -14,6 +14,13 @@
  *   - Un missatge amb la classificació general i els millors de cada competició.
  *   - Un missatge amb la classificació de la jornada.
  *
+ * LES DUES CLASSIFICACIONS VAN DINS D'UN BLOC DE CODI
+ *
+ * Telegram, fora d'un bloc de codi, fa servir una font d'amplària variable i els
+ * espais no alineen res. Perquè la columna dels punts comence tota al mateix
+ * lloc, estes dos van embolcallades amb resultsPre() i s'envien amb parse_mode
+ * HTML. Els detalls dels jugadors, en canvi, van sense format.
+ *
  * LES POSICIONS
  *
  * Es calculen amb els empats compartits: dos jugadors amb els mateixos punts
@@ -54,6 +61,15 @@ function resultsPoints(int $points): string
 }
 
 /**
+ * Ompli un text amb espais fins a una amplària, comptant caràcters i no bytes
+ * (els noms porten accents).
+ */
+function resultsPad(string $text, int $width): string
+{
+    return $text . str_repeat(' ', max(0, $width - mb_strlen($text)));
+}
+
+/**
  * Ordena les files per una clau de punts i hi afig la posició.
  *
  * @param array<int, array> $rows      Files de match_day_player_points.
@@ -86,6 +102,62 @@ function resultsRanking(array $rows, string $pointsKey): array
     }
 
     return $ranking;
+}
+
+/**
+ * Les línies alineades d'una classificació.
+ *
+ * La gràcia és que els punts comencen tots a la mateixa columna: el número de
+ * posició va alineat a la dreta, el nom s'ompli amb espais fins al més llarg i
+ * els punts també s'alineen a la dreta (aixina 'pts' i la jornada queden a la
+ * mateixa columna encara que hi haja xifres d'una i de tres xifres).
+ *
+ * AIXÒ NOMÉS ES VEU EN UN BLOC DE CODI: fora d'<pre>, Telegram fa servir una
+ * font d'amplària variable i els espais no alineen res. Per això els missatges
+ * de les classificacions s'envien amb parse_mode HTML i embolcallats amb
+ * resultsPre().
+ *
+ * @param array<int, array>  $rows        Files ja passades per resultsRanking(), amb 'position'.
+ * @param array<int, string> $playerNames
+ * @param string             $pointsKey   'total' o 'match_day_total'.
+ * @param bool               $withMatchDay Cert per afegir-hi els punts de la jornada.
+ *
+ * @return array<int, string>
+ */
+function resultsRankingLines(array $rows, array $playerNames, string $pointsKey, bool $withMatchDay): array
+{
+    $entries     = [];
+    $rankWidth   = 1;
+    $nameWidth   = 1;
+    $pointsWidth = 1;
+
+    foreach ($rows as $row) {
+        $rank   = (int) $row['position'];
+        $name   = resultsPlayerName($playerNames, (int) $row['player_id']);
+        $points = (int) $row[$pointsKey];
+
+        $entries[] = ['rank' => $rank, 'name' => $name, 'points' => $points, 'row' => $row];
+
+        // '10.' és una columna més ampla que '4.'.
+        $rankWidth   = max($rankWidth, mb_strlen((string) $rank) + 1);
+        $nameWidth   = max($nameWidth, mb_strlen($name));
+        $pointsWidth = max($pointsWidth, mb_strlen((string) $points));
+    }
+
+    $lines = [];
+    foreach ($entries as $entry) {
+        $line  = str_pad($entry['rank'] . '.', $rankWidth, ' ', STR_PAD_LEFT) . ' ';
+        $line .= resultsPad($entry['name'], $nameWidth) . '  ';
+        $line .= str_pad((string) $entry['points'], $pointsWidth, ' ', STR_PAD_LEFT) . ' pts';
+
+        if ($withMatchDay) {
+            $line .= ' (jornada ' . resultsPoints((int) $entry['row']['match_day_total']) . ')';
+        }
+
+        $lines[] = $line;
+    }
+
+    return $lines;
 }
 
 /**
@@ -241,7 +313,7 @@ function resultsPlayerText(array $row, array $teamRows, string $name, array $tea
 }
 
 /**
- * La classificació general, amb els punts de la jornada entre parèntesis.
+ * La classificació general, amb els punts de la jornada a la dreta.
  *
  * @param array<int, array>  $rows        Files de match_day_player_points.
  * @param array<int, string> $playerNames
@@ -250,14 +322,8 @@ function resultsGeneralRankingText(array $rows, array $playerNames): string
 {
     $lines = ['🏆 Classificació general'];
 
-    foreach (resultsRanking($rows, 'total') as $row) {
-        $lines[] = sprintf(
-            '%s %s — %s (jornada %s)',
-            resultsMedal((int) $row['position']),
-            resultsPlayerName($playerNames, (int) $row['player_id']),
-            resultsPoints((int) $row['total']),
-            resultsPoints((int) $row['match_day_total'])
-        );
+    foreach (resultsRankingLines(resultsRanking($rows, 'total'), $playerNames, 'total', true) as $line) {
+        $lines[] = $line;
     }
 
     return implode("\n", $lines);
@@ -270,13 +336,8 @@ function resultsMatchDayRankingText(array $rows, array $playerNames, int $matchD
 {
     $lines = ['⚡ Classificació de la jornada ' . $matchDay];
 
-    foreach (resultsRanking($rows, 'match_day_total') as $row) {
-        $lines[] = sprintf(
-            '%s %s — %s',
-            resultsMedal((int) $row['position']),
-            resultsPlayerName($playerNames, (int) $row['player_id']),
-            resultsPoints((int) $row['match_day_total'])
-        );
+    foreach (resultsRankingLines(resultsRanking($rows, 'match_day_total'), $playerNames, 'match_day_total', false) as $line) {
+        $lines[] = $line;
     }
 
     return implode("\n", $lines);
@@ -348,14 +409,29 @@ function resultsSummaryText(array $rows, array $playerNames): string
 }
 
 /**
+ * Un bloc de codi de Telegram amb el text a dins.
+ *
+ * És l'única manera que les columnes s'alineen: dins d'<pre>, Telegram fa servir
+ * una font d'amplària fixa i els espais conten. El text s'escapa perquè
+ * Telegram l'ha d'interpretar com a HTML, i els noms els trien els jugadors.
+ */
+function resultsPre(string $text): string
+{
+    return '<pre>' . htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</pre>';
+}
+
+/**
  * Tots els missatges de la jornada, en l'ordre en què s'han d'enviar.
  *
- * @param array<int, array>       $playerPoints        Files de getAllMatchDayPlayerPoints().
- * @param array<int, array<int, array>> $teamPointsByPlayer [player_id => files de match_day_team_points].
- * @param array<int, string>      $playerNames
- * @param array<int, string>      $teamNames
+ * Cada missatge porta el seu parse_mode: les classificacions van dins d'un bloc
+ * de codi (HTML) perquè les columnes s'alineen, i la resta van sense format.
  *
- * @return array<int, string>
+ * @param array<int, array>             $playerPoints        Files de getAllMatchDayPlayerPoints().
+ * @param array<int, array<int, array>> $teamPointsByPlayer  [player_id => files de match_day_team_points].
+ * @param array<int, string>            $playerNames
+ * @param array<int, string>            $teamNames
+ *
+ * @return array<int, array{text: string, parse_mode: string|null}>
  */
 function resultsMessages(
     array $playerPoints,
@@ -366,20 +442,30 @@ function resultsMessages(
 ): array {
     $messages = [];
 
-    // Un missatge per jugador, en l'ordre de la general.
+    // Un missatge per jugador, en l'ordre de la general. Van sense parse_mode:
+    // aixina els noms no s'han d'escapar ni poden trencar res.
     foreach (resultsRanking($playerPoints, 'total') as $row) {
         $playerId = (int) $row['player_id'];
 
-        $messages[] = resultsPlayerText(
-            $row,
-            $teamPointsByPlayer[$playerId] ?? [],
-            resultsPlayerName($playerNames, $playerId),
-            $teamNames
-        );
+        $messages[] = [
+            'text'       => resultsPlayerText(
+                $row,
+                $teamPointsByPlayer[$playerId] ?? [],
+                resultsPlayerName($playerNames, $playerId),
+                $teamNames
+            ),
+            'parse_mode' => null,
+        ];
     }
 
-    $messages[] = resultsSummaryText($playerPoints, $playerNames);
-    $messages[] = resultsMatchDayRankingText($playerPoints, $playerNames, $matchDay);
+    $messages[] = [
+        'text'       => resultsPre(resultsSummaryText($playerPoints, $playerNames)),
+        'parse_mode' => 'HTML',
+    ];
+    $messages[] = [
+        'text'       => resultsPre(resultsMatchDayRankingText($playerPoints, $playerNames, $matchDay)),
+        'parse_mode' => 'HTML',
+    ];
 
     return $messages;
 }

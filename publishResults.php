@@ -70,5 +70,7 @@ foreach ($playerPoints as $row) {
 }
 
 foreach (resultsMessages($playerPoints, $teamPointsByPlayer, $playerNames, $teamNames, $matchDay) as $message) {
-    $telegram->sendMessage($groupChatId, $message);
+    // El parse_mode ve de config/publishResults.php: les classificacions van en
+    // un bloc de codi (HTML) perquè les columnes s'alineen.
+    $telegram->sendMessage($groupChatId, $message['text'], $message['parse_mode']);
 }
