@@ -116,5 +116,42 @@ class MatchDayPlayerPoint extends Connection {
 
         return $lastMatchDay === false ? self::emptyTotals() : $lastMatchDay;
     }
+
+    /**
+     * Cert si la jornada ja té punts calculats.
+     *
+     * calculateMatchDayPoints.php ho mira abans de fer res: els punts són
+     * acumulatius i passar una jornada dos voltes els inflaria. Abans es podia
+     * fer sense que res ho aturara, perquè getLastMatchDayByPlayer torna la
+     * fila de la mateixa jornada que s'està calculant.
+     */
+    public function matchDayHasPoints(int $matchDay): bool
+    {
+        $connection = parent::connect();
+        $sql = "select count(*) as total from match_day_player_points where match_day=?;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $matchDay, PDO::PARAM_INT);
+        $sql->execute();
+
+        $row = $sql->fetch(pdo::FETCH_ASSOC);
+
+        return (int) ($row['total'] ?? 0) > 0;
+    }
+
+    /**
+     * Esborra els punts calculats d'una jornada, per tornar-los a calcular.
+     *
+     * Només ho fa servir calculateMatchDayPoints.php amb --recalculate. Els
+     * acumulats no es toquen: el que esborra és justament el que es tornarà a
+     * escriure.
+     */
+    public function deleteByMatchDay(int $matchDay): void
+    {
+        $connection = parent::connect();
+        $sql = "delete from match_day_player_points where match_day=?;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $matchDay, PDO::PARAM_INT);
+        $sql->execute();
+    }
 }
 ?>

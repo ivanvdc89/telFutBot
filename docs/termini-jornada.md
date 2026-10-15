@@ -178,8 +178,20 @@ php publishActions.php             # resum de les accions de la jornada
 `getResults.php` ha d'anar abans de `calculateMatchDayPoints.php`, i els canvis
 del pas 2 també: `calculateMatchDayPoints.php` llegeix les substitucions de la
 jornada i en descompta el cost, i llegeix la plantilla per repartir els punts.
-Si una fila quedés pendent, el cost es cobraria igualment sense que l'equip
-hagués canviat.
+De fet, si quedara alguna fila pendent (`pending = 1`), l'script **s'atura i no
+calcula res**: no ha de cobrar el cost d'un canvi que no s'ha aplicat. Primer
+`applySubstitutions.php`, i si alguna substitució no s'ha de fer, el jugador la
+pot traure amb `/substitució remove`.
+
+`calculateMatchDayPoints.php` **no es pot passar dues vegades per la mateixa
+jornada**: els punts són acumulatius i els sumaria un altre cop. Si la jornada ja
+té punts calculats, l'script s'atura i no toca res. Per refer-la de debò (per
+exemple, després de corregir una acció mal posada) cal demanar-ho explícitament,
+i aleshores esborra les files d'eixa jornada abans de tornar-les a calcular:
+
+```
+php calculateMatchDayPoints.php 2 --recalculate
+```
 
 `calculateTeamStandings.php` també va després de `getResults.php`, perquè només
 llegeix `team_results`. Es pot executar quan convingui: reescriu la taula sencera
@@ -196,6 +208,14 @@ no escriu res a la base de dades, aixina que es pot executar quan convingui.
   torna a executar.
 - **Telegram falla a `publishSubstitutions.php`.** Torna a executar el mateix
   publicador. No cal tornar a aplicar els canvis.
+- **`calculateMatchDayPoints.php` s'atura dient que hi ha substitucions pendents.**
+  Vol dir que `applySubstitutions.php` no s'ha executat (o que alguna fila ha
+  quedat enrere). Aplica-les i torna-ho a provar; no s'ha calculat res.
+- **`calculateMatchDayPoints.php` s'atura dient que la jornada ja té punts.** És
+  la guarda que evita sumar-la dos vegades. Si de debò s'ha de refer (una acció
+  mal posada, un resultat carregat malament), es torna a executar amb
+  `--recalculate`, que esborra els punts d'eixa jornada i els recalcula. Si va
+  quedar a mitges, `--recalculate` també ho arregla.
 - **Un jugador s'ha de fer enrere després d'aplicar.** Si la fila encara és
   pendent, `/substitució remove` la treu. Si ja està aplicada (`pending = 0`),
   el canvi és a `player_teams`: per desfer-lo abans que es jugui la jornada,
@@ -212,6 +232,7 @@ Els tests no toquen la base de dades ni Telegram:
 ```
 php tests/actionsMenuTest.php           # els quatre estats dels interruptors
 php tests/substitutionActionTest.php    # el termini tancat i els pendents
+php tests/matchDayPointsTest.php        # els punts de la jornada, sense BD
 ```
 
 I a la base de dades, després del pas 2, cap fila de la jornada no ha de quedar

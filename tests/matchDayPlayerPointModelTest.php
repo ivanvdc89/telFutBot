@@ -17,6 +17,7 @@
 
 require_once(__DIR__ . '/../config/connection.php');
 require_once(__DIR__ . '/../models/matchDayPlayerPoint.php');
+require_once(__DIR__ . '/../models/matchDayTeamPoint.php');
 
 $failures = 0;
 
@@ -67,6 +68,16 @@ $pdo->exec('CREATE TABLE match_day_player_points (
 $pdo->exec("INSERT INTO match_day_player_points
     (player_id, match_day, chl_total, eul_total, col_total, total)
     VALUES (1, 1, 7, 3, 0, 10), (1, 2, 12, 9, 0, 21), (2, 1, 4, 0, 6, 10)");
+
+$pdo->exec('CREATE TABLE match_day_team_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player_id INTEGER NOT NULL,
+    match_day INTEGER NOT NULL,
+    team_id INTEGER,
+    total INTEGER
+)');
+
+$pdo->exec('INSERT INTO match_day_team_points (player_id, match_day, team_id, total) VALUES (1, 2, 10, 3)');
 
 $repo = new MatchDayPlayerPoint();
 
@@ -149,6 +160,26 @@ check(
         : null,
     ['chl_total', 'eul_total', 'col_total', 'total']
 );
+
+echo "\n--- la guarda de reexecució de calculateMatchDayPoints ---\n";
+check('la jornada 1 ja té punts', $repo->matchDayHasPoints(1), true);
+check('la jornada 3 encara no', $repo->matchDayHasPoints(3), false);
+
+$pdo->exec('INSERT INTO match_day_player_points (player_id, match_day, total) VALUES (1, 7, 99)');
+check('la jornada 7, que s\'acaba d\'escriure, ja hi és', $repo->matchDayHasPoints(7), true);
+
+$repo->deleteByMatchDay(7);
+check('i després d\'esborrar-la ja no', $repo->matchDayHasPoints(7), false);
+check('esborrar-ne una altra no toca la 1', $repo->matchDayHasPoints(1), true);
+
+// La segona taula: si una execució va quedar a mitges, potser hi ha punts
+// d'equip sense la fila del jugador.
+$teamRepo = new MatchDayTeamPoint();
+check('els punts d\'equip de la jornada 2 hi són', $teamRepo->matchDayHasPoints(2), true);
+check('els de la jornada 3 no', $teamRepo->matchDayHasPoints(3), false);
+
+$teamRepo->deleteByMatchDay(2);
+check('i s\'esborren', $teamRepo->matchDayHasPoints(2), false);
 
 echo "\n--- el model no ha emés cap avís de PHP ---\n";
 check('ni Undefined array key ni TypeError', $phpProblems, []);

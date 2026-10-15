@@ -245,5 +245,25 @@ getResults -> calculateTeamStandings -> applySubstitutions -> calculateMatchDayP
 llegeix `team_results` per repartir els punts. `calculateTeamStandings.php` també
 va després de `getResults.php`, perquè només llegeix `team_results`.
 
+`calculateMatchDayPoints.php` tampoc no es pot passar dues vegades per la mateixa
+jornada: com que els totals són acumulatius, els sumaria un altre cop. Si la
+jornada ja té punts, s'atura sense tocar res; per refer-la cal demanar-ho amb
+`--recalculate`, que esborra les files d'eixa jornada abans de recalcular-les:
+
+```
+php calculateMatchDayPoints.php 2 --recalculate
+```
+
+`calculateMatchDayPoints.php` també s'atura si queden substitucions **sense
+aplicar** a la jornada (`pending = 1`): si no, en cobraria el cost sense que
+l'equip haguera canviat. Cal executar abans `applySubstitutions.php` (o traure
+les files pendents amb `/substitució remove`).
+
+I és on es paguen les accions: `#malDia`, `#socElMillor` i `#guanyarOMorir` cada
+jornada, `#dobleORes` i `#kosAmbEscuts` amb els vots de la jornada,
+`#segurQuePasse` a les eliminatòries (amb el marge de gols de l'anada posat a mà)
+i `#millorFinal` a la jornada de les finals (la 18), amb el rànquing de vots que
+també publica `publishActions.php`.
+
 El termini de la jornada —tancar els canvis, aplicar-los, anunciar-los i obrir
 les accions— és a [termini-jornada.md](termini-jornada.md).

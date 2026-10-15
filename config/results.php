@@ -141,6 +141,17 @@ function resultsIsSimulatedLeagueMatchDay(string $competition, int $matchDay): b
     return resultsIsLeagueMatchDay($matchDay) && resultsLeagueRound($competition, $matchDay) === null;
 }
 
+/**
+ * Cert si la jornada és la de les finals.
+ *
+ * #millorFinal només té efectes a la final de cada competició, i al joc les tres
+ * finals van a la mateixa jornada (RESULTS_KNOCKOUT_ROUNDS['Final']).
+ */
+function resultsIsFinalMatchDay(int $matchDay): bool
+{
+    return $matchDay === RESULTS_KNOCKOUT_ROUNDS['Final'];
+}
+
 /** Punts que val una victòria en una jornada: 4 a la lligueta de la Conference, 3 a la resta. */
 function resultsWinPoints(string $competition, int $matchDay): int
 {

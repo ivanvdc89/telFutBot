@@ -36,7 +36,7 @@ $messageBestsEUL = "";
 $messageBestsCOL = "";
 $bestCHLPoints  = -1;
 $bestEULPoints  = -1;
-$bestCOLPoints  = 1;
+$bestCOLPoints  = -1;
 $messageRanking = "Classificació general:\n";
 
 $allMatchDayPlayerPoints = $matchDayPlayerPointsRepo->getAllMatchDayPlayerPoints($matchDay);

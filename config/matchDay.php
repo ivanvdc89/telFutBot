@@ -16,11 +16,13 @@
  * L'ordre dels passos de la jornada és:
  *   getResults -> applySubstitutions -> calculateMatchDayPoints -> publishSubstitutions
  *                                                              -> publishResults
- * Cada pas es pot tornar a executar pel seu compte, amb una excepció: getResults
- * no sobreescriu una jornada ja carregada (els resultats no s'actualitzen; si ja
- * hi són, avisa i s'atura). Aplicar substitucions és idempotent i anunciar no
- * consumeix res, aixina que si un enviament a Telegram falla només cal repetir
- * aquell pas.
+ * Cada pas es pot tornar a executar pel seu compte, amb dos excepcions:
+ * getResults no sobreescriu una jornada ja carregada (els resultats no
+ * s'actualitzen; si ja hi són, avisa i s'atura), i calculateMatchDayPoints no
+ * torna a sumar una jornada ja calculada (si ja té punts, s'atura; per refer-la
+ * cal demanar-ho amb --recalculate, que esborra les files d'eixa jornada).
+ * Aplicar substitucions és idempotent i anunciar no consumeix res, aixina que si
+ * un enviament a Telegram falla només cal repetir aquell pas.
  *
  * NO la fan servir els scripts de final de fase, perquè la seua jornada és una
  * fita fixa i no la jornada en curs:

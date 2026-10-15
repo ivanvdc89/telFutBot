@@ -42,5 +42,37 @@ class MatchDayTeamPoint extends Connection {
         $sql->execute();
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
+
+    /**
+     * Cert si la jornada ja té punts d'equip calculats.
+     *
+     * És la segona meitat de la guarda de calculateMatchDayPoints.php: si una
+     * execució va quedar a mitges, potser hi ha files ací encara que
+     * match_day_player_points estiga buit.
+     */
+    public function matchDayHasPoints(int $matchDay): bool
+    {
+        $connection = parent::connect();
+        $sql = "select count(*) as total from match_day_team_points where match_day=?;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $matchDay, PDO::PARAM_INT);
+        $sql->execute();
+
+        $row = $sql->fetch(pdo::FETCH_ASSOC);
+
+        return (int) ($row['total'] ?? 0) > 0;
+    }
+
+    /**
+     * Esborra els punts d'equip d'una jornada, per tornar-los a calcular.
+     */
+    public function deleteByMatchDay(int $matchDay): void
+    {
+        $connection = parent::connect();
+        $sql = "delete from match_day_team_points where match_day=?;";
+        $sql = $connection->prepare($sql);
+        $sql->bindValue(1, $matchDay, PDO::PARAM_INT);
+        $sql->execute();
+    }
 }
 ?>
