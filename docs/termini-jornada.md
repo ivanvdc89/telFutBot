@@ -233,6 +233,7 @@ Els tests no toquen la base de dades ni Telegram:
 php tests/actionsMenuTest.php           # els quatre estats dels interruptors
 php tests/substitutionActionTest.php    # el termini tancat i els pendents
 php tests/matchDayPointsTest.php        # els punts de la jornada, sense BD
+php tests/publishResultsTest.php        # els missatges de la classificació
 ```
 
 I a la base de dades, després del pas 2, cap fila de la jornada no ha de quedar

@@ -265,5 +265,11 @@ jornada, `#dobleORes` i `#kosAmbEscuts` amb els vots de la jornada,
 i `#millorFinal` a la jornada de les finals (la 18), amb el rànquing de vots que
 també publica `publishActions.php`.
 
+`publishResults.php` envia la classificació i el detall de cada jugador. El text
+el munta `config/publishResults.php`, que es pot provar sense base de dades ni
+Telegram (`tests/publishResultsTest.php`): un missatge per jugador, un amb la
+classificació general i els millors de cada competició, i un amb la classificació
+de la jornada. Les posicions es calculen amb els empats compartits (1, 1, 3).
+
 El termini de la jornada —tancar els canvis, aplicar-los, anunciar-los i obrir
 les accions— és a [termini-jornada.md](termini-jornada.md).
