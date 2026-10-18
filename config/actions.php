@@ -9,6 +9,10 @@
  * La idea és que NO hi hagi cap llista escrita a mà: tancar una fase la treu
  * del menú tota sola, i obrir-la la hi torna a posar.
  *
+ * /dobleORes és l'única votació que ix al menú. Les altres (/kos,
+ * /segurQuePasse i /millorFinal) només tenen efecte en fases concretes i es
+ * continuen escrivint a mà.
+ *
  * @return array Files de botons, buit si no hi ha res disponible.
  */
 function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen): array
@@ -21,6 +25,7 @@ function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen): array
 
     if ($actionsOpen) {
         $rows[] = ['/malDia', '/socElMillor', '/guanyarOMorir'];
+        $rows[] = ['/dobleORes'];
     }
 
     return $rows;

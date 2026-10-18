@@ -119,10 +119,10 @@ A `config/matchDay.php`:
 define('ACTIONS_OPEN', true);
 ```
 
-Ara `/accions` ofereix `/malDia`, `/socElMillor` i `/guanyarOMorir`. Les altres
-comandes d'acció (`/dobleORes`, `/kos`, `/segurQuePasse`, `/millorFinal`) no
-surten al menú, però també depenen d'este interruptor: amb les accions
-tancades responen "No disponible".
+Ara `/accions` ofereix `/malDia`, `/socElMillor`, `/guanyarOMorir` i
+`/dobleORes`. Les altres comandes d'acció (`/kos`, `/segurQuePasse`,
+`/millorFinal`) no surten al menú, però també depenen d'este interruptor: amb
+les accions tancades responen "No disponible".
 
 S'obre **després d'aplicar i publicar** els canvis, no abans: ningú no ha de
 triar una acció sobre una plantilla que encara ha de canviar.
@@ -150,7 +150,7 @@ aquí.
 
 | Comanda | Amb els canvis oberts | Amb el termini tancat | Amb les accions obertes |
 | --- | --- | --- | --- |
-| `/accions` | `/substitució` | "Ara mateix no hi ha cap acció disponible." i treu el teclat vell | `/malDia`, `/socElMillor`, `/guanyarOMorir` |
+| `/accions` | `/substitució` | "Ara mateix no hi ha cap acció disponible." i treu el teclat vell | `/malDia`, `/socElMillor`, `/guanyarOMorir`, `/dobleORes` |
 | `/substitució` | Estat dels pendents i menú d'equips | Mateix estat, més el motiu del tancament; només `remove` | Igual |
 | `/out`, `/in` | Es guarda el canvi | El motiu del tancament, sense tocar res | Igual |
 | `/malDia`, `/socElMillor`, `/guanyarOMorir` | "No disponible" | "No disponible" | Menú d'activar i desactivar |

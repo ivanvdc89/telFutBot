@@ -237,7 +237,7 @@ function runCommand(
     array $world,
     string $text,
     int $lastMatchDayWithChanges = LAST_MATCH_DAY_WITH_CHANGES,
-    bool $substitutionsOpen = SUBSTITUTIONS_OPEN
+    bool $substitutionsOpen = true
 ): array {
     [$bot, $player, $team, $sub] = $world;
     $bot->sent = [];

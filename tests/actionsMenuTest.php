@@ -5,8 +5,8 @@
  *
  * Cobreix els quatre estats de la temporada, perquè tancar els canvis ha de
  * treure /substitució del menú i obrir les accions ha de fer-hi aparèixer les
- * tres. Un menú que ofereix coses que ja no es poden fer és pitjor que no tenir
- * menú.
+ * tres accions de competició i la votació de #dobleORes. Un menú que ofereix
+ * coses que ja no es poden fer és pitjor que no tenir menú.
  *
  * Sense base de dades: actionsMenuRows() només mira dos booleans.
  *
@@ -33,6 +33,7 @@ function check(string $label, $actual, $expected): void
 
 $SUBSTITUCIONS = ['/substitució'];
 $ACCIONS       = ['/malDia', '/socElMillor', '/guanyarOMorir'];
+$VOTACIO       = ['/dobleORes'];
 
 echo "--- abans del termini: només canvis ---\n";
 check('els canvis hi són i les accions no', actionsMenuRows(true, false), [$SUBSTITUCIONS]);
@@ -42,17 +43,18 @@ echo "\n--- el termini tancat i les accions encara no obertes ---\n";
 check('el menú queda buit', actionsMenuRows(false, false), []);
 
 echo "\n--- després d'obrir les accions ---\n";
-check('les tres accions hi són i els canvis no', actionsMenuRows(false, true), [$ACCIONS]);
+check('les tres accions i /dobleORes hi són, i els canvis no', actionsMenuRows(false, true), [$ACCIONS, $VOTACIO]);
 
 echo "\n--- les dues coses obertes alhora (no hauria de passar) ---\n";
-check('es mostren les dues files', actionsMenuRows(true, true), [$SUBSTITUCIONS, $ACCIONS]);
+check('es mostren les tres files', actionsMenuRows(true, true), [$SUBSTITUCIONS, $ACCIONS, $VOTACIO]);
 
 echo "\n--- les accions surten amb el nom exacte dels comandaments ---\n";
 // Si un botó no coincidís amb el comandament del router, el jugador el polsaria
 // i no passaria res.
 $files = actionsMenuRows(false, true);
-check('les tres són a la mateixa fila', count($files), 1);
+check('les accions de competició són a la primera fila', count($files), 2);
 check('i són les tres accions', $files[0], ['/malDia', '/socElMillor', '/guanyarOMorir']);
+check('i la votació és a la segona', $files[1], ['/dobleORes']);
 
 echo "\n";
 if ($failures === 0) {
