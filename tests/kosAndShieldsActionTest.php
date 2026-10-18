@@ -315,7 +315,7 @@ echo "\n--- /kos ko_vot EquipA ---\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'kos' => [], 'shields' => []]), '/kos ko_vot EquipA');
 check('dos missatges', count($sent), 2);
 check('primer: vot guardat', $sent[0]['text'], 'Vot guardat');
-check('segon: la llista', $sent[1]['text'], "Vots màxims: 3\nEquipts votats:\n- EquipA\n\nEscuts:\n");
+check('segon: la llista', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n\nEscuts:\n");
 check('s\'ha desat el vot', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'kos' => [10], 'shields' => []]]]);
 
 echo "\n--- /kos ko_vot d'un equip que no existeix ---\n";
@@ -340,7 +340,7 @@ echo "\n--- /kos escut OwnedPot1 ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/kos escut OwnedPot1');
 check('dos missatges', count($sent), 2);
 check('primer: escut guardat', $sent[0]['text'], 'Escut guardat');
-check('segon: la llista amb l\'escut', $sent[1]['text'], "Vots màxims: 3\nEquipts votats:\n\nEscuts:\n- OwnedPot1\n");
+check('segon: la llista amb l\'escut', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n\nEscuts:\n- OwnedPot1\n");
 check('s\'ha desat l\'escut', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'kos' => [], 'shields' => [101]]]]);
 
 echo "\n--- /kos escut d'un equip que ja té escut ---\n";
@@ -355,7 +355,7 @@ check('text', $sent[0]['text'], "ERROR, l'equip no existeix");
 
 echo "\n--- /kos borrar ---\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'kos' => [10], 'shields' => [101]]), '/kos borrar');
-check('text', $sent[0]['text'], 'Vots i escuts borrats');
+check('text', $sent[0]['text'], 'Vots i escuts esborrats');
 check('teclat', $sent[0]['keyboard'], [['/kos', '/inici']]);
 check('esborra kos i escuts i conserva el max', $action->updates, [
     ['id' => 33, 'data' => ['max' => 3, 'kos' => [], 'shields' => []]],
@@ -378,7 +378,7 @@ check('text', $sent[1]['text'], 'Ja tens tots els vots fets');
 echo "\n  i amb els escuts al màxim, \"escut CHL\" tampoc no mostra equips\n";
 $world = buildWorld(['max' => 2, 'kos' => [], 'shields' => [101, 105]], true, standingsAtGap(19));
 [$sent] = runCommand($world, '/kos escut CHL');
-check('text', $sent[0]['text'], "Ja has posat el màxim d'escuts, ara pots votat els kos si vols:");
+check('text', $sent[0]['text'], "Ja has posat el màxim d'escuts, ara pots votar els kos si vols:");
 
 echo "\n--- subcomandament desconegut ---\n";
 [$sent] = runCommand(buildWorld(), '/kos aixòNoExisteix');
@@ -386,7 +386,7 @@ check('mostra el menú en lloc de caure al missatge global', $sent[0]['text'], '
 
 echo "\n--- fila sense 'kos' ni 'shields' ---\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3]), '/kos');
-check('es tracta com si fossin buides', $action->updates, []);
+check('es completa la fila amb les dues llistes', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'kos' => [], 'shields' => []]]]);
 check('i funciona igual', $sent[0]['text'], 'Pots disponibles:');
 
 echo "\n--- el router discrimina bé ---\n";

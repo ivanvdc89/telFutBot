@@ -60,11 +60,22 @@ $teamCompetitions = [
 echo "\n--- #dobleORes: el més votat a 0 i el segon a doble, per competició ---\n";
 $votes = matchDayVoteResults([10, 10, 86, 4, 5, 20, 20], [10, 10, 4, 86, 20], $teamCompetitions);
 
-check('el més votat de cada competició queda a zero', $votes['nothingTeams'], [10, 4, 5, 20]);
-// A EUL els dos equips tenen un vot: empatats al màxim, cap segon. A COL només
-// n'hi ha un, i a CHL el segon és el 86.
-check('el segon més votat suma doble', $votes['doubleTeams'], [86]);
+check('el més votat de cada competició queda a zero', $votes['nothingTeams'], [10, 4, 20]);
+// A EUL els dos equips tenen un vot: sense classificació, el primer votat (4)
+// és el més votat i el 5 el segon. A COL només n'hi ha un, i a CHL el segon és
+// el 86.
+check('el segon més votat suma doble', $votes['doubleTeams'], [86, 5]);
 check('els 4 més votats del boicot', $votes['koTeams'], [10, 4, 86, 20]);
+
+echo "\n--- #dobleORes: l'empat el decidix la classificació ---\n";
+// 10 i 86 empatats a 2 vots a CHL; el 86 va millor classificat.
+$tie = matchDayVoteResults([10, 86, 10, 86], [], $teamCompetitions, [86 => 1, 10 => 2]);
+check('el millor classificat queda a zero', $tie['nothingTeams'], [86]);
+check('l\'altre suma doble', $tie['doubleTeams'], [10]);
+
+echo "\n--- #kosAmbEscuts: el tall dels 4 també desempata per classificació ---\n";
+$kosTie = matchDayVoteResults([], [10, 86, 20, 4, 5], $teamCompetitions, [5 => 1, 4 => 2, 20 => 3, 86 => 4, 10 => 5]);
+check('el pitjor classificat dels empatats queda fora', $kosTie['koTeams'], [5, 4, 20, 86]);
 
 // El boicot només agafa KOS_BOICOT_TEAMS (4) equips, i els que no tenen cap vot
 // no hi entren.

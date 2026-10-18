@@ -43,6 +43,7 @@ require_once("config/results.php");
 require_once("config/matchDayPoints.php");
 require_once("models/player.php");
 require_once("models/team.php");
+require_once("models/teamStanding.php");
 require_once("models/matchDayTeamPoint.php");
 require_once("models/matchDayPlayerPoint.php");
 require_once("models/teamResult.php");
@@ -56,6 +57,7 @@ if (php_sapi_name() !== 'cli') {
 
 $playersRepo             = new Player();
 $teamsRepo               = new Team();
+$standingsRepo           = new TeamStanding();
 $matchDayTeamPointRepo   = new MatchDayTeamPoint();
 $matchDayPlayerPointRepo = new MatchDayPlayerPoint();
 $teamResultRepo          = new TeamResult();
@@ -105,6 +107,11 @@ foreach ($teamsRepo->getAllTeams() as $team) {
     $teamCompetitions[(int) $team['id']] = (string) $team['competition'];
 }
 
+// Posició de cada equip a la seua competició: desempata els vots empatats de
+// #dobleORes i de #kosAmbEscuts. És la mateixa foto que fa servir
+// publishActions.php, perquè l'anunci i els punts no es puguen separar.
+$teamRankings = $standingsRepo->getRankingsByTeam();
+
 $doubleOrNothingVoted = [];
 foreach ($actionsRepo->getActions($matchDay, 'doubleOrNothing') as $action) {
     $actionData = json_decode($action['data'], true);
@@ -127,7 +134,7 @@ foreach ($actionsRepo->getActions($matchDay, 'kosAndShields') as $action) {
     'nothingTeams' => $nothingTeams,
     'doubleTeams'  => $doubleTeams,
     'koTeams'      => $koTeams,
-] = matchDayVoteResults($doubleOrNothingVoted, $kosVoted, $teamCompetitions);
+] = matchDayVoteResults($doubleOrNothingVoted, $kosVoted, $teamCompetitions, $teamRankings);
 
 // Els equips que passen de ronda i el marge de gols de l'anada no es poden
 // deduir dels resultats de hui: són una dada de la jornada eliminatòria, i es

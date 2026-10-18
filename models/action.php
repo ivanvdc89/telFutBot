@@ -3,7 +3,7 @@ class Action extends Connection {
     public function getActionsByPlayerId(int $playerId, int $matchDay, string $type){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where player_id=? and match_day=? and type=?;";
+        $sql="select * from actions where player_id=? and match_day=? and type=? order by id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
         $sql->bindValue(2, $matchDay);
@@ -22,7 +22,7 @@ class Action extends Connection {
     public function getActionsByPlayerAndType(int $playerId, string $type){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where player_id=? and type=? order by match_day;";
+        $sql="select * from actions where player_id=? and type=? order by match_day, id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
         $sql->bindValue(2, $type);
@@ -41,7 +41,7 @@ class Action extends Connection {
     public function getActionsByPlayerAndMatchDay(int $playerId, int $matchDay){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where player_id=? and match_day=?;";
+        $sql="select * from actions where player_id=? and match_day=? order by id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $playerId);
         $sql->bindValue(2, $matchDay);
@@ -52,7 +52,7 @@ class Action extends Connection {
     public function getActions(int $matchDay, string $type){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where match_day=? and type=?;";
+        $sql="select * from actions where match_day=? and type=? order by id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $matchDay);
         $sql->bindValue(2, $type);
@@ -63,7 +63,7 @@ class Action extends Connection {
     public function getActionsByMatchDay(int $matchDay){
         $connection= parent::connect();
         parent::set_names();
-        $sql="select * from actions where match_day=? order by type;";
+        $sql="select * from actions where match_day=? order by type, id;";
         $sql=$connection->prepare($sql);
         $sql->bindValue(1, $matchDay);
         $sql->execute();
@@ -99,8 +99,10 @@ class Action extends Connection {
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->bindValue(':data', $data, PDO::PARAM_STR);
             $stmt->execute();
+
+            return true;
         } catch (PDOException $e) {
-            error_log("DB insert error: " . $e->getMessage());
+            error_log("DB update error: " . $e->getMessage());
             return false;
         }
     }

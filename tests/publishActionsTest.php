@@ -68,14 +68,31 @@ check('més votat i segon de cada competició', actionsDoubleOrNothingResult($to
     'COL' => ['top' => [], 'second' => []],
 ]);
 
-echo "\n--- #dobleORes amb empat a dalt ---\n";
+echo "\n--- #dobleORes amb empat a dalt: mana la classificació ---\n";
 $totals = actionsVoteTotals([10, 4, 10, 4, 86]);
 $competitions = [10 => 'CHL', 4 => 'CHL', 86 => 'EUL'];
-check('els empatats hi són tots', actionsDoubleOrNothingResult($totals, $competitions), [
-    'CHL' => ['top' => [10, 4], 'second' => []],
+// El 4 va millor classificat que el 10: és el més votat, i el 10 el segon.
+check('el ranking decidix qui queda a 0 i qui dobla', actionsDoubleOrNothingResult($totals, $competitions, [4 => 1, 10 => 2]), [
+    'CHL' => ['top' => [4], 'second' => [10]],
     'EUL' => ['top' => [86], 'second' => []],
     'COL' => ['top' => [], 'second' => []],
 ]);
+// Sense classificació, l'empat manté l'ordre en què s'ha votat: el 10 primer.
+check('sense rankings, el primer votat va davant', actionsDoubleOrNothingResult($totals, $competitions), [
+    'CHL' => ['top' => [10], 'second' => [4]],
+    'EUL' => ['top' => [86], 'second' => []],
+    'COL' => ['top' => [], 'second' => []],
+]);
+
+echo "\n--- #kosAmbEscuts: empat al tall, mana la classificació ---\n";
+$kosTie = actionsVoteTotals([10, 4, 86, 82, 10, 4, 86, 82, 39]);
+// Quatre equips empatats a 2 vots; el 82 és el millor classificat i el 86 el
+// pitjor, així que amb 3 llocs el 86 queda fora.
+check(
+    'el pitjor classificat dels empatats no entra',
+    actionsMostVotedTeams($kosTie, 3, [82 => 1, 10 => 2, 4 => 3, 86 => 4, 39 => 5]),
+    [82, 10, 4]
+);
 
 echo "\n--- #dobleORes no compta equips de competicions que no coneix ---\n";
 check(
@@ -243,6 +260,25 @@ check(
     actionsPublishText(5, actionsAnnouncement($rows, $allowedVotes, $playerNames, $teamNames, $teamCompetitions, 1)),
     $expectedFromRows
 );
+
+echo "\n--- l'anunci desempata amb la classificació d'equips ---\n";
+$rowsTie = [
+    ['player_id' => 7, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 2, 'teams' => [10, 4]])],
+    ['player_id' => 8, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 2, 'teams' => [10, 4]])],
+];
+$announcementTie = actionsAnnouncement(
+    $rowsTie,
+    $allowedVotes,
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [4 => 1, 10 => 2]
+);
+check('el millor classificat queda a 0 i l\'altre dobla', $announcementTie['doubleOrNothing']['result']['CHL'], [
+    'top'    => ['Bayern'],
+    'second' => ['Arsenal'],
+]);
 
 echo "\n--- files velles i casos raros ---\n";
 $legacy = actionsAnnouncement(

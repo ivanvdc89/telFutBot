@@ -78,9 +78,20 @@ class DoubleOrNothingAction extends ActionRowAction
             // l'acció; abans l'havia de sembrar algú a mà a la base de dades.
             $data     = $this->newRowData($playerId);
             $actionId = $this->createActionRow($playerId, $data);
+
+            if ($actionId <= 0) {
+                $this->sendSaveError();
+
+                return;
+            }
         } else {
             $actionId = (int) $actions[0]['id'];
-            $data     = $this->withAllowedVotes($actionId, json_decode($actions[0]['data'], true), $playerId);
+            $rowData  = json_decode((string) ($actions[0]['data'] ?? ''), true);
+
+            // Una fila antiga pot portar el camp data buit o un JSON trencat:
+            // amb un array buit, withAllowedVotes() hi torna a posar el màxim i
+            // normalizeRow() la llista de vots, i el jugador pot votar igual.
+            $data = $this->withAllowedVotes($actionId, is_array($rowData) ? $rowData : [], $playerId);
         }
 
         // L'ordre importa i és el de sempre: primer esborrar, després comprovar
@@ -122,10 +133,15 @@ class DoubleOrNothingAction extends ActionRowAction
     private function deleteVotes(int $actionId, array $data): void
     {
         $data['teams'] = [];
-        $this->saveActionRow($actionId, $data);
+
+        if (!$this->saveActionRow($actionId, $data)) {
+            $this->sendSaveError();
+
+            return;
+        }
 
         $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
-        $this->telegram->sendMessage($this->chatId, "Vots borrats", false, null, null, $keyboard);
+        $this->telegram->sendMessage($this->chatId, "Vots esborrats", false, null, null, $keyboard);
     }
 
     /**
@@ -133,6 +149,14 @@ class DoubleOrNothingAction extends ActionRowAction
      */
     private function registerVote(int $actionId, array $data): void
     {
+        // Defensa extra: handle() ja ho comprova abans de cridar ací, però així
+        // ni una fila alterada a mà pot acabar amb més vots dels permesos.
+        if ($this->votesAreComplete($data)) {
+            $this->sendVotesComplete($data);
+
+            return;
+        }
+
         $team = $this->teamsRepo->getTeamByName($this->argument(2));
 
         if (count($team) === 0) {
@@ -142,7 +166,12 @@ class DoubleOrNothingAction extends ActionRowAction
         }
 
         $data['teams'][] = $team[0]['id'];
-        $this->saveActionRow($actionId, $data);
+
+        if (!$this->saveActionRow($actionId, $data)) {
+            $this->sendSaveError();
+
+            return;
+        }
 
         $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
         $this->telegram->sendMessage($this->chatId, "Vot guardat", false, null, null, $keyboard);
@@ -163,7 +192,7 @@ class DoubleOrNothingAction extends ActionRowAction
      */
     private function sendVotesList(array $data): void
     {
-        $message = "Vots màxims: " . ($data['max'] ?? '') . "\n" . "Equipts votats:\n";
+        $message = "Vots màxims: " . $this->maxVotes($data) . "\n" . "Equips votats:\n";
 
         foreach ($data['teams'] ?? [] as $teamId) {
             $message .= "- " . $this->teamsRepo->getTeamName($teamId) . "\n";
@@ -191,14 +220,21 @@ class DoubleOrNothingAction extends ActionRowAction
     {
         $pot = $this->argument(2);
 
-        if (!is_numeric($pot) || $pot < 1 || $pot > 12) {
+        if (!ctype_digit($pot) || (int) $pot < 1 || (int) $pot > 12) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
 
             return;
         }
 
-        $teams = $this->teamsRepo->getTeamsByPot($pot);
-        $rows  = [];
+        $teams = $this->teamsRepo->getTeamsByPot((int) $pot);
+
+        if (count($teams) === 0) {
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . (int) $pot);
+
+            return;
+        }
+
+        $rows = [];
         $row   = [];
 
         foreach ($teams as $team) {
@@ -260,7 +296,10 @@ class DoubleOrNothingAction extends ActionRowAction
 
     private function votesAreComplete(array $data): bool
     {
-        return $this->maxVotes($data) === count($data['teams'] ?? []);
+        // >= i no ===: si el màxim baixa a mig joc (per un recàlcul de la
+        // general), una fila amb més vots dels permesos no ha de quedar oberta
+        // per a sempre més.
+        return count($data['teams'] ?? []) >= $this->maxVotes($data);
     }
 
 }

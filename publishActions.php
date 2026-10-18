@@ -24,6 +24,7 @@ require_once("config/matchDay.php");
 require_once("config/publishActions.php");
 require_once("models/player.php");
 require_once("models/team.php");
+require_once("models/teamStanding.php");
 require_once("models/group.php");
 require_once("models/action.php");
 
@@ -36,10 +37,11 @@ use TelegramBot\Api\BotApi;
 
 $telegram = new BotApi(secret('telegram_token'));
 
-$groupRepo   = new Group();
-$playersRepo = new Player();
-$teamsRepo   = new Team();
-$actionsRepo = new Action();
+$groupRepo     = new Group();
+$playersRepo   = new Player();
+$teamsRepo     = new Team();
+$standingsRepo = new TeamStanding();
+$actionsRepo   = new Action();
 
 $matchDay    = currentMatchDay();
 $group       = $groupRepo->getGroup(1);
@@ -73,13 +75,19 @@ foreach ($teamsRepo->getAllTeams() as $team) {
 // esta foto és per a les antigues, que només porten l'equip o la competició.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
+// Posició de cada equip a la seua competició: desempata els vots empatats de
+// #dobleORes i de #kosAmbEscuts. Si la taula encara no té dades, l'empat es
+// queda amb l'ordre en què s'ha votat.
+$teamRankings = $standingsRepo->getRankingsByTeam();
+
 $announcement = actionsAnnouncement(
     $allActions,
     $allowedVotes,
     $playerNames,
     $teamNames,
     $teamCompetitions,
-    Player::MIN_VOTES
+    Player::MIN_VOTES,
+    $teamRankings
 );
 
 $message = actionsPublishText($matchDay, $announcement);

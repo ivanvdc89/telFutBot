@@ -30,7 +30,7 @@ toca fins que els canvis de la jornada estan aplicats** (vegeu el pas 2).
 | --- | --- | --- |
 | Durant la setmana | `SUBSTITUTIONS_OPEN = true`, `ACTIONS_OPEN = false` | Els jugadors fan els canvis. Al menú `/accions` només hi ha `/substitució`. |
 | Diumenge (el termini) | es tanquen els canvis i s'obren les accions | Els quatre passos d'este document. |
-| Després dels partits | igual, amb les accions obertes | Resultats, punts i publicació. Al final: `CURRENT_MATCH_DAY + 1`, `SUBSTITUTIONS_OPEN = true`, `ACTIONS_OPEN = false`. |
+| Després dels partits | es tanquen les accions abans de calcular | Resultats, punts i publicació. Al final: `CURRENT_MATCH_DAY + 1`, `SUBSTITUTIONS_OPEN = true`, `ACTIONS_OPEN = false`. |
 
 Mentre els canvis estan oberts, cada jugador pot tenir **un canvi per competició
 i jornada** (fins a tres pendents alhora: CHL, EUL i COL). Cada canvi costa **6
@@ -182,6 +182,17 @@ De fet, si quedara alguna fila pendent (`pending = 1`), l'script **s'atura i no
 calcula res**: no ha de cobrar el cost d'un canvi que no s'ha aplicat. Primer
 `applySubstitutions.php`, i si alguna substitució no s'ha de fer, el jugador la
 pot traure amb `/substitució remove`.
+
+`calculateTeamStandings.php` també ha d'anar abans de `calculateMatchDayPoints.php`
+i de `publishActions.php`: els empats de vots de `#dobleORes` i de
+`#kosAmbEscuts` es resolen amb la posició de `team_standings`. Si la taula encara
+no té files, l'empat es queda amb l'ordre en què s'ha votat.
+
+> **Tanca les accions abans de calcular els punts.** Si `ACTIONS_OPEN` encara és
+> `true` quan executes `calculateMatchDayPoints.php`, un vot que arribe després
+> es desarà a `actions`, però ja no es comptarà: el càlcul ja s'ha fet. Posa
+> `ACTIONS_OPEN = false` abans del càlcul; si te n'adones després, cal tornar a
+> calcular la jornada amb `--recalculate`.
 
 `calculateMatchDayPoints.php` **no es pot passar dues vegades per la mateixa
 jornada**: els punts són acumulatius i els sumaria un altre cop. Si la jornada ja

@@ -57,24 +57,45 @@ abstract class ActionRowAction extends PlayerAction
     /**
      * Crea la fila de l'acció per a este jugador i jornada.
      *
-     * @return int Id de la fila nova.
+     * @return int Id de la fila nova, o 0 si la inserció ha fallat. Qui la crida
+     *             ha de comprovar-ho: amb un 0, qualsevol desada posterior es
+     *             perdria sense avisar.
      */
     protected function createActionRow(int $playerId, array $data): int
     {
-        return (int) $this->actionsRepo->addAction(
+        $actionId = $this->actionsRepo->addAction(
             $playerId,
             $this->matchDay,
             $this->actionType(),
             json_encode($data)
         );
+
+        return $actionId === false ? 0 : (int) $actionId;
     }
 
     /**
      * Desa el contingut de la fila.
+     *
+     * @return bool False si la BD no l'ha poguda desar.
      */
-    protected function saveActionRow(int $actionId, array $data): void
+    protected function saveActionRow(int $actionId, array $data): bool
     {
-        $this->actionsRepo->updateAction($actionId, json_encode($data));
+        $json = json_encode($data);
+
+        if ($json === false) {
+            return false;
+        }
+
+        return $this->actionsRepo->updateAction($actionId, $json) !== false;
+    }
+
+    /**
+     * La fila no s'ha pogut crear o desar: val més dir-ho que fer creure al
+     * jugador que el vot ha quedat guardat.
+     */
+    protected function sendSaveError(): void
+    {
+        $this->telegram->sendMessage($this->chatId, "ERROR, no s'ha pogut guardar. Torna-ho a provar.");
     }
 
     /**
@@ -89,13 +110,18 @@ abstract class ActionRowAction extends PlayerAction
     {
         $allowedVotes = $this->playersRepo->getAllowedVotes($playerId);
 
-        if (($data['max'] ?? null) !== $allowedVotes) {
+        // Normalitzar ABANS de desar: si la fila vella no portava la llista de
+        // vots, es desava només amb 'max' i el JSON quedava a mitges.
+        $normalized = $this->normalizeRow($data);
+        $needsSave  = $normalized !== $data || ($normalized['max'] ?? null) !== $allowedVotes;
+
+        if ($needsSave) {
             // 'max' al davant: la fila queda sempre amb la mateixa forma.
-            $data = ['max' => $allowedVotes] + $data;
-            $this->saveActionRow($actionId, $data);
+            $normalized = ['max' => $allowedVotes] + $normalized;
+            $this->saveActionRow($actionId, $normalized);
         }
 
-        return $this->normalizeRow($data);
+        return $normalized;
     }
 
     /**

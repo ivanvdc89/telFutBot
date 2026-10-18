@@ -22,12 +22,13 @@
  *     la menys votada -2 al perdedor.
  *
  * ELS EMPATS
- *   - Als vots per equip, els empatats mantenen l'ordre en què s'han votat per
- *     primera vegada: arsort() és estable des de PHP 8.0.
- *   - A #dobleORes només compten els equips amb algun vot. El joc diu que els
- *     empats a 0 vots es resolen per la classificació, però aquí no hi ha cap
- *     classificació d'equips a mà, i inventar-se-la seria pitjor que deixar la
- *     competició sense segon.
+ *   - Als vots per equip, els empatats es resolen per la classificació
+ *     d'equips (team_standings): el millor classificat va davant. Si la taula
+ *     encara no té dades, l'empat manté l'ordre en què s'han votat per primera
+ *     vegada, perquè les funcions d'ordenació són estables des de PHP 8.0.
+ *   - A #dobleORes només compten els equips amb algun vot: un equip sense vots
+ *     no pot ser el segon. Així una competició sense vots no té cap efecte, i
+ *     amb un sol equip votat no hi ha segon.
  *   - A #millorFinal els empats mantenen l'ordre CHL, EUL, COL, que és el que
  *     feia el publicador d'abans.
  */
@@ -119,7 +120,8 @@ function actionsJoinNames(array $names): string
  * Vots per equip, de més a menys.
  *
  * Un element de $teamIds és un vot. Els empatats mantenen l'ordre en què s'han
- * votat per primera vegada.
+ * votat per primera vegada; el desempat definitiu el fa
+ * actionsSortVotesByStandings(), que ja té la classificació d'equips.
  *
  * @param array<int, int> $teamIds
  *
@@ -139,23 +141,61 @@ function actionsVoteTotals(array $teamIds): array
 }
 
 /**
+ * Ordena els vots d'una competició: primer per vots (de més a menys) i, si hi
+ * ha empat, per la posició a la classificació d'equips (team_standings).
+ *
+ * Si la classificació encara no té dades (abans de calcular-la), l'empat manté
+ * l'ordre en què s'han votat per primera vegada: les funcions d'ordenació són
+ * estables des de PHP 8.0.
+ *
+ * @param array<int, int> $votesByTeam   [team_id => vots]
+ * @param array<int, int> $teamRankings  [team_id => posició], 1 és el primer
+ *
+ * @return array<int, int> [team_id => vots], ja ordenat
+ */
+function actionsSortVotesByStandings(array $votesByTeam, array $teamRankings): array
+{
+    uksort(
+        $votesByTeam,
+        static function ($teamA, $teamB) use ($votesByTeam, $teamRankings): int {
+            $byVotes = $votesByTeam[$teamB] <=> $votesByTeam[$teamA];
+
+            if ($byVotes !== 0) {
+                return $byVotes;
+            }
+
+            $rankA = $teamRankings[$teamA] ?? PHP_INT_MAX;
+            $rankB = $teamRankings[$teamB] ?? PHP_INT_MAX;
+
+            return $rankA <=> $rankB;
+        }
+    );
+
+    return $votesByTeam;
+}
+
+/**
  * Els equips més votats, en ordre, sense comptar els que no han rebut cap vot.
  *
- * @param array<int, int> $totals [team_id => vots]
+ * L'empat es resol per la classificació d'equips, igual que a #dobleORes: el
+ * que decidix quin equip entra al boicot quan hi ha els mateixos vots al tall.
+ *
+ * @param array<int, int> $totals       [team_id => vots]
+ * @param array<int, int> $teamRankings [team_id => posició], 1 és el primer
  *
  * @return array<int, int> ids d'equip
  */
-function actionsMostVotedTeams(array $totals, int $howMany): array
+function actionsMostVotedTeams(array $totals, int $howMany, array $teamRankings = []): array
 {
     $teams = [];
 
-    foreach ($totals as $teamId => $votes) {
+    foreach (actionsSortVotesByStandings($totals, $teamRankings) as $teamId => $votes) {
         if (count($teams) >= $howMany) {
             break;
         }
 
         if ($votes > 0) {
-            $teams[] = $teamId;
+            $teams[] = (int) $teamId;
         }
     }
 
@@ -163,15 +203,18 @@ function actionsMostVotedTeams(array $totals, int $howMany): array
 }
 
 /**
- * El resultat de #dobleORes: per competició, l'equip o equips més votats i el
- * segon o segons.
+ * El resultat de #dobleORes: per competició, l'equip més votat i el segon.
+ *
+ * Només compten els equips amb algun vot. Si hi ha empat, mana la classificació
+ * d'equips: el millor classificat és el més votat i el següent és el segon.
  *
  * @param array<int, int>    $totals           [team_id => vots]
  * @param array<int, string> $teamCompetitions [team_id => 'CHL'|'EUL'|'COL']
+ * @param array<int, int>    $teamRankings     [team_id => posició], 1 és el primer
  *
  * @return array<string, array{top: array<int, int>, second: array<int, int>}>
  */
-function actionsDoubleOrNothingResult(array $totals, array $teamCompetitions): array
+function actionsDoubleOrNothingResult(array $totals, array $teamCompetitions, array $teamRankings = []): array
 {
     $result = [];
     foreach (ACTION_COMPETITIONS as $competition) {
@@ -192,25 +235,14 @@ function actionsDoubleOrNothingResult(array $totals, array $teamCompetitions): a
     }
 
     foreach ($byCompetition as $competition => $votesByTeam) {
-        $mostVotes      = max($votesByTeam);
-        $secondMostVotes = null;
+        $teamIds = array_keys(actionsSortVotesByStandings($votesByTeam, $teamRankings));
 
-        foreach ($votesByTeam as $teamId => $votes) {
-            if ($votes === $mostVotes) {
-                $result[$competition]['top'][] = $teamId;
+        if (count($teamIds) > 0) {
+            $result[$competition]['top'][] = (int) $teamIds[0];
+        }
 
-                continue;
-            }
-
-            // Com que la llista va ordenada, el segon valor que apareix és el
-            // segon més votat.
-            if ($secondMostVotes === null) {
-                $secondMostVotes = $votes;
-            }
-
-            if ($votes === $secondMostVotes) {
-                $result[$competition]['second'][] = $teamId;
-            }
+        if (count($teamIds) > 1) {
+            $result[$competition]['second'][] = (int) $teamIds[1];
         }
     }
 
@@ -441,8 +473,9 @@ function actionsTeamName(array $teamNames, int $teamId): string
  * @param array<int, int>    $allowedVotes     [player_id => vots], la regla de posició.
  * @param array<int, string> $playerNames      [player_id => nom].
  * @param array<int, string> $teamNames        [team_id => nom].
- * @param array<int, string> $teamCompetitions [team_id => 'CHL'|'EUL'|'COL'].
- * @param int                $minVotes         Vots de la regla de posició per a les files velles.
+ * @param array<int, string> $teamCompetitions [team_id => 'CHL'|'EUL'|'COL']
+ * @param int                $minVotes         Vots de la regla de posició per a les files velles
+ * @param array<int, int>    $teamRankings     [team_id => posició] de team_standings, per desempatar
  */
 function actionsAnnouncement(
     array $actionRows,
@@ -450,7 +483,8 @@ function actionsAnnouncement(
     array $playerNames,
     array $teamNames,
     array $teamCompetitions,
-    int $minVotes
+    int $minVotes,
+    array $teamRankings = []
 ): array {
     $announcement = [
         'badDay'            => [],
@@ -565,7 +599,7 @@ function actionsAnnouncement(
 
     // El resultat de #dobleORes: qui queda a 0 punts i qui suma doble.
     if (count($doubleOrNothingVoted) > 0) {
-        $result = actionsDoubleOrNothingResult(actionsVoteTotals($doubleOrNothingVoted), $teamCompetitions);
+        $result = actionsDoubleOrNothingResult(actionsVoteTotals($doubleOrNothingVoted), $teamCompetitions, $teamRankings);
 
         foreach ($result as $competition => $teams) {
             $announcement['doubleOrNothing']['result'][$competition] = [
@@ -576,7 +610,7 @@ function actionsAnnouncement(
     }
 
     // El boicot de #kosAmbEscuts: els més votats, amb els escuts que els salven.
-    foreach (actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS) as $teamId) {
+    foreach (actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings) as $teamId) {
         $announcement['kosAndShields']['boicot'][] = [
             'team'       => actionsTeamName($teamNames, $teamId),
             'shieldedBy' => $kosShieldedBy[$teamId] ?? [],

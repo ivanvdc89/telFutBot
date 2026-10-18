@@ -84,9 +84,20 @@ class KosAndShieldsAction extends ActionRowAction
             // l'acció; abans l'havia de sembrar algú a mà a la base de dades.
             $data     = $this->newRowData($playerId);
             $actionId = $this->createActionRow($playerId, $data);
+
+            if ($actionId <= 0) {
+                $this->sendSaveError();
+
+                return;
+            }
         } else {
             $actionId = (int) $actions[0]['id'];
-            $data     = $this->withAllowedVotes($actionId, json_decode($actions[0]['data'], true), $playerId);
+            $rowData  = json_decode((string) ($actions[0]['data'] ?? ''), true);
+
+            // Una fila antiga pot portar el camp data buit o un JSON trencat:
+            // amb un array buit, withAllowedVotes() hi torna a posar el màxim i
+            // normalizeRow() les llistes de kos i escuts.
+            $data = $this->withAllowedVotes($actionId, is_array($rowData) ? $rowData : [], $playerId);
         }
 
         $maxVotes   = (int) $data['max'];
@@ -160,11 +171,16 @@ class KosAndShieldsAction extends ActionRowAction
     {
         $data['kos']     = [];
         $data['shields'] = [];
-        $this->saveActionRow($actionId, $data);
+
+        if (!$this->saveActionRow($actionId, $data)) {
+            $this->sendSaveError();
+
+            return;
+        }
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Vots i escuts borrats",
+            "Vots i escuts esborrats",
             false,
             null,
             null,
@@ -194,18 +210,16 @@ class KosAndShieldsAction extends ActionRowAction
      */
     private function votesListText(array $data, int $maxVotes): string
     {
-        $message = "Vots màxims: " . $maxVotes . "\n" . "Equipts votats:\n";
+        $message = "Vots màxims: " . $maxVotes . "\n" . "Equips votats:\n";
 
         foreach ($data['kos'] as $teamId) {
-            $teamInfo = $this->teamsRepo->getTeamById($teamId);
-            $message .= "- " . $teamInfo[0]['name'] . "\n";
+            $message .= "- " . $this->teamsRepo->getTeamName($teamId) . "\n";
         }
 
         $message .= "\nEscuts:\n";
 
         foreach ($data['shields'] as $teamId) {
-            $teamInfo = $this->teamsRepo->getTeamById($teamId);
-            $message .= "- " . $teamInfo[0]['name'] . "\n";
+            $message .= "- " . $this->teamsRepo->getTeamName($teamId) . "\n";
         }
 
         return $message;
@@ -248,13 +262,19 @@ class KosAndShieldsAction extends ActionRowAction
 
         $pot = $this->argument(2);
 
-        if (!is_numeric($pot) || $pot < 1 || $pot > 12) {
+        if (!ctype_digit($pot) || (int) $pot < 1 || (int) $pot > 12) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
 
             return;
         }
 
-        $rows = $this->teamRows($this->teamsRepo->getTeamsByPot($pot), '/kos ko_vot ');
+        $rows = $this->teamRows($this->teamsRepo->getTeamsByPot((int) $pot), '/kos ko_vot ');
+
+        if (count($rows) === 0) {
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . (int) $pot);
+
+            return;
+        }
 
         $this->telegram->sendMessage(
             $this->chatId,
@@ -286,7 +306,12 @@ class KosAndShieldsAction extends ActionRowAction
         }
 
         $data['kos'][] = $team[0]['id'];
-        $this->saveActionRow($actionId, $data);
+
+        if (!$this->saveActionRow($actionId, $data)) {
+            $this->sendSaveError();
+
+            return;
+        }
 
         $this->telegram->sendMessage($this->chatId, "Vot guardat", false, null, null, $this->simpleKeyboard());
         $this->telegram->sendMessage($this->chatId, $this->votesListText($data, $maxVotes));
@@ -334,7 +359,12 @@ class KosAndShieldsAction extends ActionRowAction
         }
 
         $data['shields'][] = $team[0]['id'];
-        $this->saveActionRow($actionId, $data);
+
+        if (!$this->saveActionRow($actionId, $data)) {
+            $this->sendSaveError();
+
+            return;
+        }
 
         $this->telegram->sendMessage($this->chatId, "Escut guardat", false, null, null, $this->simpleKeyboard());
         $this->telegram->sendMessage($this->chatId, $this->votesListText($data, $maxVotes));
@@ -387,7 +417,7 @@ class KosAndShieldsAction extends ActionRowAction
     {
         $this->telegram->sendMessage(
             $this->chatId,
-            "Ja has posat el màxim d'escuts, ara pots votat els kos si vols:",
+            "Ja has posat el màxim d'escuts, ara pots votar els kos si vols:",
             false,
             null,
             null,
@@ -434,12 +464,12 @@ class KosAndShieldsAction extends ActionRowAction
 
     private function hasMaxKos(array $data, int $maxVotes): bool
     {
-        return $maxVotes === count($data['kos']);
+        return count($data['kos']) >= $maxVotes;
     }
 
     private function hasMaxShields(array $data, int $maxVotes): bool
     {
-        return $maxVotes === count($data['shields']);
+        return count($data['shields']) >= $maxVotes;
     }
 
 }

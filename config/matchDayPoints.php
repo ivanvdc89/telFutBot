@@ -11,11 +11,13 @@
  *
  * LES REGLES (les de /normes accions)
  *   - #dobleORes: l'equip més votat de cada competició no suma cap punt i el
- *     segon suma doble. Els recomptes són els mateixos que els del publicador
+ *     segon suma doble. Els empats els decidix la classificació d'equips
+ *     (team_standings). Els recomptes són els mateixos que els del publicador
  *     (config/publishActions.php), perquè l'anunci i els punts no es puguen
  *     separar mai.
  *   - #kosAmbEscuts: els KOS_BOICOT_TEAMS equips més votats no sumen punts,
- *     tret que el jugador els hi haja posat un escut.
+ *     tret que el jugador els hi haja posat un escut. El tall dels quatre també
+ *     desempata per classificació d'equips.
  *   - #segurQuePasse: si l'equip apuntat es classifica, se suma l'aposta i el
  *     marge de gols de l'anada ($classifiedTeams).
  *   - #socElMillor: entre els qui l'activen, el màxim de cada competició rep
@@ -38,17 +40,19 @@ require_once(__DIR__ . '/publishActions.php');
  * @param array<int, int>    $doubleOrNothingVoted ids d'equip votats a #dobleORes, un element per vot
  * @param array<int, int>    $kosVoted             ids d'equip votats a #kosAmbEscuts, un per vot
  * @param array<int, string> $teamCompetitions     [team_id => 'CHL'|'EUL'|'COL']
+ * @param array<int, int>    $teamRankings         [team_id => posició] de team_standings, per desempatar
  *
  * @return array{nothingTeams: array<int, int>, doubleTeams: array<int, int>, koTeams: array<int, int>}
  */
-function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array $teamCompetitions): array
+function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array $teamCompetitions, array $teamRankings = []): array
 {
     $nothingTeams = [];
     $doubleTeams  = [];
 
     // L'equip més votat i el segon de cada competició. Els vots buits no hi
     // compten: si ningú no ha votat #dobleORes, els dos arrays queden buits.
-    foreach (actionsDoubleOrNothingResult(actionsVoteTotals($doubleOrNothingVoted), $teamCompetitions) as $teams) {
+    // Els empats els resol la classificació d'equips, igual que a l'anunci.
+    foreach (actionsDoubleOrNothingResult(actionsVoteTotals($doubleOrNothingVoted), $teamCompetitions, $teamRankings) as $teams) {
         foreach ($teams['top'] as $teamId) {
             $nothingTeams[] = (int) $teamId;
         }
@@ -61,7 +65,7 @@ function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array
     return [
         'nothingTeams' => $nothingTeams,
         'doubleTeams'  => $doubleTeams,
-        'koTeams'      => array_map('intval', actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS)),
+        'koTeams'      => array_map('intval', actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings)),
     ];
 }
 

@@ -35,7 +35,7 @@
  * (El bot no ho pot sobreescriure mai: per web sempre s'usa la constant.)
  */
 
-define('CURRENT_MATCH_DAY', 2);
+define('CURRENT_MATCH_DAY', 3);
 
 /**
  * Darrera jornada en què es poden fer canvis d'equips.
@@ -77,8 +77,8 @@ define('LAST_MATCH_DAY_WITH_CHANGES', 15);
  * Canviar CURRENT_MATCH_DAY abans del pas 2 faria que el pas 2 no trobés les
  * substitucions pendents d'esta jornada, i es perdrien.
  */
-define('SUBSTITUTIONS_OPEN', true);
-define('ACTIONS_OPEN', false);
+define('SUBSTITUTIONS_OPEN', false);
+define('ACTIONS_OPEN', true);
 
 function currentMatchDay(): int
 {

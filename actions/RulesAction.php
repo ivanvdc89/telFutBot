@@ -79,9 +79,9 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 
         "Norma #dobleORes:
 -Hi ha una votació a repartir entre els equips de les 3 competicions.
--L'equip més votat de cada competició no sumarà cap punt, el segon més votat de cada competició sumarà doble (0, 2 o 6/8 depenent del seu resultat).
--Tots els vots valen igual. Se pot donar més d'un vot a un equip. Si hi ha empat entre equips (encara que sigue a 0 vots), l'ordre serà el de la classificació.
--Depenent dels punts en la general tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots",
+-L'equip més votat de cada competició no sumarà cap punt, el segon més votat de cada competició sumarà doble (0, 2, 6 o 8 depenent del seu resultat).
+-Tots els vots valen igual. Se pot donar més d'un vot a un equip. Si hi ha empat entre equips (encara que siga a 0 vots), l'ordre serà el de la classificació.
+-Depenent dels punts en la general tenim més vots o menys. 1 vot per al primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots.",
 
         "Norma #kosAmbEscuts:
 -Hi ha una votació per a boicotejar equips, els 4 més votats no sumaran punts independenment del resultat del seu partit.

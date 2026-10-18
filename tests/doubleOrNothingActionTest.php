@@ -89,6 +89,10 @@ class FakeAction extends Action
     public array $updates = [];
     public array $added   = [];
 
+    /** Per provar què passa quan la BD no desa el vot. */
+    public bool $failUpdates = false;
+    public bool $failInserts = false;
+
     public function getActionsByPlayerId(int $playerId, int $matchDay, string $type)
     {
         return $this->rows;
@@ -96,11 +100,21 @@ class FakeAction extends Action
 
     public function updateAction(int $id, string $data)
     {
+        if ($this->failUpdates) {
+            return false;
+        }
+
         $this->updates[] = ['id' => $id, 'data' => json_decode($data, true)];
+
+        return true;
     }
 
     public function addAction(int $playerId, int $matchDay, string $type, string $data)
     {
+        if ($this->failInserts) {
+            return false;
+        }
+
         $this->added[] = [
             'playerId' => $playerId,
             'matchDay' => $matchDay,
@@ -283,7 +297,7 @@ echo "\n--- /dobleORes vot EquipA ---\n";
 check('dos missatges', count($sent), 2);
 check('primer: vot guardat', $sent[0]['text'], 'Vot guardat');
 check('teclat del vot', $sent[0]['keyboard'], [['/dobleORes', '/inici']]);
-check('segon: llista de vots', $sent[1]['text'], "Vots màxims: 3\nEquipts votats:\n- EquipA\n");
+check('segon: llista de vots', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n");
 check('s\'ha desat el vot', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => [10]]]]);
 
 echo "\n--- /dobleORes vot d'un equip que no existeix ---\n";
@@ -293,23 +307,23 @@ check('no s\'ha desat res', $action->updates, []);
 
 echo "\n--- /dobleORes borrar ---\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => [10, 11]]), '/dobleORes borrar');
-check('text', $sent[0]['text'], 'Vots borrats');
+check('text', $sent[0]['text'], 'Vots esborrats');
 check('teclat', $sent[0]['keyboard'], [['/dobleORes', '/inici']]);
 check('esborra els equips i conserva el max', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
 
 echo "\n--- /dobleORes amb tots els vots fets ---\n";
 [$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes');
 check('dos missatges', count($sent), 2);
-check('llista els vots', $sent[0]['text'], "Vots màxims: 2\nEquipts votats:\n- EquipA\n- EquipB\n");
+check('llista els vots', $sent[0]['text'], "Vots màxims: 2\nEquips votats:\n- EquipA\n- EquipB\n");
 check('avisa que ja està', $sent[1]['text'], 'Ja tens tots els vots fets');
 check('botó per esborrar', $sent[1]['keyboard'], [['/dobleORes borrar', '/inici']]);
 
 echo "\n  l'ordre dels guards es conserva\n";
 [$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes pot 3');
-check('amb els vots fets, "pot 3" no mostra equips', $sent[0]['text'], "Vots màxims: 2\nEquipts votats:\n- EquipA\n- EquipB\n");
+check('amb els vots fets, "pot 3" no mostra equips', $sent[0]['text'], "Vots màxims: 2\nEquips votats:\n- EquipA\n- EquipB\n");
 
 [$sent, $action] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes borrar');
-check('però "borrar" sí que funciona', $sent[0]['text'], 'Vots borrats');
+check('però "borrar" sí que funciona', $sent[0]['text'], 'Vots esborrats');
 check('i esborra', $action->updates[0]['data']['teams'], []);
 
 echo "\n--- subcomandament desconegut ---\n";
@@ -327,6 +341,54 @@ check('i el jugador pot votar', $sent[0]['text'], 'Pots disponibles:');
 echo "\n  un 'max' desfasat es corregeix\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 1, 'teams' => []]), '/dobleORes');
 check('passa de 1 a 3 vots', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
+
+echo "\n  una fila amb data buit o JSON trencat es reconstrueix\n";
+foreach ([['data' => null, 'label' => 'data NULL'], ['data' => 'això no és JSON', 'label' => 'JSON trencat']] as $case) {
+    $world = buildWorld(null);
+    $world[3]->rows = [[
+        'id'        => 33,
+        'player_id' => PLAYER_ID,
+        'match_day' => MATCH_DAY,
+        'type'      => 'doubleOrNothing',
+        'data'      => $case['data'],
+    ]];
+
+    [$sent, $action] = runCommand($world, '/dobleORes');
+    check($case['label'] . ': es desa la fila sencera', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
+    check($case['label'] . ': es pot votar', $sent[0]['text'], 'Pots disponibles:');
+}
+
+echo "\n  una fila amb el max correcte però sense 'teams' es completa\n";
+[$sent, $action] = runCommand(buildWorld(['max' => 3]), '/dobleORes');
+check('es desa amb la llista buida', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => []]]]);
+check('i es pot votar', $sent[0]['text'], 'Pots disponibles:');
+
+echo "\n  una fila amb més vots que el màxim no en deixa fer més\n";
+[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11, 12]], true, standingsAtGap(19)), '/dobleORes');
+check('es tracta com a completa', $sent[1]['text'], 'Ja tens tots els vots fets');
+
+echo "\n--- si la BD no desa el vot, no es diu que s'ha guardat ---\n";
+$world = buildWorld(['max' => 3, 'teams' => []]);
+$world[3]->failUpdates = true;
+[$sent, $action] = runCommand($world, '/dobleORes vot EquipA');
+check('un sol missatge', count($sent), 1);
+check('text', $sent[0]['text'], "ERROR, no s'ha pogut guardar. Torna-ho a provar.");
+check('cap escriptura', $action->updates, []);
+
+echo "\n--- si no es pot crear la fila, tampoc es diu que s'ha guardat ---\n";
+$world = buildWorld(null);
+$world[3]->failInserts = true;
+[$sent, $action] = runCommand($world, '/dobleORes');
+check('text', $sent[0]['text'], "ERROR, no s'ha pogut guardar. Torna-ho a provar.");
+check('no ha creat cap fila', $action->added, []);
+
+echo "\n--- el pot ha de ser un enter de l'1 al 12 ---\n";
+[$sent] = runCommand(buildWorld(), '/dobleORes pot 3.5');
+check('un decimal no val', $sent[0]['text'], 'ERROR, pot invàlid');
+[$sent] = runCommand(buildWorld(), '/dobleORes pot 1e1');
+check('una notació científica no val', $sent[0]['text'], 'ERROR, pot invàlid');
+[$sent] = runCommand(buildWorld(), '/dobleORes pot 1');
+check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot 1');
 
 echo "\n  si ja coincideix no s'escriu res\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => []]), '/dobleORes');
