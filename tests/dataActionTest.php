@@ -192,17 +192,17 @@ echo "\n--- /data pots ---\n";
 [$sent] = runCommand(buildWorld(), '/data pots');
 check('text', $sent[0]['text'], 'Pots disponibles:');
 check('un botó per pot, en tres files', $sent[0]['keyboard'], [
-    ['/data pot 1', '/data pot 2', '/data pot 3', '/data pot 4'],
-    ['/data pot 5', '/data pot 6', '/data pot 7', '/data pot 8'],
-    ['/data pot 9', '/data pot 10', '/data pot 11', '/data pot 12'],
+    ['/data pot CHL_1', '/data pot CHL_2', '/data pot CHL_3', '/data pot CHL_4'],
+    ['/data pot EUL_1', '/data pot EUL_2', '/data pot EUL_3', '/data pot EUL_4'],
+    ['/data pot COL_1', '/data pot COL_2', '/data pot COL_3', '/data pot COL_4'],
 ]);
 
-echo "\n--- /data pot 3 ---\n";
-[$sent] = runCommand(buildWorld(), '/data pot 3');
+echo "\n--- /data pot CHL_3 ---\n";
+[$sent] = runCommand(buildWorld(), '/data pot CHL_3');
 check(
     'quants jugadors té cada equip i qui són',
     $sent[0]['text'],
-    "Equipos del pot 3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
+    "Equips del pot CHL_3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
 );
 
 echo "\n--- /data pot amb números que no existeixen ---\n";

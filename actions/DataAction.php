@@ -12,7 +12,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  *
  *   /data                  menú
  *   /data pots             quants jugadors té cada equip, pot a pot
- *   /data pot <1-12>       el detall d'un pot
+ *   /data pot CHL_1        el detall d'un pot (CHL_1...COL_4)
  *   /data players          els noms dels participants, com a botons
  *   /data player all       la plantilla de tothom
  *   /data player <nom>     la plantilla d'un jugador
@@ -102,19 +102,27 @@ class DataAction extends CommandAction
     }
 
     /**
-     * /data pots: un botó per a cada pot global.
+     * /data pots: un botó per a cada pot, amb l'etiqueta de la competició.
      */
     private function showPots(): void
     {
-        $keyboard = new ReplyKeyboardMarkup(
-            [
-                ['/data pot 1', '/data pot 2', '/data pot 3', '/data pot 4'],
-                ['/data pot 5', '/data pot 6', '/data pot 7', '/data pot 8'],
-                ['/data pot 9', '/data pot 10', '/data pot 11', '/data pot 12'],
-            ],
-            true,
-            true
-        );
+        $rows = [];
+        $row  = [];
+
+        foreach (potLabels() as $label) {
+            $row[] = '/data pot ' . $label;
+
+            if (count($row) === 4) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }
+
+        if (count($row) !== 0) {
+            $rows[] = $row;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
 
         $this->telegram->sendMessage(
             $this->chatId,
@@ -127,20 +135,22 @@ class DataAction extends CommandAction
     }
 
     /**
-     * /data pot <1-12>: quants jugadors té cada equip del pot i qui són.
+     * /data pot CHL_1: quants jugadors té cada equip del pot i qui són.
      *
-     * @param string $potArgument Número de pot tal com ha arribat.
+     * @param string $potArgument Etiqueta del pot (CHL_1...COL_4) o número global antic.
      */
     private function showPot(string $potArgument): void
     {
-        if (!is_numeric($potArgument) || (int) $potArgument < 1 || (int) $potArgument > 12) {
+        $globalPot = potFromLabel($potArgument);
+
+        if ($globalPot === null) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot number not found");
 
             return;
         }
 
-        $teams   = $this->teamsRepo->getCountPlayerTeamsByPot($potArgument);
-        $message = 'Equipos del pot ' . $potArgument . ":\n";
+        $teams   = $this->teamsRepo->getCountPlayerTeamsByPot($globalPot);
+        $message = 'Equips del pot ' . potLabel($globalPot) . ":\n";
 
         foreach ($teams as $team) {
             $message .= $team['total'] . " " . $team['name'] . "\n";

@@ -293,7 +293,7 @@ if(isset($update->message->text) && $update->message->chat->type === "private") 
                 $alreadyAddedCountries = array_map(function($team) { return $team['country']; }, $alreadyAddedTeams);
 
                 if (in_array($newTeamPot, $alreadyAddedPots)) {
-                    $telegram->sendMessage($chatId, "ERROR, $newTeamPot pot repeated");
+                    $telegram->sendMessage($chatId, "ERROR, ja tens un equip del pot " . potLabel($newTeamPot));
                     exit;
                 }
                 if (in_array($newTeamCountry, $alreadyAddedCountries)) {

@@ -1,6 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/../config/pots.php');
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -12,7 +13,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * protegeix un dels equips propis del boicot.
  *
  *     /kos                    menú de pots i d'escuts
- *     /kos ko_pot N           equips del pot N per votar-hi en contra
+ *     /kos ko_pot CHL_1       equips d'aquell pot per votar-hi en contra
  *     /kos ko_vot EQUIP       registra un vot de KO
  *     /kos escut CHL          els teus equips d'aquella competició per escudar
  *     /kos escut EQUIP        posa un escut a l'equip
@@ -230,23 +231,41 @@ class KosAndShieldsAction extends ActionRowAction
      */
     private function sendMenu(): void
     {
+        $rows   = $this->potRows('/kos ko_pot ');
+        $rows[] = ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos'];
+
         $this->telegram->sendMessage(
             $this->chatId,
             "Pots disponibles:",
             false,
             null,
             null,
-            new ReplyKeyboardMarkup(
-                [
-                    ['/kos ko_pot 1', '/kos ko_pot 2', '/kos ko_pot 3', '/kos ko_pot 4'],
-                    ['/kos ko_pot 5', '/kos ko_pot 6', '/kos ko_pot 7', '/kos ko_pot 8'],
-                    ['/kos ko_pot 9', '/kos ko_pot 10', '/kos ko_pot 11', '/kos ko_pot 12'],
-                    ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos'],
-                ],
-                true,
-                true
-            )
+            new ReplyKeyboardMarkup($rows, true, true)
         );
+    }
+
+    /**
+     * Files de botons dels pots, amb l'etiqueta de cada competició (CHL_1...).
+     */
+    private function potRows(string $commandPrefix): array
+    {
+        $rows = [];
+        $row  = [];
+
+        foreach (potLabels() as $label) {
+            $row[] = $commandPrefix . $label;
+
+            if (count($row) === 4) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }
+
+        if (count($row) !== 0) {
+            $rows[] = $row;
+        }
+
+        return $rows;
     }
 
     /**
@@ -260,25 +279,25 @@ class KosAndShieldsAction extends ActionRowAction
             return;
         }
 
-        $pot = $this->argument(2);
+        $globalPot = potFromLabel($this->argument(2));
 
-        if (!ctype_digit($pot) || (int) $pot < 1 || (int) $pot > 12) {
+        if ($globalPot === null) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
 
             return;
         }
 
-        $rows = $this->teamRows($this->teamsRepo->getTeamsByPot((int) $pot), '/kos ko_vot ');
+        $rows = $this->teamRows($this->teamsRepo->getTeamsByPot($globalPot), '/kos ko_vot ');
 
         if (count($rows) === 0) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . (int) $pot);
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potLabel($globalPot));
 
             return;
         }
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Equips del pot " . $pot . ":",
+            "Equips del pot " . potLabel($globalPot) . ":",
             false,
             null,
             null,
@@ -421,15 +440,7 @@ class KosAndShieldsAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup(
-                [
-                    ['/kos ko_pot 1', '/kos ko_pot 2', '/kos ko_pot 3', '/kos ko_pot 4'],
-                    ['/kos ko_pot 5', '/kos ko_pot 6', '/kos ko_pot 7', '/kos ko_pot 8'],
-                    ['/kos ko_pot 9', '/kos ko_pot 10', '/kos ko_pot 11', '/kos ko_pot 12'],
-                ],
-                true,
-                true
-            )
+            new ReplyKeyboardMarkup($this->potRows('/kos ko_pot '), true, true)
         );
     }
 

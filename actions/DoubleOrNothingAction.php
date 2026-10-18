@@ -1,6 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/../config/pots.php');
 
 use TelegramBot\Api\BotApi;
 use TelegramBot\Api\Types\ReplyKeyboardMarkup;
@@ -12,7 +13,7 @@ use TelegramBot\Api\Types\ReplyKeyboardMarkup;
  * segon més votat suma doble.
  *
  *     /dobleORes              menú de pots
- *     /dobleORes pot N        equips del pot N per votar
+ *     /dobleORes pot CHL_1    equips d'aquell pot per votar (CHL_1...COL_4)
  *     /dobleORes vot EQUIP    registra el vot
  *     /dobleORes borrar       esborra tots els vots
  *
@@ -203,39 +204,49 @@ class DoubleOrNothingAction extends ActionRowAction
 
     private function sendPotMenu(): void
     {
-        $keyboard = new ReplyKeyboardMarkup(
-            [
-                ['/dobleORes pot 1', '/dobleORes pot 2', '/dobleORes pot 3', '/dobleORes pot 4'],
-                ['/dobleORes pot 5', '/dobleORes pot 6', '/dobleORes pot 7', '/dobleORes pot 8'],
-                ['/dobleORes pot 9', '/dobleORes pot 10', '/dobleORes pot 11', '/dobleORes pot 12'],
-            ],
-            true,
-            true
-        );
+        $rows = [];
+        $row  = [];
+
+        // Les etiquetes per competició (CHL_1...COL_4) i no els pots globals
+        // 1-12: per al jugador, "pot 5" no diu res i "EUL_1" sí.
+        foreach (potLabels() as $label) {
+            $row[] = '/dobleORes pot ' . $label;
+
+            if (count($row) === 4) {
+                $rows[] = $row;
+                $row    = [];
+            }
+        }
+
+        if (count($row) !== 0) {
+            $rows[] = $row;
+        }
+
+        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
 
         $this->telegram->sendMessage($this->chatId, "Pots disponibles:", false, null, null, $keyboard);
     }
 
     private function sendPotTeams(): void
     {
-        $pot = $this->argument(2);
+        $globalPot = potFromLabel($this->argument(2));
 
-        if (!ctype_digit($pot) || (int) $pot < 1 || (int) $pot > 12) {
+        if ($globalPot === null) {
             $this->telegram->sendMessage($this->chatId, "ERROR, pot invàlid");
 
             return;
         }
 
-        $teams = $this->teamsRepo->getTeamsByPot((int) $pot);
+        $teams = $this->teamsRepo->getTeamsByPot($globalPot);
 
         if (count($teams) === 0) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . (int) $pot);
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potLabel($globalPot));
 
             return;
         }
 
         $rows = [];
-        $row   = [];
+        $row  = [];
 
         foreach ($teams as $team) {
             $row[] = '/dobleORes vot ' . $team['name'];
@@ -254,7 +265,7 @@ class DoubleOrNothingAction extends ActionRowAction
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Equips del pot " . $pot . ":",
+            "Equips del pot " . potLabel($globalPot) . ":",
             false,
             null,
             null,

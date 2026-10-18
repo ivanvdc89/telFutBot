@@ -278,12 +278,12 @@ echo "\n--- /dobleORes sense argument: menú de pots ---\n";
 check('un sol missatge', count($sent), 1);
 check('text', $sent[0]['text'], 'Pots disponibles:');
 check('3 files de 4 botons', count($sent[0]['keyboard']), 3);
-check('primera fila', $sent[0]['keyboard'][0], ['/dobleORes pot 1', '/dobleORes pot 2', '/dobleORes pot 3', '/dobleORes pot 4']);
-check('última fila', $sent[0]['keyboard'][2], ['/dobleORes pot 9', '/dobleORes pot 10', '/dobleORes pot 11', '/dobleORes pot 12']);
+check('primera fila', $sent[0]['keyboard'][0], ['/dobleORes pot CHL_1', '/dobleORes pot CHL_2', '/dobleORes pot CHL_3', '/dobleORes pot CHL_4']);
+check('última fila', $sent[0]['keyboard'][2], ['/dobleORes pot COL_1', '/dobleORes pot COL_2', '/dobleORes pot COL_3', '/dobleORes pot COL_4']);
 
-echo "\n--- /dobleORes pot 3 ---\n";
-[$sent] = runCommand(buildWorld(), '/dobleORes pot 3');
-check('text', $sent[0]['text'], 'Equips del pot 3:');
+echo "\n--- /dobleORes pot CHL_3 ---\n";
+[$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_3');
+check('text', $sent[0]['text'], 'Equips del pot CHL_3:');
 check('teclat', $sent[0]['keyboard'], [['/dobleORes vot EquipA', '/dobleORes vot EquipB', '/dobleORes vot EquipC']]);
 
 echo "\n--- /dobleORes pot invàlid ---\n";
@@ -319,8 +319,8 @@ check('avisa que ja està', $sent[1]['text'], 'Ja tens tots els vots fets');
 check('botó per esborrar', $sent[1]['keyboard'], [['/dobleORes borrar', '/inici']]);
 
 echo "\n  l'ordre dels guards es conserva\n";
-[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes pot 3');
-check('amb els vots fets, "pot 3" no mostra equips', $sent[0]['text'], "Vots màxims: 2\nEquips votats:\n- EquipA\n- EquipB\n");
+[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes pot CHL_3');
+check('amb els vots fets, "pot CHL_3" no mostra equips', $sent[0]['text'], "Vots màxims: 2\nEquips votats:\n- EquipA\n- EquipB\n");
 
 [$sent, $action] = runCommand(buildWorld(['max' => 2, 'teams' => [10, 11]], true, standingsAtGap(19)), '/dobleORes borrar');
 check('però "borrar" sí que funciona', $sent[0]['text'], 'Vots esborrats');
@@ -387,8 +387,12 @@ echo "\n--- el pot ha de ser un enter de l'1 al 12 ---\n";
 check('un decimal no val', $sent[0]['text'], 'ERROR, pot invàlid');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot 1e1');
 check('una notació científica no val', $sent[0]['text'], 'ERROR, pot invàlid');
-[$sent] = runCommand(buildWorld(), '/dobleORes pot 1');
-check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot 1');
+[$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_1');
+check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot CHL_1');
+[$sent] = runCommand(buildWorld(), '/dobleORes pot EUL_1');
+check('EUL_1 apunta al pot global 5', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL_1');
+[$sent] = runCommand(buildWorld(), '/dobleORes pot 5');
+check('els teclats antics amb pot 5 encara funcionen', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL_1');
 
 echo "\n  si ja coincideix no s'escriu res\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => []]), '/dobleORes');

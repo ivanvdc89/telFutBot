@@ -289,7 +289,7 @@ echo "\n--- /kos: menú de pots i escuts ---\n";
 check('un sol missatge (el max ja hi és)', count($sent), 1);
 check('text', $sent[0]['text'], 'Pots disponibles:');
 check('4 files de botons', count($sent[0]['keyboard']), 4);
-check('primera fila', $sent[0]['keyboard'][0], ['/kos ko_pot 1', '/kos ko_pot 2', '/kos ko_pot 3', '/kos ko_pot 4']);
+check('primera fila', $sent[0]['keyboard'][0], ['/kos ko_pot CHL_1', '/kos ko_pot CHL_2', '/kos ko_pot CHL_3', '/kos ko_pot CHL_4']);
 check('última fila', $sent[0]['keyboard'][3], ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']);
 
 echo "\n  el màxim de vots surt de la classificació general\n";
@@ -300,9 +300,9 @@ $world = buildWorld(['kos' => [], 'shields' => []], true, standingsAtGap(9));
 [$sent, $action] = runCommand($world, '/kos');
 check('a 9 punts del líder -> 1 vot', $action->updates[0]['data']['max'] ?? null, 1);
 
-echo "\n--- /kos ko_pot 3 ---\n";
-[$sent] = runCommand(buildWorld(), '/kos ko_pot 3');
-check('text', $sent[0]['text'], 'Equips del pot 3:');
+echo "\n--- /kos ko_pot CHL_3 ---\n";
+[$sent] = runCommand(buildWorld(), '/kos ko_pot CHL_3');
+check('text', $sent[0]['text'], 'Equips del pot CHL_3:');
 check('teclat', $sent[0]['keyboard'], [['/kos ko_vot EquipA', '/kos ko_vot EquipB', '/kos ko_vot EquipC']]);
 
 echo "\n--- /kos ko_pot invàlid ---\n";
@@ -372,7 +372,7 @@ check('botó per esborrar', $sent[1]['keyboard'], [['/kos borrar', '/inici']]);
 
 echo "\n  amb tot fet, \"ko_pot\" no mostra equips\n";
 $world = buildWorld(['max' => 2, 'kos' => [10, 11], 'shields' => [101, 105]], true, standingsAtGap(19));
-[$sent] = runCommand($world, '/kos ko_pot 3');
+[$sent] = runCommand($world, '/kos ko_pot CHL_3');
 check('text', $sent[1]['text'], 'Ja tens tots els vots fets');
 
 echo "\n  i amb els escuts al màxim, \"escut CHL\" tampoc no mostra equips\n";
