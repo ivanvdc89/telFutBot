@@ -315,7 +315,7 @@ echo "\n--- /kos ko_vot EquipA ---\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'kos' => [], 'shields' => []]), '/kos ko_vot EquipA');
 check('dos missatges', count($sent), 2);
 check('primer: vot guardat', $sent[0]['text'], 'Vot guardat');
-check('segon: la llista', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n\nEscuts:\n");
+check('segon: la llista i el que falta', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n\nEscuts:\n\nEt queden 2 vots de KO pendents d'usar.\nEt queden 3 escuts pendents de posar.");
 check('s\'ha desat el vot', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'kos' => [10], 'shields' => []]]]);
 
 echo "\n--- /kos ko_vot d'un equip que no existeix ---\n";
@@ -340,7 +340,7 @@ echo "\n--- /kos escut OwnedPot1 ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/kos escut OwnedPot1');
 check('dos missatges', count($sent), 2);
 check('primer: escut guardat', $sent[0]['text'], 'Escut guardat');
-check('segon: la llista amb l\'escut', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n\nEscuts:\n- OwnedPot1\n");
+check('segon: la llista amb l\'escut i el que falta', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n\nEscuts:\n- OwnedPot1\n\nEt queden 3 vots de KO pendents d'usar.\nEt queden 2 escuts pendents de posar.");
 check('s\'ha desat l\'escut', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'kos' => [], 'shields' => [101]]]]);
 
 echo "\n--- /kos escut d'un equip que ja té escut ---\n";

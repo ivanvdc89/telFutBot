@@ -189,14 +189,25 @@ class DoubleOrNothingAction extends ActionRowAction
     }
 
     /**
-     * Llista els equips votats amb el màxim de vots.
+     * Llista els equips votats amb el màxim de vots i, si en queden, quants
+     * vots falten per usar.
      */
     private function sendVotesList(array $data): void
     {
-        $message = "Vots màxims: " . $this->maxVotes($data) . "\n" . "Equips votats:\n";
+        $maxVotes  = $this->maxVotes($data);
+        $voted     = $data['teams'] ?? [];
+        $remaining = $maxVotes - count($voted);
 
-        foreach ($data['teams'] ?? [] as $teamId) {
+        $message = "Vots màxims: " . $maxVotes . "\n" . "Equips votats:\n";
+
+        foreach ($voted as $teamId) {
             $message .= "- " . $this->teamsRepo->getTeamName($teamId) . "\n";
+        }
+
+        if ($remaining > 0) {
+            $message .= "\n" . ($remaining === 1
+                ? "Et queda 1 vot pendent d'usar."
+                : "Et queden " . $remaining . " vots pendents d'usar.");
         }
 
         $this->telegram->sendMessage($this->chatId, $message);

@@ -207,7 +207,8 @@ class KosAndShieldsAction extends ActionRowAction
     }
 
     /**
-     * Llista els equips votats i els escuts, amb el màxim de vots.
+     * Llista els equips votats i els escuts, amb el màxim de vots i el que
+     * queda pendent d'usar.
      */
     private function votesListText(array $data, int $maxVotes): string
     {
@@ -221,6 +222,26 @@ class KosAndShieldsAction extends ActionRowAction
 
         foreach ($data['shields'] as $teamId) {
             $message .= "- " . $this->teamsRepo->getTeamName($teamId) . "\n";
+        }
+
+        $remainingKos     = $maxVotes - count($data['kos']);
+        $remainingShields = $maxVotes - count($data['shields']);
+        $notices          = [];
+
+        if ($remainingKos > 0) {
+            $notices[] = $remainingKos === 1
+                ? "Et queda 1 vot de KO pendent d'usar."
+                : "Et queden " . $remainingKos . " vots de KO pendents d'usar.";
+        }
+
+        if ($remainingShields > 0) {
+            $notices[] = $remainingShields === 1
+                ? "Et queda 1 escut pendent de posar."
+                : "Et queden " . $remainingShields . " escuts pendents de posar.";
+        }
+
+        if (count($notices) > 0) {
+            $message .= "\n" . implode("\n", $notices);
         }
 
         return $message;

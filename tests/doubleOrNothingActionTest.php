@@ -297,8 +297,15 @@ echo "\n--- /dobleORes vot EquipA ---\n";
 check('dos missatges', count($sent), 2);
 check('primer: vot guardat', $sent[0]['text'], 'Vot guardat');
 check('teclat del vot', $sent[0]['keyboard'], [['/dobleORes', '/inici']]);
-check('segon: llista de vots', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n");
+check('segon: llista de vots i els que falten', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n\nEt queden 2 vots pendents d'usar.");
 check('s\'ha desat el vot', $action->updates, [['id' => 33, 'data' => ['max' => 3, 'teams' => [10]]]]);
+
+echo "\n--- avís de l'últim vot pendent ---\n";
+[$sent] = runCommand(buildWorld(['max' => 3, 'teams' => [10]]), '/dobleORes vot EquipB');
+check('queda 1 vot', $sent[1]['text'], "Vots màxims: 3\nEquips votats:\n- EquipA\n- EquipB\n\nEt queda 1 vot pendent d'usar.");
+
+[$sent] = runCommand(buildWorld(['max' => 2, 'teams' => [10]], true, standingsAtGap(19)), '/dobleORes vot EquipB');
+check('amb l\'últim vot no diu res', $sent[1]['text'], "Vots màxims: 2\nEquips votats:\n- EquipA\n- EquipB\n");
 
 echo "\n--- /dobleORes vot d'un equip que no existeix ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/dobleORes vot NoExisteix');
