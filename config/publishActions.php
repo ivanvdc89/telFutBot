@@ -429,8 +429,7 @@ function actionsDoubleOrNothingText(array $result, array $totals = []): array
     }
 
     $lines = [
-        "Equips més votats (el més votat no suma cap punt i el segon suma doble):",
-        "Els empats de vots es desempaten per la classificació d'equips.",
+        "Equips més votats (el més votat no sume cap punt i el segon sume doble):"
     ];
 
     foreach ($result as $competition => $teams) {
