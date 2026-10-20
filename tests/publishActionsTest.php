@@ -84,6 +84,28 @@ check('sense rankings, el primer votat va davant', actionsDoubleOrNothingResult(
     'COL' => ['top' => [], 'second' => []],
 ]);
 
+echo "\n--- #dobleORes: el segon pot ser un equip sense vots ---\n";
+$totals = actionsVoteTotals([10, 10]);
+$competitions = [10 => 'CHL', 86 => 'CHL', 4 => 'CHL', 20 => 'EUL', 21 => 'EUL'];
+check('el millor classificat sense vots és el segon', actionsDoubleOrNothingResult($totals, $competitions, [4 => 1, 86 => 2, 10 => 3, 20 => 1, 21 => 2]), [
+    'CHL' => ['top' => [10], 'second' => [4]],
+    // EUL no té cap vot: mana la classificació, 20 a 0 i 21 dobla.
+    'EUL' => ['top' => [20], 'second' => [21]],
+    'COL' => ['top' => [], 'second' => []],
+]);
+check('sense classificació només compten els votats', actionsDoubleOrNothingResult($totals, $competitions), [
+    'CHL' => ['top' => [10], 'second' => []],
+    'EUL' => ['top' => [], 'second' => []],
+    'COL' => ['top' => [], 'second' => []],
+]);
+
+echo "\n--- sense cap vot a l'acció no es reparteix res ---\n";
+check('ni amb la classificació carregada', actionsDoubleOrNothingResult([], [10 => 'CHL', 4 => 'CHL'], [10 => 1, 4 => 2]), [
+    'CHL' => ['top' => [], 'second' => []],
+    'EUL' => ['top' => [], 'second' => []],
+    'COL' => ['top' => [], 'second' => []],
+]);
+
 echo "\n--- #kosAmbEscuts: empat al tall, mana la classificació ---\n";
 $kosTie = actionsVoteTotals([10, 4, 86, 82, 10, 4, 86, 82, 39]);
 // Quatre equips empatats a 2 vots; el 82 és el millor classificat i el 86 el
@@ -169,7 +191,7 @@ $expected = "Accions de la jornada 2:\n"
     . "\n- Ivan: 1 vot a Roma"
     . "\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):"
     . "\nEls empats de vots es desempaten per la classificació d'equips."
-    . "\n- CHL: Arsenal (2 vots, a 0 punts); Roma (1 vot, punts dobles)"
+    . "\n- CHL: Arsenal (2 vots, sumarà 0 punts); Roma (1 vot, sumarà doble)"
     . "\n- EUL: cap vot"
     . "\n- COL: cap vot"
     . "\n\n#kosAmbEscuts"
@@ -209,7 +231,7 @@ check(
     [
         'Equips més votats (el més votat no suma cap punt i el segon suma doble):',
         "Els empats de vots es desempaten per la classificació d'equips.",
-        '- CHL: Arsenal (3 vots, a 0 punts); Roma (2 vots, punts dobles)',
+        '- CHL: Arsenal (3 vots, sumarà 0 punts); Roma (2 vots, sumarà doble)',
         '- EUL: cap vot',
     ]
 );
@@ -219,7 +241,7 @@ check(
     [
         'Equips més votats (el més votat no suma cap punt i el segon suma doble):',
         "Els empats de vots es desempaten per la classificació d'equips.",
-        '- CHL: Roma (a 0 punts); cap segon equip amb vots',
+        '- CHL: Roma (sumarà 0 punts); cap segon equip amb vots',
     ]
 );
 
@@ -233,7 +255,7 @@ check(
             'result'  => ['CHL' => ['top' => ['Roma'], 'second' => []], 'EUL' => ['top' => [], 'second' => []], 'COL' => ['top' => [], 'second' => []]],
         ],
     ]),
-    "Accions de la jornada 3:\n\n#dobleORes\n- Ivan: 1 vot a Roma\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\nEls empats de vots es desempaten per la classificació d'equips.\n- CHL: Roma (1 vot, a 0 punts); cap segon equip amb vots\n- EUL: cap vot\n- COL: cap vot"
+    "Accions de la jornada 3:\n\n#dobleORes\n- Ivan: 1 vot a Roma\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\nEls empats de vots es desempaten per la classificació d'equips.\n- CHL: Roma (1 vot, sumarà 0 punts); cap segon equip amb vots\n- EUL: cap vot\n- COL: cap vot"
 );
 
 echo "\n--- sense cap acció ---\n";
@@ -281,8 +303,8 @@ $expectedFromRows = "Accions de la jornada 5:\n"
     . "\n- Ivan: 1 vot a Roma"
     . "\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):"
     . "\nEls empats de vots es desempaten per la classificació d'equips."
-    . "\n- CHL: Arsenal (2 vots, a 0 punts); cap segon equip amb vots"
-    . "\n- EUL: Roma (1 vot, a 0 punts); cap segon equip amb vots"
+    . "\n- CHL: Arsenal (2 vots, sumarà 0 punts); cap segon equip amb vots"
+    . "\n- EUL: Roma (1 vot, sumarà 0 punts); cap segon equip amb vots"
     . "\n- COL: cap vot"
     . "\n\n#kosAmbEscuts"
     . "\n- Marta: 1 vot de KO a Arsenal"
@@ -324,6 +346,58 @@ check('el millor classificat queda a 0 i l\'altre dobla', $announcementTie['doub
     'top'    => ['Bayern'],
     'second' => ['Arsenal'],
 ]);
+
+echo "\n--- l'anunci pot donar el doble a un equip sense vots ---\n";
+$rowsZero = [
+    ['player_id' => 7, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 2, 'teams' => [10]])],
+];
+$announcementZero = actionsAnnouncement(
+    $rowsZero,
+    $allowedVotes,
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [4 => 1, 10 => 2]
+);
+check('el segon és el millor classificat sense vots', $announcementZero['doubleOrNothing']['result']['CHL'], [
+    'top'    => ['Arsenal'],
+    'second' => ['Bayern'],
+]);
+check('i compta 0 vots', $announcementZero['doubleOrNothing']['totals']['Bayern'] ?? null, 0);
+check(
+    'el text ho diu',
+    actionsPublishText(6, $announcementZero),
+    "Accions de la jornada 6:\n\n#dobleORes\n- Ivan: 1 vot a Arsenal\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\nEls empats de vots es desempaten per la classificació d'equips.\n- CHL: Arsenal (1 vot, sumarà 0 punts); Bayern (0 vots, sumarà doble)\n- EUL: cap vot\n- COL: cap vot"
+);
+
+echo "\n--- una competició sense vots també reparteix per classificació ---\n";
+$rowsNoVotes = [
+    ['player_id' => 7, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 2, 'teams' => [86]])],
+    ['player_id' => 8, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 2, 'teams' => [39]])],
+];
+$announcementNoVotes = actionsAnnouncement(
+    $rowsNoVotes,
+    $allowedVotes,
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [10 => 1, 4 => 2, 86 => 1, 82 => 2, 39 => 1]
+);
+check('CHL, sense vots, decideix la classificació', $announcementNoVotes['doubleOrNothing']['result']['CHL'], [
+    'top'    => ['Arsenal'],
+    'second' => ['Bayern'],
+]);
+check('i els dos compten 0 vots', [
+    $announcementNoVotes['doubleOrNothing']['totals']['Arsenal'],
+    $announcementNoVotes['doubleOrNothing']['totals']['Bayern'],
+], [0, 0]);
+check(
+    'el text',
+    actionsPublishText(7, $announcementNoVotes),
+    "Accions de la jornada 7:\n\n#dobleORes\n- Ivan: 1 vot a Roma\n- Marta: 1 vot a Betis\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\nEls empats de vots es desempaten per la classificació d'equips.\n- CHL: Arsenal (0 vots, sumarà 0 punts); Bayern (0 vots, sumarà doble)\n- EUL: Roma (1 vot, sumarà 0 punts); Ajax (0 vots, sumarà doble)\n- COL: Betis (1 vot, sumarà 0 punts); cap segon equip amb vots"
+);
 
 echo "\n--- files velles i casos raros ---\n";
 $legacy = actionsAnnouncement(

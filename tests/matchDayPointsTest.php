@@ -73,6 +73,19 @@ $tie = matchDayVoteResults([10, 86, 10, 86], [], $teamCompetitions, [86 => 1, 10
 check('el millor classificat queda a zero', $tie['nothingTeams'], [86]);
 check('l\'altre suma doble', $tie['doubleTeams'], [10]);
 
+echo "\n--- #dobleORes: el segon pot ser un equip sense vots ---\n";
+// A CHL només el 10 té vots: el 86, sense vots, és el millor classificat i
+// suma doble. A EUL no hi ha cap vot, així que mana la classificació: el 4
+// queda a 0 i el 5 dobla. A COL tampoc no hi ha vots ni classificació, i no
+// s'inventa res.
+$zeroSecond = matchDayVoteResults([10], [], $teamCompetitions, [86 => 1, 10 => 2, 4 => 1, 5 => 2]);
+check('el més votat queda a zero', $zeroSecond['nothingTeams'], [10, 4]);
+check('el millor classificat sense vots suma doble', $zeroSecond['doubleTeams'], [86, 5]);
+
+echo "\n--- sense cap vot a l'acció no es reparteix res ---\n";
+$noVotes = matchDayVoteResults([], [], $teamCompetitions, [86 => 1, 10 => 2, 4 => 1, 5 => 2, 20 => 1]);
+check('ni amb la classificació carregada', [$noVotes['nothingTeams'], $noVotes['doubleTeams']], [[], []]);
+
 echo "\n--- #kosAmbEscuts: el tall dels 4 també desempata per classificació ---\n";
 $kosTie = matchDayVoteResults([], [10, 86, 20, 4, 5], $teamCompetitions, [5 => 1, 4 => 2, 20 => 3, 86 => 4, 10 => 5]);
 check('el pitjor classificat dels empatats queda fora', $kosTie['koTeams'], [5, 4, 20, 86]);

@@ -26,9 +26,10 @@
  *     d'equips (team_standings): el millor classificat va davant. Si la taula
  *     encara no té dades, l'empat manté l'ordre en què s'han votat per primera
  *     vegada, perquè les funcions d'ordenació són estables des de PHP 8.0.
- *   - A #dobleORes només compten els equips amb algun vot: un equip sense vots
- *     no pot ser el segon. Així una competició sense vots no té cap efecte, i
- *     amb un sol equip votat no hi ha segon.
+ *   - A #dobleORes, si hi ha almenys un vot a l'acció, el segon pot ser un
+ *     equip sense vots (els empats a 0 també es resolen per la classificació),
+ *     i una competició sense cap vot reparteix per classificació: el líder
+ *     queda a 0 i el segon dobla.
  *   - A #millorFinal els empats mantenen l'ordre CHL, EUL, COL, que és el que
  *     feia el publicador d'abans.
  */
@@ -205,8 +206,16 @@ function actionsMostVotedTeams(array $totals, int $howMany, array $teamRankings 
 /**
  * El resultat de #dobleORes: per competició, l'equip més votat i el segon.
  *
- * Només compten els equips amb algun vot. Si hi ha empat, mana la classificació
- * d'equips: el millor classificat és el més votat i el següent és el segon.
+ * L'equip més votat de cada competició queda a 0 punts i el segon suma doble.
+ * Si hi ha empat, mana la classificació d'equips. El segon pot ser un equip
+ * sense vots, i si una competició no té cap vot tots els equips estan empatats
+ * a 0: mana la classificació, o siga que el líder queda a 0 i el segon dobla.
+ * Això passa quan hi ha almenys un vot a l'acció; si no n'hi ha cap, no es
+ * reparteix res.
+ *
+ * Si no hi ha classificació d'equips (team_standings buit), no es poden ordenar
+ * els equips sense vots: es manté el comportament antic i només compten els
+ * equips que han rebut algun vot.
  *
  * @param array<int, int>    $totals           [team_id => vots]
  * @param array<int, string> $teamCompetitions [team_id => 'CHL'|'EUL'|'COL']
@@ -221,20 +230,39 @@ function actionsDoubleOrNothingResult(array $totals, array $teamCompetitions, ar
         $result[$competition] = ['top' => [], 'second' => []];
     }
 
-    // Els vots de cada competició, sense perdre l'ordre global (que ja va de
-    // més votat a menys).
-    $byCompetition = [];
-    foreach ($totals as $teamId => $votes) {
-        $competition = $teamCompetitions[$teamId] ?? null;
+    // Sense cap vot a tota l'acció no es reparteix res. Si n'hi ha almenys un,
+    // les competicions que no han rebut vots es resolen per la classificació.
+    if (array_sum($totals) === 0) {
+        return $result;
+    }
 
-        if ($votes <= 0 || $competition === null || !isset($result[$competition])) {
+    // Tots els equips de cada competició, amb els vots que han rebut (0 si no
+    // n'han rebut cap): el segon es pot triar entre els que no han votat ningú.
+    $byCompetition = [];
+    foreach ($teamCompetitions as $teamId => $competition) {
+        if (!isset($result[$competition])) {
             continue;
         }
 
-        $byCompetition[$competition][$teamId] = $votes;
+        $byCompetition[$competition][(int) $teamId] = (int) ($totals[$teamId] ?? 0);
     }
 
     foreach ($byCompetition as $competition => $votesByTeam) {
+        // Si la classificació no té cap d'estos equips, no es poden ordenar els
+        // que no han rebut vots: només compten els votats, com abans.
+        $hasRankings = false;
+        foreach (array_keys($votesByTeam) as $teamId) {
+            if (isset($teamRankings[$teamId])) {
+                $hasRankings = true;
+
+                break;
+            }
+        }
+
+        if (!$hasRankings) {
+            $votesByTeam = array_filter($votesByTeam, static fn(int $votes): bool => $votes > 0);
+        }
+
         $teamIds = array_keys(actionsSortVotesByStandings($votesByTeam, $teamRankings));
 
         if (count($teamIds) > 0) {
@@ -364,7 +392,7 @@ function actionsSectionText(string $type, array $data): string
  *
  * @param array<int, string> $names  Noms de l'equip (normalment un)
  * @param array<string, int> $totals [nom => vots]
- * @param string             $effect 'a 0 punts' o 'punts dobles'
+ * @param string             $effect 'sumarà 0 punts' o 'sumarà doble'
  */
 function actionsDoubleOrNothingTeamText(array $names, array $totals, string $effect): string
 {
@@ -415,9 +443,9 @@ function actionsDoubleOrNothingText(array $result, array $totals = []): array
             continue;
         }
 
-        $line = '- ' . $competition . ': ' . actionsDoubleOrNothingTeamText($top, $totals, 'a 0 punts');
+        $line = '- ' . $competition . ': ' . actionsDoubleOrNothingTeamText($top, $totals, 'sumarà 0 punts');
         $line .= count($second) > 0
-            ? '; ' . actionsDoubleOrNothingTeamText($second, $totals, 'punts dobles')
+            ? '; ' . actionsDoubleOrNothingTeamText($second, $totals, 'sumarà doble')
             : '; cap segon equip amb vots';
 
         $lines[] = $line;
@@ -629,7 +657,7 @@ function actionsAnnouncement(
 
     // El resultat de #dobleORes: qui queda a 0 punts i qui suma doble. Els
     // vots totals per equip es guarden pel nom perquè el text del resum puga
-    // dir "Arsenal (3 vots, a 0 punts)".
+    // dir "Arsenal (3 vots, sumarà 0 punts)".
     if (count($doubleOrNothingVoted) > 0) {
         $doubleOrNothingTotals = actionsVoteTotals($doubleOrNothingVoted);
         $result                = actionsDoubleOrNothingResult($doubleOrNothingTotals, $teamCompetitions, $teamRankings);
@@ -639,6 +667,15 @@ function actionsAnnouncement(
         }
 
         foreach ($result as $competition => $teams) {
+            // Un segon pot ser un equip sense vots: ha de sortir amb "0 vots".
+            foreach (array_merge($teams['top'], $teams['second']) as $teamId) {
+                $teamName = actionsTeamName($teamNames, (int) $teamId);
+
+                if (!array_key_exists($teamName, $announcement['doubleOrNothing']['totals'])) {
+                    $announcement['doubleOrNothing']['totals'][$teamName] = 0;
+                }
+            }
+
             $announcement['doubleOrNothing']['result'][$competition] = [
                 'top'    => array_map(fn($teamId) => actionsTeamName($teamNames, $teamId), $teams['top']),
                 'second' => array_map(fn($teamId) => actionsTeamName($teamNames, $teamId), $teams['second']),

@@ -12,7 +12,10 @@
  * LES REGLES (les de /normes accions)
  *   - #dobleORes: l'equip més votat de cada competició no suma cap punt i el
  *     segon suma doble. Els empats els decidix la classificació d'equips
- *     (team_standings). Els recomptes són els mateixos que els del publicador
+ *     (team_standings), i el segon pot ser un equip sense vots si només n'hi ha
+ *     un que n'haja rebut. Si hi ha almenys un vot a l'acció, una competició
+ *     sense vots també mana per classificació: el líder queda a 0 i el segon
+ *     dobla. Els recomptes són els mateixos que els del publicador
  *     (config/publishActions.php), perquè l'anunci i els punts no es puguen
  *     separar mai.
  *   - #kosAmbEscuts: els KOS_BOICOT_TEAMS equips més votats no sumen punts,
