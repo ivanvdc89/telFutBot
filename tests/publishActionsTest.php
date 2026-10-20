@@ -139,8 +139,9 @@ $announcement = [
             ['player' => 'Marta', 'team' => 'Arsenal'],
             ['player' => 'Ivan', 'team' => 'Roma'],
         ],
+        'totals' => ['Arsenal' => 2, 'Roma' => 1],
         'result' => [
-            'CHL' => ['top' => ['Arsenal'], 'second' => ['Chelsea']],
+            'CHL' => ['top' => ['Arsenal'], 'second' => ['Roma']],
             'EUL' => ['top' => [], 'second' => []],
             'COL' => ['top' => [], 'second' => []],
         ],
@@ -167,7 +168,8 @@ $expected = "Accions de la jornada 2:\n"
     . "\n- Marta: 2 vots a Arsenal"
     . "\n- Ivan: 1 vot a Roma"
     . "\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):"
-    . "\n- CHL: Arsenal (a 0 punts); Chelsea (punts dobles)"
+    . "\nEls empats de vots es desempaten per la classificació d'equips."
+    . "\n- CHL: Arsenal (2 vots, a 0 punts); Roma (1 vot, punts dobles)"
     . "\n- EUL: cap vot"
     . "\n- COL: cap vot"
     . "\n\n#kosAmbEscuts"
@@ -194,20 +196,62 @@ check(
     "Accions de la jornada 7:\n\n#malDia\n- Ivan: COL"
 );
 
+echo "\n--- el resum de #dobleORes amb els vots per equip ---\n";
+check(
+    'top i segon amb el recompte i la nota d\'empats',
+    actionsDoubleOrNothingText(
+        [
+            'CHL' => ['top' => ['Arsenal'], 'second' => ['Roma']],
+            'EUL' => ['top' => [], 'second' => []],
+        ],
+        ['Arsenal' => 3, 'Roma' => 2]
+    ),
+    [
+        'Equips més votats (el més votat no suma cap punt i el segon suma doble):',
+        "Els empats de vots es desempaten per la classificació d'equips.",
+        '- CHL: Arsenal (3 vots, a 0 punts); Roma (2 vots, punts dobles)',
+        '- EUL: cap vot',
+    ]
+);
+check(
+    'sense recompte, el text és el d\'abans',
+    actionsDoubleOrNothingText(['CHL' => ['top' => ['Roma'], 'second' => []]]),
+    [
+        'Equips més votats (el més votat no suma cap punt i el segon suma doble):',
+        "Els empats de vots es desempaten per la classificació d'equips.",
+        '- CHL: Roma (a 0 punts); cap segon equip amb vots',
+    ]
+);
+
 echo "\n--- una competició sense segon equip votat ---\n";
 check(
     'ho diu en comptes d\'inventar-se un equip',
     actionsPublishText(3, [
         'doubleOrNothing' => [
-            'votes' => [['player' => 'Ivan', 'team' => 'Roma']],
-            'result' => ['CHL' => ['top' => ['Roma'], 'second' => []], 'EUL' => ['top' => [], 'second' => []], 'COL' => ['top' => [], 'second' => []]],
+            'votes'   => [['player' => 'Ivan', 'team' => 'Roma']],
+            'totals'  => ['Roma' => 1],
+            'result'  => ['CHL' => ['top' => ['Roma'], 'second' => []], 'EUL' => ['top' => [], 'second' => []], 'COL' => ['top' => [], 'second' => []]],
         ],
     ]),
-    "Accions de la jornada 3:\n\n#dobleORes\n- Ivan: 1 vot a Roma\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\n- CHL: Roma (a 0 punts); cap segon equip amb vots\n- EUL: cap vot\n- COL: cap vot"
+    "Accions de la jornada 3:\n\n#dobleORes\n- Ivan: 1 vot a Roma\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):\nEls empats de vots es desempaten per la classificació d'equips.\n- CHL: Roma (1 vot, a 0 punts); cap segon equip amb vots\n- EUL: cap vot\n- COL: cap vot"
 );
 
 echo "\n--- sense cap acció ---\n";
-check('només la capçalera', actionsPublishText(4, []), "Accions de la jornada 4:\n\n");
+check('no hi ha missatge', actionsPublishText(4, []), '');
+
+echo "\n--- una fila d'#dobleORes oberta sense vots no envia res ---\n";
+check(
+    'ni capçalera',
+    actionsPublishText(4, actionsAnnouncement(
+        [['player_id' => 7, 'type' => 'doubleOrNothing', 'data' => json_encode(['max' => 3, 'teams' => []])]],
+        [],
+        [7 => 'Ivan'],
+        [10 => 'Arsenal'],
+        [10 => 'CHL'],
+        1
+    )),
+    ''
+);
 
 // ---------- de les files de la BD al missatge ----------
 
@@ -236,8 +280,9 @@ $expectedFromRows = "Accions de la jornada 5:\n"
     . "\n- Ivan: 2 vots a Arsenal"
     . "\n- Ivan: 1 vot a Roma"
     . "\n\nEquips més votats (el més votat no suma cap punt i el segon suma doble):"
-    . "\n- CHL: Arsenal (a 0 punts); cap segon equip amb vots"
-    . "\n- EUL: Roma (a 0 punts); cap segon equip amb vots"
+    . "\nEls empats de vots es desempaten per la classificació d'equips."
+    . "\n- CHL: Arsenal (2 vots, a 0 punts); cap segon equip amb vots"
+    . "\n- EUL: Roma (1 vot, a 0 punts); cap segon equip amb vots"
     . "\n- COL: cap vot"
     . "\n\n#kosAmbEscuts"
     . "\n- Marta: 1 vot de KO a Arsenal"
@@ -308,7 +353,7 @@ check(
     [['player' => 'Ivan', 'team' => 'Arsenal', 'points' => 3]]
 );
 check('jugador sense nom: s\'identifica amb #id', $legacy['badDay'], [['player' => '#99', 'values' => ['CHL']]]);
-check('sense vots no hi ha res a dir', $legacy['doubleOrNothing'], ['votes' => [], 'result' => []]);
+check('sense vots no hi ha res a dir', $legacy['doubleOrNothing'], ['votes' => [], 'result' => [], 'totals' => []]);
 check('un tipus desconegut s\'ignora', array_key_exists('convidat', $legacy), false);
 check('un JSON trencat no peta', $legacy['winOrDie'], []);
 

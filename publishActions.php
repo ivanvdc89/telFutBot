@@ -92,6 +92,11 @@ $announcement = actionsAnnouncement(
 
 $message = actionsPublishText($matchDay, $announcement);
 
+if ($message === '') {
+    echo "No hi ha res a publicar a la jornada $matchDay: no s'envia res.\n";
+    exit;
+}
+
 $telegram->sendMessage($groupChatId, $message);
 
 // El text també surt per consola: si Telegram no el mostra com s'esperava, aquí

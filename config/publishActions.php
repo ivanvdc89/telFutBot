@@ -325,7 +325,7 @@ function actionsSectionText(string $type, array $data): string
 
     if ($type === 'doubleOrNothing') {
         $lines = actionsVoteLines($data['votes'] ?? [], 'a');
-        $lines = array_merge($lines, actionsSubBlock(actionsDoubleOrNothingText($data['result'] ?? [])));
+        $lines = array_merge($lines, actionsSubBlock(actionsDoubleOrNothingText($data['result'] ?? [], $data['totals'] ?? [])));
     } elseif ($type === 'kosAndShields') {
         $lines = actionsVoteLines($data['kos'] ?? [], 'de KO a');
 
@@ -360,20 +360,50 @@ function actionsSectionText(string $type, array $data): string
 }
 
 /**
+ * Un equip del resultat de #dobleORes, amb els vots que ha rebut si els sabem.
+ *
+ * @param array<int, string> $names  Noms de l'equip (normalment un)
+ * @param array<string, int> $totals [nom => vots]
+ * @param string             $effect 'a 0 punts' o 'punts dobles'
+ */
+function actionsDoubleOrNothingTeamText(array $names, array $totals, string $effect): string
+{
+    $name = actionsJoinNames($names);
+
+    // Si l'empat no s'ha pogut resoldre (dades velles o fetes a mà), no hi
+    // haurà un sol nom i el recompte per equip no es pot assignar.
+    if (count($names) !== 1) {
+        return $name . ' (' . $effect . ')';
+    }
+
+    $votes = $totals[$names[0]] ?? null;
+
+    if ($votes === null) {
+        return $name . ' (' . $effect . ')';
+    }
+
+    return $name . ' (' . actionsVotesText((int) $votes) . ', ' . $effect . ')';
+}
+
+/**
  * El resum de #dobleORes: qui queda a 0 punts i qui suma doble a cada
- * competició.
+ * competició, amb els vots que ha rebut cada equip.
  *
  * @param array<string, array{top: array<int, string>, second: array<int, string>}> $result Noms, no ids.
+ * @param array<string, int>                                                       $totals [nom => vots]
  *
  * @return array<int, string>
  */
-function actionsDoubleOrNothingText(array $result): array
+function actionsDoubleOrNothingText(array $result, array $totals = []): array
 {
     if (count($result) === 0) {
         return [];
     }
 
-    $lines = ["Equips més votats (el més votat no suma cap punt i el segon suma doble):"];
+    $lines = [
+        "Equips més votats (el més votat no suma cap punt i el segon suma doble):",
+        "Els empats de vots es desempaten per la classificació d'equips.",
+    ];
 
     foreach ($result as $competition => $teams) {
         $top    = $teams['top'] ?? [];
@@ -385,9 +415,9 @@ function actionsDoubleOrNothingText(array $result): array
             continue;
         }
 
-        $line = '- ' . $competition . ': ' . actionsJoinNames($top) . ' (a 0 punts)';
+        $line = '- ' . $competition . ': ' . actionsDoubleOrNothingTeamText($top, $totals, 'a 0 punts');
         $line .= count($second) > 0
-            ? '; ' . actionsJoinNames($second) . ' (punts dobles)'
+            ? '; ' . actionsDoubleOrNothingTeamText($second, $totals, 'punts dobles')
             : '; cap segon equip amb vots';
 
         $lines[] = $line;
@@ -491,7 +521,7 @@ function actionsAnnouncement(
         'iAmTheBest'        => [],
         'winOrDie'          => [],
         'sureToBeQualified' => [],
-        'doubleOrNothing'   => ['votes' => [], 'result' => []],
+        'doubleOrNothing'   => ['votes' => [], 'result' => [], 'totals' => []],
         'kosAndShields'     => ['kos' => [], 'shields' => [], 'boicot' => []],
         'bestFinal'         => ['votes' => [], 'ranking' => []],
     ];
@@ -597,9 +627,16 @@ function actionsAnnouncement(
         }
     }
 
-    // El resultat de #dobleORes: qui queda a 0 punts i qui suma doble.
+    // El resultat de #dobleORes: qui queda a 0 punts i qui suma doble. Els
+    // vots totals per equip es guarden pel nom perquè el text del resum puga
+    // dir "Arsenal (3 vots, a 0 punts)".
     if (count($doubleOrNothingVoted) > 0) {
-        $result = actionsDoubleOrNothingResult(actionsVoteTotals($doubleOrNothingVoted), $teamCompetitions, $teamRankings);
+        $doubleOrNothingTotals = actionsVoteTotals($doubleOrNothingVoted);
+        $result                = actionsDoubleOrNothingResult($doubleOrNothingTotals, $teamCompetitions, $teamRankings);
+
+        foreach ($doubleOrNothingTotals as $teamId => $votes) {
+            $announcement['doubleOrNothing']['totals'][actionsTeamName($teamNames, (int) $teamId)] = (int) $votes;
+        }
 
         foreach ($result as $competition => $teams) {
             $announcement['doubleOrNothing']['result'][$competition] = [
@@ -633,6 +670,7 @@ function actionsAnnouncement(
  *   - 'badDay', 'iAmTheBest', 'winOrDie': [['player' => 'Ivan', 'values' => ['CHL', 'EUL']], ...]
  *   - 'sureToBeQualified': [['player' => 'Ivan', 'team' => 'Barça', 'points' => 4], ...]
  *   - 'doubleOrNothing': ['votes' => [['player' => .., 'team' => ..], ...],
+ *                         'totals' => ['Arsenal' => 2, 'Roma' => 1],
  *                         'result' => ['CHL' => ['top' => ['Arsenal'], 'second' => ['Roma']], ...]]
  *   - 'kosAndShields': ['kos' => [['player' => .., 'team' => ..], ...],
  *                       'shields' => [['player' => .., 'team' => ..], ...],
@@ -650,6 +688,12 @@ function actionsPublishText(int $matchDay, array $announcement): string
         if ($section !== '') {
             $sections[] = $section;
         }
+    }
+
+    // Sense cap secció no hi ha res a dir: una fila d'#dobleORes oberta sense
+    // vots no ha de fer que el grup reba només la capçalera.
+    if (count($sections) === 0) {
+        return '';
     }
 
     return 'Accions de la jornada ' . $matchDay . ":\n\n" . implode("\n\n", $sections);
