@@ -220,6 +220,44 @@ check('l\'aposta mana sobre el doble', rowView($bothSure['rows'][0]), [
 
 // ------------------------------------------------- el llindar del #socElMillor
 
+echo "\n--- #socElMillor: el millor es decidix després de #dobleORes ---\n";
+check('4 punts i màxim 4 -> OK', matchDayBestActionPoints(4, 4, 'CHL'), ['points' => 3, 'result' => 'OK']);
+check('3 punts i màxim 4 -> KO', matchDayBestActionPoints(3, 4, 'CHL'), ['points' => -3, 'result' => 'KO']);
+check('5 punts i màxim 5 a COL -> OK', matchDayBestActionPoints(5, 5, 'COL'), ['points' => 4, 'result' => 'OK']);
+check('4 punts i màxim 5 a COL -> KO', matchDayBestActionPoints(4, 5, 'COL'), ['points' => -4, 'result' => 'KO']);
+
+// A fa 7 punts de CHL, però #dobleORes li n'anul·la 4 i queda amb 3. B en fa 4.
+// Sense #dobleORes el millor seria A; amb l'anul·lació el millor és B.
+$zeroedA = matchDayTeamPoints($twoChlTeams, $twoChlResults, ['nothingTeams' => [11]]);
+$plainB  = matchDayTeamPoints(
+    [['id' => 12, 'pot' => 3]],
+    [12 => ['team_id' => 12, 'points' => 4, 'competition' => 'CHL']],
+    []
+);
+$best = matchDayBestPoints(
+    [1 => ['CHL'], 2 => ['CHL']],
+    [
+        1 => ['CHL' => $zeroedA['points']['CHL']],
+        2 => ['CHL' => $plainB['points']['CHL']],
+    ]
+);
+check('el màxim és el 4 de B', $best['CHL'], 4);
+check('A, amb 3, queda KO', matchDayBestActionPoints($zeroedA['points']['CHL'], $best['CHL'], 'CHL')['result'], 'KO');
+check('B, amb 4, queda OK', matchDayBestActionPoints($plainB['points']['CHL'], $best['CHL'], 'CHL')['result'], 'OK');
+
+// I amb un equip doblat, A passa de 3 a 6 i supera B (4): el millor canvia.
+$doubledA = matchDayTeamPoints($playerTeams, $resultsByTeam, ['doubleTeams' => [10]]);
+$bestDoubled = matchDayBestPoints(
+    [1 => ['CHL'], 2 => ['CHL']],
+    [
+        1 => ['CHL' => $doubledA['points']['CHL']],
+        2 => ['CHL' => $plainB['points']['CHL']],
+    ]
+);
+check('el màxim ara és el 6 de A', $bestDoubled['CHL'], 6);
+check('A, amb 6, queda OK', matchDayBestActionPoints($doubledA['points']['CHL'], $bestDoubled['CHL'], 'CHL')['result'], 'OK');
+check('B, amb 4, queda KO', matchDayBestActionPoints($plainB['points']['CHL'], $bestDoubled['CHL'], 'CHL')['result'], 'KO');
+
 echo "\n--- #socElMillor: el màxim de cada competició ---\n";
 $activated = [
     1 => ['CHL'],

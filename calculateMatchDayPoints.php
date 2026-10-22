@@ -359,32 +359,22 @@ foreach ($players as $player) {
                 continue;
             }
 
+            // La comparació es fa amb els punts que ja porten #dobleORes i la
+            // resta d'accions d'equip aplicades.
             if ($competition === "CHL") {
-                if ($chlPoints >= $bestCHL) {
-                    $chlAction[]          = ["type" => "socElMillor", "result" => "OK"];
-                    $chlPointsAfterAction += 3;
-                } else {
-                    $chlAction[]          = ["type" => "socElMillor", "result" => "KO"];
-                    $chlPointsAfterAction -= 3;
-                }
+                $bestAction = matchDayBestActionPoints($chlPoints, $bestCHL, $competition);
+                $chlAction[] = ["type" => "socElMillor", "result" => $bestAction['result']];
+                $chlPointsAfterAction += $bestAction['points'];
             }
             if ($competition === "EUL") {
-                if ($eulPoints >= $bestEUL) {
-                    $eulAction[]          = ["type" => "socElMillor", "result" => "OK"];
-                    $eulPointsAfterAction += 3;
-                } else {
-                    $eulAction[]          = ["type" => "socElMillor", "result" => "KO"];
-                    $eulPointsAfterAction -= 3;
-                }
+                $bestAction = matchDayBestActionPoints($eulPoints, $bestEUL, $competition);
+                $eulAction[] = ["type" => "socElMillor", "result" => $bestAction['result']];
+                $eulPointsAfterAction += $bestAction['points'];
             }
             if ($competition === "COL") {
-                if ($colPoints >= $bestCOL) {
-                    $colAction[]          = ["type" => "socElMillor", "result" => "OK"];
-                    $colPointsAfterAction += 4;
-                } else {
-                    $colAction[]          = ["type" => "socElMillor", "result" => "KO"];
-                    $colPointsAfterAction -= 4;
-                }
+                $bestAction = matchDayBestActionPoints($colPoints, $bestCOL, $competition);
+                $colAction[] = ["type" => "socElMillor", "result" => $bestAction['result']];
+                $colPointsAfterAction += $bestAction['points'];
             }
         }
     }

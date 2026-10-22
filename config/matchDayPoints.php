@@ -81,7 +81,9 @@ function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array
  * La norma diu que, entre tots els qui l'activen a una competició, els qui sumen
  * més punts reben l'extra i la resta la penalització. Per tant el llindar no és
  * cap constant: és el màxim d'eixa competició, i es compara amb els punts de
- * cada jugador abans d'aplicar #malDia, #guanyarOMorir ni el mateix #socElMillor.
+ * cada jugador DESPRÉS de les accions d'equip (#dobleORes, #segurQuePasse i
+ * #kosAmbEscuts) i ABANS d'aplicar #malDia, #guanyarOMorir ni el mateix
+ * #socElMillor.
  *
  * @param array<int, array<int, string>> $activatedCompetitions [player_id => ['CHL', 'EUL', ...]]
  * @param array<int, array<string, int>> $playerPoints          [player_id => ['CHL' => punts, ...]]
@@ -111,6 +113,31 @@ function matchDayBestPoints(array $activatedCompetitions, array $playerPoints): 
     }
 
     return $best;
+}
+
+/**
+ * El que fa #socElMillor a un jugador en una competició.
+ *
+ * La comparació es fa amb els punts de la jornada DESPRÉS de les accions
+ * d'equip (#dobleORes, #segurQuePasse, #kosAmbEscuts) i ABANS de #malDia,
+ * #guanyarOMorir i el mateix #socElMillor. El llindar és el màxim d'eixa
+ * competició entre els qui han activat l'acció (matchDayBestPoints()).
+ *
+ * @param int    $points      Punts del jugador després de les accions d'equip
+ * @param int    $bestPoints  Màxim d'eixa competició entre els qui l'activen
+ * @param string $competition 'CHL', 'EUL' o 'COL'
+ *
+ * @return array{points: int, result: string} Punts que deixa l'acció i 'OK' o 'KO'
+ */
+function matchDayBestActionPoints(int $points, int $bestPoints, string $competition): array
+{
+    $bonus = $competition === 'COL' ? 4 : 3;
+
+    if ($points >= $bestPoints) {
+        return ['points' => $bonus, 'result' => 'OK'];
+    }
+
+    return ['points' => -$bonus, 'result' => 'KO'];
 }
 
 /**
