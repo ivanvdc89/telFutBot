@@ -331,32 +331,22 @@ foreach ($players as $player) {
                 continue;
             }
 
+            // Els punts d'equip ja porten #dobleORes (i la resta d'accions
+            // d'equip) aplicats: el llindar de #malDia es mira sobre eixe total.
             if ($competition === "CHL") {
-                if ($chlPoints > 5) {
-                    $chlAction[] = ["type" => "malDia", "result" => "KO"];
-                    $chlPointsAfterAction = 2;
-                } else {
-                    $chlAction[] = ["type" => "malDia", "result" => "OK"];
-                    $chlPointsAfterAction = 9;
-                }
+                $badDay = matchDayBadDayPoints($chlPoints, $competition);
+                $chlAction[] = ["type" => "malDia", "result" => $badDay['result']];
+                $chlPointsAfterAction = $badDay['points'];
             }
             if ($competition === "EUL") {
-                if ($eulPoints > 5) {
-                    $eulAction[] = ["type" => "malDia", "result" => "KO"];
-                    $eulPointsAfterAction = 2;
-                } else {
-                    $eulAction[] = ["type" => "malDia", "result" => "OK"];
-                    $eulPointsAfterAction = 9;
-                }
+                $badDay = matchDayBadDayPoints($eulPoints, $competition);
+                $eulAction[] = ["type" => "malDia", "result" => $badDay['result']];
+                $eulPointsAfterAction = $badDay['points'];
             }
             if ($competition === "COL") {
-                if ($colPoints > 6) {
-                    $colAction[] = ["type" => "malDia", "result" => "KO"];
-                    $colPointsAfterAction = 2;
-                } else {
-                    $colAction[] = ["type" => "malDia", "result" => "OK"];
-                    $colPointsAfterAction = 12;
-                }
+                $badDay = matchDayBadDayPoints($colPoints, $competition);
+                $colAction[] = ["type" => "malDia", "result" => $badDay['result']];
+                $colPointsAfterAction = $badDay['points'];
             }
         }
     }

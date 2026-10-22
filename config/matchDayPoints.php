@@ -10,6 +10,8 @@
  * provar tests/matchDayPointsTest.php sense tocar la base de dades.
  *
  * LES REGLES (les de /normes accions)
+ *   - #malDia: si els punts de la competició (després de les accions d'equip)
+ *     passen de 5 (6 a COL), l'acció deixa 2 punts; si no, 9 (12 a COL).
  *   - #dobleORes: l'equip més votat de cada competició no suma cap punt i el
  *     segon suma doble. Els empats els decidix la classificació d'equips
  *     (team_standings), i el segon pot ser un equip sense vots si només n'hi ha
@@ -109,6 +111,33 @@ function matchDayBestPoints(array $activatedCompetitions, array $playerPoints): 
     }
 
     return $best;
+}
+
+/**
+ * El que fa #malDia amb els punts d'una competició.
+ *
+ * Els punts que arriben són els de la jornada DESPRÉS de les accions d'equip
+ * (#dobleORes, #segurQuePasse i #kosAmbEscuts): si #dobleORes ha doblat o
+ * anul·lat un equip, el llindar de #malDia es mira sobre eixe total. La norma
+ * diu 5 punts a CHL i EUL, i 6 a COL.
+ *
+ * @param int    $points      Punts de la competició després de les accions d'equip
+ * @param string $competition 'CHL', 'EUL' o 'COL'
+ *
+ * @return array{points: int, result: string} Punts que deixa l'acció i 'OK' o 'KO'
+ */
+function matchDayBadDayPoints(int $points, string $competition): array
+{
+    $threshold = $competition === 'COL' ? 6 : 5;
+
+    if ($points > $threshold) {
+        return ['points' => 2, 'result' => 'KO'];
+    }
+
+    return [
+        'points' => $competition === 'COL' ? 12 : 9,
+        'result' => 'OK',
+    ];
 }
 
 /**

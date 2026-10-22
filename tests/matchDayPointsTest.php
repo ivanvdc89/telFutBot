@@ -137,6 +137,32 @@ check('el més votat a zero i el segon a doble', array_map('rowView', $double['r
 ]);
 check('i la suma ho arreplega', $double['points'], ['CHL' => 0, 'EUL' => 1, 'COL' => 8]);
 
+echo "\n--- #malDia: el llindar es mira després de #dobleORes ---\n";
+check('5 punts a CHL -> OK', matchDayBadDayPoints(5, 'CHL'), ['points' => 9, 'result' => 'OK']);
+check('6 punts a CHL -> KO', matchDayBadDayPoints(6, 'CHL'), ['points' => 2, 'result' => 'KO']);
+check('6 punts a COL -> OK', matchDayBadDayPoints(6, 'COL'), ['points' => 12, 'result' => 'OK']);
+check('7 punts a COL -> KO', matchDayBadDayPoints(7, 'COL'), ['points' => 2, 'result' => 'KO']);
+
+// El 10 fa 3 punts; doblat, CHL passa de 3 a 6 i #malDia deixa de ser OK.
+$doubled = matchDayTeamPoints($playerTeams, $resultsByTeam, ['doubleTeams' => [10]]);
+check('el total doblat de CHL', $doubled['points']['CHL'], 6);
+check('amb el doble, #malDia CHL és KO', matchDayBadDayPoints($doubled['points']['CHL'], 'CHL')['result'], 'KO');
+
+// Amb dos equips de CHL (3 + 4) i el de 4 anul·lat, el total baixa de 7 a 3.
+$twoChlTeams = [
+    ['id' => 10, 'pot' => 1],
+    ['id' => 11, 'pot' => 2],
+    ['id' => 4,  'pot' => 5],
+];
+$twoChlResults = [
+    10 => ['team_id' => 10, 'points' => 3, 'competition' => 'CHL'],
+    11 => ['team_id' => 11, 'points' => 4, 'competition' => 'CHL'],
+    4  => ['team_id' => 4,  'points' => 1, 'competition' => 'EUL'],
+];
+$zeroed = matchDayTeamPoints($twoChlTeams, $twoChlResults, ['nothingTeams' => [11]]);
+check('el total anul·lat de CHL', $zeroed['points']['CHL'], 3);
+check('amb l\'anul·lació, #malDia CHL és OK', matchDayBadDayPoints($zeroed['points']['CHL'], 'CHL')['result'], 'OK');
+
 echo "\n--- #kosAmbEscuts ---\n";
 $ko = matchDayTeamPoints($playerTeams, $resultsByTeam, ['koTeams' => [10]]);
 check('l\'equip boicotejat no suma', rowView($ko['rows'][0]), [
