@@ -12,6 +12,9 @@
  * LES REGLES (les de /normes accions)
  *   - #malDia: si els punts de la competició (després de les accions d'equip)
  *     passen de 5 (6 a COL), l'acció deixa 2 punts; si no, 9 (12 a COL).
+ *   - #guanyarOMorir: compta els partits guanyats sobre el resultat (3/4 punts
+ *     base), no sobre el total que deixen les accions d'equip. Una victòria
+ *     anul·lada per #dobleORes o #kosAmbEscuts continua comptant.
  *   - #dobleORes: l'equip més votat de cada competició no suma cap punt i el
  *     segon suma doble. Els empats els decidix la classificació d'equips
  *     (team_standings), i el segon pot ser un equip sense vots si només n'hi ha
@@ -292,9 +295,9 @@ function matchDayBestFinalEffects(array $ranking, array $results): array
  *   rows: una fila per equip amb resultat (pot, team_id, points, action, total);
  *   points: la suma de la jornada per competició, amb les accions d'equip ja
  *   aplicades i sense les de jugador (#malDia, #socElMillor, #guanyarOMorir);
- *   wins: els partits guanyats per competició (pels punts del partit, no pels
- *   del joc: a la Conference la victòria val 4, i el comptador mira si en val
- *   més de 2).
+ *   wins: els partits guanyats per competició, mirats sobre el resultat del
+ *   partit (3/4 punts base), no sobre el total amb les accions. Una victòria
+ *   que #dobleORes deixa a 0 o dobla continua comptant per a #guanyarOMorir.
  */
 function matchDayTeamPoints(array $playerTeams, array $resultsByTeam, array $actions): array
 {
@@ -355,6 +358,9 @@ function matchDayTeamPoints(array $playerTeams, array $resultsByTeam, array $act
         if (array_key_exists($competition, $points)) {
             $points[$competition] += $totalPoints;
 
+            // La victòria es mira sobre el resultat del partit (3/4), no sobre
+            // el total amb les accions: #guanyarOMorir ha de comptar el partit
+            // guanyat encara que #dobleORes el deixe a 0 o el doble.
             if ($basePoints > 2) {
                 $wins[$competition]++;
             }

@@ -137,6 +137,20 @@ check('el més votat a zero i el segon a doble', array_map('rowView', $double['r
 ]);
 check('i la suma ho arreplega', $double['points'], ['CHL' => 0, 'EUL' => 1, 'COL' => 8]);
 
+echo "\n--- #guanyarOMorir: les victòries compten pel resultat del partit ---\n";
+// El script fa -4 + 2 * wins, així que estos wins han de ser els del partit i
+// no els dels punts que deixen les accions.
+$zeroedWin = matchDayTeamPoints($playerTeams, $resultsByTeam, ['nothingTeams' => [10]]);
+check('una victòria anul·lada compta com a victòria', $zeroedWin['wins']['CHL'], 1);
+check('encara que els punts queden a 0', $zeroedWin['points']['CHL'], 0);
+
+$doubledWin = matchDayTeamPoints($playerTeams, $resultsByTeam, ['doubleTeams' => [20]]);
+check('una victòria doblada compta una sola vegada', $doubledWin['wins']['COL'], 1);
+check('i els punts es doblen', $doubledWin['points']['COL'], 8);
+
+$koWin = matchDayTeamPoints($playerTeams, $resultsByTeam, ['koTeams' => [10]]);
+check('una victòria anul·lada pel KO també compta', $koWin['wins']['CHL'], 1);
+
 echo "\n--- #malDia: el llindar es mira després de #dobleORes ---\n";
 check('5 punts a CHL -> OK', matchDayBadDayPoints(5, 'CHL'), ['points' => 9, 'result' => 'OK']);
 check('6 punts a CHL -> KO', matchDayBadDayPoints(6, 'CHL'), ['points' => 2, 'result' => 'KO']);
