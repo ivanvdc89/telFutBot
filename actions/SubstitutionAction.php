@@ -493,7 +493,13 @@ class SubstitutionAction extends PlayerAction
             $rows[] = $row;
         }
 
-        $keyboard = InlineMenu::fromCommands($rows);
+        // Cancelar no esborra res: només torna al menú de /substitució, on es
+        // veuen els canvis pendents i es pot continuar revisant sense passar
+        // per /inici.
+        $keyboard = InlineMenu::appendRow(
+            InlineMenu::fromCommands($rows),
+            [InlineMenu::button('Cancelar', commandCallbackData('/substitució'))]
+        );
 
         $this->telegram->sendMessage($this->chatId, "Nou equip:", false, null, null, $keyboard);
     }

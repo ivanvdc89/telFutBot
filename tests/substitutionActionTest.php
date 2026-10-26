@@ -403,6 +403,7 @@ $flat = flatKeyboard($sent[0]['keyboard']);
 check('candidat de país nou inclòs', in_array('/in CandA', $flat, true), true);
 check('candidat del mateix país inclòs (es deixa anar el seu)', in_array('/in CandSameCountry', $flat, true), true);
 check('el propi equip exclòs', in_array('/in OwnedPot1', $flat, true), false);
+check('amb el botó de cancelar', end($sent[0]['keyboard']), ['/substitució']);
 
 echo "\n--- /out sobre un equip que no és teu ---\n";
 [$sent] = runCommand(buildWorld(range(1, 12)), '/out CandA');
@@ -417,6 +418,7 @@ echo "\n--- /out sobre un pot buit vàlid ---\n";
 check('text', $sent[0]['text'], 'Nou equip:');
 $flat = flatKeyboard($sent[0]['keyboard']);
 check('ofereix els candidats del pot 5', [in_array('/in CandPot5', $flat, true), in_array('/in CandGermany5', $flat, true)], [true, true]);
+check('també es pot cancelar', end($sent[0]['keyboard']), ['/substitució']);
 
 echo "\n--- /out sobre un pot buit invàlid ---\n";
 [$sent] = runCommand(buildWorld(range(1, 12)), '/out CHL_Pot_5');

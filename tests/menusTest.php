@@ -70,7 +70,7 @@ check('un equip que s\'afig', menuLabel('/add ParisSaintGermain'), 'ParisSaintGe
 check('un nom de jugador', menuLabel('/data player Ivan Arrachina'), 'Ivan Arrachina');
 check('una final', menuLabel('/millorFinal CHL'), 'Final CHL');
 check('eliminar els canvis', menuLabel('/substitució remove'), 'Eliminar els canvis');
-check('traure l\'aposta', menuLabel('/segurQuePasse Borrar'), 'Esborrar l\'aposta');
+check('traure l\'aposta', menuLabel('/segurQuePasse Borrar'), 'Borrar l\'aposta');
 check('un comandament sense etiqueta perd la barra', menuLabel('/foo'), 'foo');
 
 echo "\n--- cap etiqueta no comença per / ---\n";

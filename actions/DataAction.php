@@ -162,7 +162,20 @@ class DataAction extends CommandAction
             $message .= "\n";
         }
 
-        $this->telegram->sendMessage($this->chatId, $message);
+        // El detall d'un pot és una pantalla final: sense botó, l'única eixida
+        // seria /inici i tornar a entrar a Dades. El botó torna a la llista.
+        $keyboard = InlineMenu::make([
+            [InlineMenu::button('Tornar als pots', commandCallbackData('/data pots'))],
+        ]);
+
+        $this->telegram->sendMessage(
+            $this->chatId,
+            $message,
+            false,
+            null,
+            null,
+            $keyboard
+        );
     }
 
     /**

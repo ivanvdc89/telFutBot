@@ -217,6 +217,7 @@ check(
     $sent[0]['text'],
     "Equips del pot CHL 3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
 );
+check('amb el botó per tornar a tots els pots', $sent[0]['keyboard'], [['/data pots']]);
 
 echo "\n--- /data pot amb números que no existeixen ---\n";
 foreach (['/data pot 13' => 'fora de rang', '/data pot 0' => 'zero', '/data pot' => 'sense número', '/data pot abc' => 'no numèric'] as $text => $label) {

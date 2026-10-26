@@ -72,6 +72,19 @@ final class InlineMenu
     }
 
     /**
+     * Afig una fila al final d'un teclat ja construït.
+     *
+     * @param array<int, array{text: string, callback_data: string}> $buttons
+     */
+    public static function appendRow(InlineKeyboardMarkup $keyboard, array $buttons): InlineKeyboardMarkup
+    {
+        $rows   = $keyboard->getInlineKeyboard();
+        $rows[] = $buttons;
+
+        return new InlineKeyboardMarkup($rows);
+    }
+
+    /**
      * Un botó inline.
      *
      * Valida les dos coses que Telegram rebutja sense dir per què: un text buit
