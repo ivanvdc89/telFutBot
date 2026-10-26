@@ -315,7 +315,7 @@ check('a 9 punts del líder -> 1 vot', $action->updates[0]['data']['max'] ?? nul
 
 echo "\n--- /kos ko_pot CHL_3 ---\n";
 [$sent] = runCommand(buildWorld(), '/kos ko_pot CHL_3');
-check('text', $sent[0]['text'], 'Equips del pot Champions 3:');
+check('text', $sent[0]['text'], 'Equips del pot CHL 3:');
 check('teclat', $sent[0]['keyboard'], [['/kos ko_vot EquipA', '/kos ko_vot EquipB', '/kos ko_vot EquipC']]);
 
 echo "\n--- /kos ko_pot invàlid ---\n";

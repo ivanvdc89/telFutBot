@@ -35,19 +35,11 @@ const CALLBACK_COMMAND_PREFIX = 'c:';
 const CALLBACK_PLAYER_PREFIX = 'dp:';
 
 /**
- * El nom curt de cada competició, per als botons.
- *
- * Les etiquetes CHL/EUL/COL són les de la base de dades, no les que entén un
- * jugador nou.
- */
-const COMPETITION_MENU_LABELS = [
-    'CHL' => 'Champions',
-    'EUL' => 'Europa',
-    'COL' => 'Conference',
-];
-
-/**
  * Etiquetes dels botons que no tenen arguments.
+ *
+ * Les competicions es queden amb CHL, EUL i COL: són les sigles que ja fan
+ * servir els textos del joc (pots, substitucions, anuncis) i el jugador les
+ * reconeix abans que un nom llarg.
  *
  * Les claus són el comandament exacte. Si un comandament no hi és, es prova
  * pels prefixos i, al final, es treu la barra.
@@ -80,8 +72,8 @@ const MENU_LABELS = [
     '/dobleORes borrar'   => 'Esborrar els vots',
     '/kos'                => 'KO amb escuts',
     '/kos borrar'         => 'Esborrar vots i escuts',
-    '/segurQuePasse Borrar' => 'Esborrar l\'aposta',
-    '/millorFinal borrar' => 'Esborrar el vot',
+    '/segurQuePasse Borrar' => 'Borrar l\'aposta',
+    '/millorFinal borrar' => 'Borrar el vot',
 ];
 
 /**
@@ -101,9 +93,9 @@ const MENU_LABEL_PREFIXES = [
 /**
  * El text humà d'un botó a partir del comandament que llança.
  *
- *     menuLabel('/dobleORes pot CHL_1')  => 'Champions 1'
- *     menuLabel('/malDia Activar EUL')   => 'Activar Europa'
- *     menuLabel('/out CHL_Pot_2')        => 'Champions 2 (buit)'
+ *     menuLabel('/dobleORes pot CHL_1')  => 'CHL 1'
+ *     menuLabel('/malDia Activar EUL')   => 'Activar EUL'
+ *     menuLabel('/out CHL_Pot_2')        => 'CHL 2 (buit)'
  *
  * @param string $command Comandament tal com l'escriuria el jugador.
  */
@@ -120,20 +112,16 @@ function menuLabel(string $command): string
             // "Activar CHL" o "Desactivar COL".
             [$verb, $competition] = array_pad(explode(' ', $rest, 2), 2, '');
 
-            return trim($verb . ' ' . competitionMenuLabel($competition));
+            return trim($verb . ' ' . $competition);
         }
     }
 
     if (str_starts_with($command, '/millorFinal ')) {
-        return 'Final ' . competitionMenuLabel(substr($command, strlen('/millorFinal ')));
+        return 'Final ' . substr($command, strlen('/millorFinal '));
     }
 
     if (str_starts_with($command, '/kos escut ')) {
-        $target = substr($command, strlen('/kos escut '));
-
-        return isset(COMPETITION_MENU_LABELS[$target])
-            ? 'Escut ' . COMPETITION_MENU_LABELS[$target]
-            : 'Escut: ' . $target;
+        return 'Escut ' . substr($command, strlen('/kos escut '));
     }
 
     // Els tres menús que trien un pot.
@@ -165,18 +153,10 @@ function menuLabel(string $command): string
 }
 
 /**
- * Etiqueta curta d'una competició: CHL => Champions.
- */
-function competitionMenuLabel(string $competition): string
-{
-    return COMPETITION_MENU_LABELS[$competition] ?? $competition;
-}
-
-/**
- * Etiqueta d'un pot: CHL_1 => "Champions 1".
+ * Etiqueta d'un pot: CHL_1 => "CHL 1".
  *
- * També accepta el número global antic (5 => "Europa 1"), perquè els teclats
- * vells que queden als xats continuen enviant eixe format.
+ * També accepta el número global antic (5 => "EUL 1"), perquè els teclats vells
+ * que queden als xats continuen enviant eixe format.
  */
 function potMenuLabel(string $pot): string
 {
@@ -194,16 +174,16 @@ function potMenuLabel(string $pot): string
 
     [$competition, $number] = explode('_', $label, 2);
 
-    return competitionMenuLabel($competition) . ' ' . $number;
+    return $competition . ' ' . $number;
 }
 
 /**
- * Etiqueta d'un forat buit: CHL_Pot_1 => "Champions 1 (buit)".
+ * Etiqueta d'un forat buit: CHL_Pot_1 => "CHL 1 (buit)".
  */
 function emptyPotMenuLabel(string $slot): string
 {
     if (preg_match('/^(CHL|EUL|COL)_Pot_(\d)$/', $slot, $parts) === 1) {
-        return competitionMenuLabel($parts[1]) . ' ' . $parts[2] . ' (buit)';
+        return $parts[1] . ' ' . $parts[2] . ' (buit)';
     }
 
     return $slot . ' (buit)';

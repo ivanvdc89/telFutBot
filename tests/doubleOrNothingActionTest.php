@@ -296,7 +296,7 @@ check('última fila', $sent[0]['keyboard'][2], ['/dobleORes pot COL_1', '/dobleO
 
 echo "\n--- /dobleORes pot CHL_3 ---\n";
 [$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_3');
-check('text', $sent[0]['text'], 'Equips del pot Champions 3:');
+check('text', $sent[0]['text'], 'Equips del pot CHL 3:');
 check('teclat', $sent[0]['keyboard'], [['/dobleORes vot EquipA', '/dobleORes vot EquipB', '/dobleORes vot EquipC']]);
 
 echo "\n--- /dobleORes pot invàlid ---\n";
@@ -408,11 +408,11 @@ check('un decimal no val', $sent[0]['text'], 'ERROR, pot invàlid');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot 1e1');
 check('una notació científica no val', $sent[0]['text'], 'ERROR, pot invàlid');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_1');
-check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Champions 1');
+check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot CHL 1');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot EUL_1');
-check('EUL_1 apunta al pot global 5', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Europa 1');
+check('EUL_1 apunta al pot global 5', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL 1');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot 5');
-check('els teclats antics amb pot 5 encara funcionen', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Europa 1');
+check('els teclats antics amb pot 5 encara funcionen', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL 1');
 
 echo "\n  si ja coincideix no s'escriu res\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => []]), '/dobleORes');

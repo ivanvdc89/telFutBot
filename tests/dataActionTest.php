@@ -215,7 +215,7 @@ echo "\n--- /data pot CHL_3 ---\n";
 check(
     'quants jugadors té cada equip i qui són',
     $sent[0]['text'],
-    "Equips del pot Champions 3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
+    "Equips del pot CHL 3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
 );
 
 echo "\n--- /data pot amb números que no existeixen ---\n";
