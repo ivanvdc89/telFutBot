@@ -68,7 +68,8 @@ check('un equip que ix', menuLabel('/out RealMadrid'), 'RealMadrid');
 check('un equip que entra', menuLabel('/in EquipA'), 'EquipA');
 check('un equip que s\'afig', menuLabel('/add ParisSaintGermain'), 'ParisSaintGermain');
 check('un nom de jugador', menuLabel('/data player Ivan Arrachina'), 'Ivan Arrachina');
-check('la classificació general', menuLabel('/classificacio'), 'Classificació general');
+check('el botó de classificacions', menuLabel('/classificacio'), 'Classificacions');
+check('la classificació general', menuLabel('/classificacio general'), 'General');
 check('el menú de competicions', menuLabel('/classificacio competicions'), 'Competicions');
 check('la classificació d\'una competició', menuLabel('/classificacio CHL'), 'CHL');
 check('una final', menuLabel('/millorFinal CHL'), 'Final CHL');
@@ -79,7 +80,8 @@ check('un comandament sense etiqueta perd la barra', menuLabel('/foo'), 'foo');
 echo "\n--- cap etiqueta no comença per / ---\n";
 $commands = [
     '/inici', '/equips', '/accions', '/data', '/normes', '/configuració', '/nom',
-    '/data pots', '/data players', '/classificacio', '/classificacio competicions',
+    '/data pots', '/data players', '/classificacio', '/classificacio general',
+    '/classificacio competicions',
     '/normes bàsiques', '/normes accions',
     '/substitució', '/substitució remove', '/malDia', '/socElMillor',
     '/guanyarOMorir', '/dobleORes', '/dobleORes borrar', '/kos', '/kos borrar',

@@ -338,7 +338,7 @@ $dispatcher->dispatch(['/data'], CHAT_ID);
 check('el menú de dades', $bot->sent[0]['text'], 'Data disponible:');
 check('amb els botons', $bot->sent[0]['keyboard'], [
     ['/data pots', '/data players'],
-    ['/classificacio', '/classificacio competicions'],
+    ['/classificacio'],
 ]);
 
 echo "\n--- un text que no és cap comandament ---\n";

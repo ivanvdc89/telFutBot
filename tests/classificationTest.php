@@ -148,10 +148,26 @@ function check(string $label, $actual, $expected): void
     }
 }
 
-// ---------- la general ----------
+// ---------- el menú ----------
 
 echo "--- /classificacio ---\n";
 $sent = run(worldWithPlayers(), '/classificacio');
+
+check('text', $sent[0]['text'], 'Classificacions:');
+check('la general i les competicions', $sent[0]['keyboard'], [
+    ['/classificacio general'],
+    ['/classificacio CHL', '/classificacio EUL', '/classificacio COL'],
+    ['/data'],
+]);
+
+echo "\n--- /classificacio competicions (botons vells) ---\n";
+$sent = run(worldWithPlayers(), '/classificacio competicions');
+check('també obri el menú', $sent[0]['text'], 'Classificacions:');
+
+// ---------- la general ----------
+
+echo "\n--- /classificacio general ---\n";
+$sent = run(worldWithPlayers(), '/classificacio general');
 
 check('un sol missatge', count($sent), 1);
 check('va dins d\'un bloc de codi', $sent[0]['parse_mode'], 'HTML');
@@ -160,19 +176,8 @@ check(
     $sent[0]['text'],
     "<pre>🏆 Classificació general\n\n1. A  10 pts\n1. B  10 pts\n3. C   5 pts</pre>"
 );
-check('botons per anar a competicions i a dades', $sent[0]['keyboard'], [
-    ['/classificacio competicions', '/data'],
-]);
-
-// ---------- el menú de competicions ----------
-
-echo "\n--- /classificacio competicions ---\n";
-$sent = run(worldWithPlayers(), '/classificacio competicions');
-
-check('text', $sent[0]['text'], 'Classificació per competició:');
-check('les tres competicions', $sent[0]['keyboard'], [
-    ['/classificacio CHL', '/classificacio EUL', '/classificacio COL'],
-    ['/data'],
+check('botons per tornar a classificacions i a dades', $sent[0]['keyboard'], [
+    ['/classificacio', '/data'],
 ]);
 
 // ---------- cada competició ----------
@@ -185,8 +190,8 @@ check(
     $sent[0]['text'],
     "<pre>🏆 Classificació CHL\n\n1. B  12 pts\n2. A   7 pts\n3. C   0 pts</pre>"
 );
-check('i torna a competicions o a la general', $sent[0]['keyboard'], [
-    ['/classificacio competicions', '/classificacio'],
+check('i torna a classificacions o a la general', $sent[0]['keyboard'], [
+    ['/classificacio', '/classificacio general'],
 ]);
 
 echo "\n--- /classificacio EUL ---\n";
@@ -221,7 +226,7 @@ check('el sisé no', str_contains($sent[0]['text'], 'P6'), false);
 check('i només cinc files', substr_count($sent[0]['text'], ' pts'), 5);
 check('i diu quants en queden', str_contains($sent[0]['text'], '… i 2 jugadors més.'), true);
 
-$sent = run(buildWorld($manyPlayers, $manyTotals), '/classificacio');
+$sent = run(buildWorld($manyPlayers, $manyTotals), '/classificacio general');
 check('la general els ensenya tots', str_contains($sent[0]['text'], 'P7'), true);
 
 // ---------- sense dades ----------
@@ -233,14 +238,14 @@ $sent = run(buildWorld(
 ), '/classificacio CHL');
 check('ho diu', str_contains($sent[0]['text'], 'Encara no hi ha cap punt.'), true);
 
-$sent = run(buildWorld([], []), '/classificacio');
+$sent = run(buildWorld([], []), '/classificacio general');
 check('i també a la general', str_contains($sent[0]['text'], 'Encara no hi ha cap punt.'), true);
 
 echo "\n--- punts negatius ---\n";
 $sent = run(buildWorld(
     [['id' => 1, 'name' => 'A', 'points' => -2]],
     []
-), '/classificacio');
+), '/classificacio general');
 check('es veuen', str_contains($sent[0]['text'], '-2 pts'), true);
 check('i no es confonen amb "sense punts"', str_contains($sent[0]['text'], 'Encara no hi ha cap punt.'), false);
 
@@ -250,7 +255,7 @@ echo "\n--- un jugador sense nom ---\n";
 $sent = run(buildWorld(
     [['id' => 9, 'name' => null, 'points' => 3]],
     []
-), '/classificacio');
+), '/classificacio general');
 check('es mostra pel número', str_contains($sent[0]['text'], '#9'), true);
 
 // ---------- el router ----------

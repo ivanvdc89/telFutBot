@@ -91,7 +91,7 @@ class DataAction extends CommandAction
     {
         $keyboard = InlineMenu::fromCommands([
             ['/data pots', '/data players'],
-            ['/classificacio', '/classificacio competicions'],
+            ['/classificacio'],
         ]);
 
         $this->telegram->sendMessage(

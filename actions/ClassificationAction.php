@@ -11,9 +11,10 @@ use TelegramBot\Api\BotApi;
 /**
  * Les classificacions: /classificacio.
  *
- *   /classificacio                 la general (players.points)
- *   /classificacio competicions    el menú de CHL, EUL i COL
+ *   /classificacio                 el menú: general o per competició
+ *   /classificacio general         la general (players.points)
  *   /classificacio CHL             la classificació de la competició
+ *   /classificacio competicions    àlies del menú, pels botons vells
  *
  * És només de lectura i no depén de cap jugador concret: ho pot consultar
  * qualsevol, també qui encara no ha triat equips.
@@ -50,8 +51,8 @@ class ClassificationAction extends CommandAction
     {
         $subCommand = $this->subCommand();
 
-        if ($subCommand === 'competicions') {
-            $this->showCompetitionsMenu();
+        if ($subCommand === 'general') {
+            $this->showGeneral();
 
             return;
         }
@@ -62,7 +63,9 @@ class ClassificationAction extends CommandAction
             return;
         }
 
-        $this->showGeneral();
+        // Sense argument, amb 'competicions' (botons vells) o amb qualsevol
+        // cosa que no siga una competició: el menú, que és on es tria.
+        $this->showMenu();
     }
 
     /**
@@ -78,21 +81,22 @@ class ClassificationAction extends CommandAction
             classificationPlayerNames($players)
         );
 
-        $this->sendTable($text, [['/classificacio competicions', '/data']]);
+        $this->sendTable($text, [['/classificacio', '/data']]);
     }
 
     /**
-     * El menú de les tres competicions.
+     * El menú: la general o una de les tres competicions.
      */
-    private function showCompetitionsMenu(): void
+    private function showMenu(): void
     {
         $this->telegram->sendMessage(
             $this->chatId,
-            "Classificació per competició:",
+            "Classificacions:",
             false,
             null,
             null,
             InlineMenu::fromCommands([
+                ['/classificacio general'],
                 ['/classificacio CHL', '/classificacio EUL', '/classificacio COL'],
                 ['/data'],
             ])
@@ -121,7 +125,7 @@ class ClassificationAction extends CommandAction
             5
         );
 
-        $this->sendTable($text, [['/classificacio competicions', '/classificacio']]);
+        $this->sendTable($text, [['/classificacio', '/classificacio general']]);
     }
 
     /**

@@ -199,7 +199,7 @@ echo "\n--- /data ---\n";
 check('text', $sent[0]['text'], 'Data disponible:');
 check('teclat', $sent[0]['keyboard'], [
     ['/data pots', '/data players'],
-    ['/classificacio', '/classificacio competicions'],
+    ['/classificacio'],
 ]);
 
 // ---------- pots ----------
