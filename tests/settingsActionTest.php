@@ -36,7 +36,20 @@ class FakeBot extends BotApi
     ) {
         $keyboard = null;
         if ($replyMarkup !== null) {
-            $keyboard = json_decode($replyMarkup->toJson(), true)['keyboard'] ?? null;
+            $inline = json_decode($replyMarkup->toJson(), true)['inline_keyboard'] ?? null;
+
+            if ($inline !== null) {
+                // Per a les proves, "keyboard" és el comandament que executaria
+                // cada botó: així les comprovacions existents continuen dient el
+                // mateix que deien amb els teclats de resposta.
+                $keyboard = array_map(function ($row) {
+                    return array_map(function ($button) {
+                        $data = $button['callback_data'];
+
+                        return str_starts_with($data, 'c:') ? substr($data, 2) : $data;
+                    }, $row);
+                }, $inline);
+            }
         }
         $this->sent[] = ['text' => $text, 'keyboard' => $keyboard];
 
@@ -184,6 +197,15 @@ check('"all" està reservat', playerNameProblem('all'), 'El nom "all" està rese
 check('"ALL" també', playerNameProblem('ALL'), 'El nom "ALL" està reservat.');
 check('el menú de configuració', settingsMenuRows(), MENU_KEYBOARD);
 
+echo "\n--- la petició de nom es reconeix ---\n";
+check('el text de la petició', isNamePrompt(NAME_PROMPT), true);
+check('un missatge normal no', isNamePrompt('Hola'), false);
+check('un error amb la petició sí', isNamePrompt("ERROR, res\n\n" . NAME_PROMPT), true);
+check('la resposta a la petició és el nom', nameReplyArgs('Ivan Arrachina', NAME_PROMPT), ['/nom', 'Ivan', 'Arrachina']);
+check('la resposta a un error també', nameReplyArgs('Ivan', "ERROR, res\n\n" . NAME_PROMPT), ['/nom', 'Ivan']);
+check('un missatge normal no és cap nom', nameReplyArgs('Ivan', 'Hola'), null);
+check('un comandament respost no és cap nom', nameReplyArgs('/inici', NAME_PROMPT), null);
+
 // ---------- /configuració ----------
 
 echo "\n--- /configuració amb nom ---\n";
@@ -191,7 +213,7 @@ echo "\n--- /configuració amb nom ---\n";
 check(
     'diu el nom i com canviar-lo',
     $sent[0]['text'],
-    "Configuració\n\nEl teu nom: Ivan\n\nPer canviar-lo, envia:\n/nom ElTeuNom"
+    "Configuració\n\nEl teu nom: Ivan\n\nPer canviar-lo, toca \"Canviar el nom\"."
 );
 check('amb el teclat de configuració', $sent[0]['keyboard'], MENU_KEYBOARD);
 check('no escriu res', $player->updatedNames, []);
@@ -201,12 +223,12 @@ echo "\n--- /configuració sense nom ---\n";
 check(
     'avisa que no en té',
     $sent[0]['text'],
-    "Configuració\n\nEncara no tens nom. El fan servir els anuncis i /data players.\n\nPer canviar-lo, envia:\n/nom ElTeuNom"
+    "Configuració\n\nEncara no tens nom. El fan servir els anuncis i la llista de jugadors.\n\nPer canviar-lo, toca \"Canviar el nom\"."
 );
 
 echo "\n--- /settings és el mateix ---\n";
 [$sent] = runCommand(buildWorld('Ivan'), '/settings');
-check('mateix text', $sent[0]['text'], "Configuració\n\nEl teu nom: Ivan\n\nPer canviar-lo, envia:\n/nom ElTeuNom");
+check('mateix text', $sent[0]['text'], "Configuració\n\nEl teu nom: Ivan\n\nPer canviar-lo, toca \"Canviar el nom\".");
 
 // ---------- /nom ----------
 
@@ -223,12 +245,8 @@ check('i el confirma sencer', $sent[0]['text'], 'Nom guardat: Ivan Arrachina');
 
 echo "\n--- /nom sense argument ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom');
-check(
-    'mostra la configuració',
-    $sent[0]['text'],
-    "Configuració\n\nEl teu nom: Ivan\n\nPer canviar-lo, envia:\n/nom ElTeuNom"
-);
-check('amb el teclat', $sent[0]['keyboard'], MENU_KEYBOARD);
+check('demana el nom', $sent[0]['text'], NAME_PROMPT);
+check('sense teclat propi', $sent[0]['keyboard'], null);
 check('i no escriu res', $player->updatedNames, []);
 
 echo "\n--- /nom amb el nom que ja té ---\n";
@@ -238,12 +256,12 @@ check('sense escriure', $player->updatedNames, []);
 
 echo "\n--- /nom repetit (el té un altre jugador) ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom Marta');
-check('error de nom ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
+check('error de nom ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\n" . NAME_PROMPT);
 check('i no toca la BD', $player->updatedNames, []);
 
 echo "\n--- /nom repetit canviant majúscules ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom MARTA');
-check('també està ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\nEnvia /nom ElTeuNom");
+check('també està ocupat', $sent[0]['text'], "ERROR, Este nom ja és d'un altre jugador.\n\n" . NAME_PROMPT);
 check('i no toca la BD', $player->updatedNames, []);
 
 echo "\n--- /nom canvia el nom del mateix jugador passant de majúscules ---\n";
@@ -258,13 +276,13 @@ foreach ([
     'massa llarg'  => ['/nom ' . str_repeat('a', 101), 'ERROR, El nom no pot passar de 100 caràcters.'],
 ] as $label => [$text, $expected]) {
     [$sent, $player] = runCommand(buildWorld('Ivan'), $text);
-    check($label, $sent[0]['text'], $expected . "\n\nEnvia /nom ElTeuNom");
+    check($label, $sent[0]['text'], $expected . "\n\n" . NAME_PROMPT);
     check($label . ': no escriu', $player->updatedNames, []);
 }
 
 echo "\n--- /nom només amb espais ---\n";
 [$sent, $player] = runCommand(buildWorld('Ivan'), '/nom    ');
-check('torna a mostrar la configuració', str_starts_with($sent[0]['text'], "Configuració\n"), true);
+check('demana el nom', $sent[0]['text'], NAME_PROMPT);
 check('sense escriure', $player->updatedNames, []);
 
 echo "\n--- /nom accepta els 100 caràcters ---\n";
@@ -284,7 +302,7 @@ echo "\n--- jugador que encara no és al joc ---\n";
 check(
     'se l\'envida a /equips',
     $sent[0]['text'],
-    "Encara no ets al joc. Fes /equips per començar; després podràs definir el teu nom amb /nom."
+    "Encara no ets al joc. Toca \"Equips\" per començar; després podràs definir el teu nom."
 );
 check('amb els botons', $sent[0]['keyboard'], [['/equips', '/inici']]);
 check('i no toca la BD', $player->updatedNames, []);

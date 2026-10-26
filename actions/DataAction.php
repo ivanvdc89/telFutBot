@@ -1,11 +1,11 @@
 <?php
 
 require_once(__DIR__ . '/CommandAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/../config/pots.php');
 require_once(__DIR__ . '/../config/settings.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Consultes de dades: /data.
@@ -89,7 +89,7 @@ class DataAction extends CommandAction
      */
     private function showMenu(): void
     {
-        $keyboard = new ReplyKeyboardMarkup([['/data pots', '/data players']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/data pots', '/data players']]);
 
         $this->telegram->sendMessage(
             $this->chatId,
@@ -122,7 +122,7 @@ class DataAction extends CommandAction
             $rows[] = $row;
         }
 
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::fromCommands($rows);
 
         $this->telegram->sendMessage(
             $this->chatId,
@@ -150,7 +150,7 @@ class DataAction extends CommandAction
         }
 
         $teams   = $this->teamsRepo->getCountPlayerTeamsByPot($globalPot);
-        $message = 'Equips del pot ' . potLabel($globalPot) . ":\n";
+        $message = 'Equips del pot ' . potMenuLabel(potLabel($globalPot)) . ":\n";
 
         foreach ($teams as $team) {
             $message .= $team['total'] . " " . $team['name'] . "\n";
@@ -172,23 +172,30 @@ class DataAction extends CommandAction
     {
         $players = $this->playersRepo->getAllPlayers();
         $rows    = [];
-        $row     = [];
-        $row[]   = '/data player all';
+        $row     = [InlineMenu::button('Tots', playerCallbackData('all'))];
 
         foreach ($players as $player) {
-            $row[] = '/data player ' . $player['name'];
+            // Un jugador sense nom no es pot consultar per /data player, i el
+            // nom pot passar de 64 bytes: per això el botó porta l'id.
+            $name = (string) ($player['name'] ?? '');
 
-            if (count($row) == 3) {
+            if ($name === '') {
+                continue;
+            }
+
+            $row[] = InlineMenu::button($name, playerCallbackData((int) $player['id']));
+
+            if (count($row) === 3) {
                 $rows[] = $row;
                 $row    = [];
             }
         }
 
-        if (count($row) != 0) {
+        if (count($row) !== 0) {
             $rows[] = $row;
         }
 
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::make($rows);
 
         $this->telegram->sendMessage(
             $this->chatId,

@@ -1,9 +1,8 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/../config/results.php');
-
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Base de les accions que s'activen i es desactiven per competició.
@@ -189,7 +188,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
                 $this->saveActionRow((int) $action['id'], $list);
             }
 
-            $keyboard       = new ReplyKeyboardMarkup($this->toggleRows($list), true, true);
+            $keyboard       = InlineMenu::fromCommands($this->toggleRows($list));
             $messageClosure = "\nActivar o desactivar:";
         }
 
@@ -208,7 +207,7 @@ abstract class CompetitionToggleAction extends ActionRowAction
      */
     private function sendMenu(array $list = []): void
     {
-        $keyboard = new ReplyKeyboardMarkup($this->toggleRows($list), true, true);
+        $keyboard = InlineMenu::fromCommands($this->toggleRows($list));
 
         $this->telegram->sendMessage(
             $this->chatId,

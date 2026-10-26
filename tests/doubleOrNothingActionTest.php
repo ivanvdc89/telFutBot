@@ -35,7 +35,20 @@ class FakeBot extends BotApi
     ) {
         $keyboard = null;
         if ($replyMarkup !== null) {
-            $keyboard = json_decode($replyMarkup->toJson(), true)['keyboard'] ?? null;
+            $inline = json_decode($replyMarkup->toJson(), true)['inline_keyboard'] ?? null;
+
+            if ($inline !== null) {
+                // Per a les proves, "keyboard" és el comandament que executaria
+                // cada botó: així les comprovacions existents continuen dient el
+                // mateix que deien amb els teclats de resposta.
+                $keyboard = array_map(function ($row) {
+                    return array_map(function ($button) {
+                        $data = $button['callback_data'];
+
+                        return str_starts_with($data, 'c:') ? substr($data, 2) : $data;
+                    }, $row);
+                }, $inline);
+            }
         }
         $this->sent[] = ['text' => $text, 'keyboard' => $keyboard];
 
@@ -270,7 +283,7 @@ $world = buildWorld(['max' => 3, 'teams' => []], true);
 [$bot, $player] = $world;
 $player->players = [];
 [$sent] = runCommand($world, '/dobleORes');
-check('text', $sent[0]['text'], 'Encara no has triat cap equip. Fes /equips per començar.');
+check('text', $sent[0]['text'], 'Encara no has triat cap equip. Toca "Equips" per començar.');
 check('teclat', $sent[0]['keyboard'], [['/equips', '/inici']]);
 
 echo "\n--- /dobleORes sense argument: menú de pots ---\n";
@@ -283,7 +296,7 @@ check('última fila', $sent[0]['keyboard'][2], ['/dobleORes pot COL_1', '/dobleO
 
 echo "\n--- /dobleORes pot CHL_3 ---\n";
 [$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_3');
-check('text', $sent[0]['text'], 'Equips del pot CHL_3:');
+check('text', $sent[0]['text'], 'Equips del pot Champions 3:');
 check('teclat', $sent[0]['keyboard'], [['/dobleORes vot EquipA', '/dobleORes vot EquipB', '/dobleORes vot EquipC']]);
 
 echo "\n--- /dobleORes pot invàlid ---\n";
@@ -395,11 +408,11 @@ check('un decimal no val', $sent[0]['text'], 'ERROR, pot invàlid');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot 1e1');
 check('una notació científica no val', $sent[0]['text'], 'ERROR, pot invàlid');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot CHL_1');
-check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot CHL_1');
+check('un pot buit ho diu', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Champions 1');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot EUL_1');
-check('EUL_1 apunta al pot global 5', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL_1');
+check('EUL_1 apunta al pot global 5', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Europa 1');
 [$sent] = runCommand(buildWorld(), '/dobleORes pot 5');
-check('els teclats antics amb pot 5 encara funcionen', $sent[0]['text'], 'ERROR, no hi ha equips en el pot EUL_1');
+check('els teclats antics amb pot 5 encara funcionen', $sent[0]['text'], 'ERROR, no hi ha equips en el pot Europa 1');
 
 echo "\n  si ja coincideix no s'escriu res\n";
 [$sent, $action] = runCommand(buildWorld(['max' => 3, 'teams' => []]), '/dobleORes');

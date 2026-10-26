@@ -34,7 +34,20 @@ class FakeBot extends BotApi
     ) {
         $keyboard = null;
         if ($replyMarkup !== null) {
-            $keyboard = json_decode($replyMarkup->toJson(), true)['keyboard'] ?? null;
+            $inline = json_decode($replyMarkup->toJson(), true)['inline_keyboard'] ?? null;
+
+            if ($inline !== null) {
+                // Per a les proves, "keyboard" és el comandament que executaria
+                // cada botó: així les comprovacions existents continuen dient el
+                // mateix que deien amb els teclats de resposta.
+                $keyboard = array_map(function ($row) {
+                    return array_map(function ($button) {
+                        $data = $button['callback_data'];
+
+                        return str_starts_with($data, 'c:') ? substr($data, 2) : $data;
+                    }, $row);
+                }, $inline);
+            }
         }
         $this->sent[] = ['text' => $text, 'keyboard' => $keyboard];
 
@@ -189,7 +202,7 @@ $world = buildWorld();
 [$bot, $player] = $world;
 $player->players = [];
 [$sent] = runCommand($world, '/millorFinal');
-check('text', $sent[0]['text'], 'Encara no has triat cap equip. Fes /equips per començar.');
+check('text', $sent[0]['text'], 'Encara no has triat cap equip. Toca "Equips" per començar.');
 check('teclat', $sent[0]['keyboard'], [['/equips', '/inici']]);
 
 echo "\n--- /millorFinal sense argument: menú de finals ---\n";

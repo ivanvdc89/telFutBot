@@ -1,9 +1,9 @@
 <?php
 
 require_once(__DIR__ . '/PlayerAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Acció de substitució d'equips.
@@ -151,7 +151,7 @@ class SubstitutionAction extends PlayerAction
             $message .= $closedReason;
 
             $keyboard = count($pending) > 0
-                ? new ReplyKeyboardMarkup($this->removeRows(), true, true)
+                ? InlineMenu::fromCommands($this->removeRows())
                 : null;
 
             $this->telegram->sendMessage($this->chatId, $message, false, null, null, $keyboard);
@@ -163,7 +163,7 @@ class SubstitutionAction extends PlayerAction
 
         if (count($freeCompetitions) === 0) {
             $message .= "Ja has fet un canvi a cada competició.";
-            $keyboard = new ReplyKeyboardMarkup($this->removeRows(), true, true);
+            $keyboard = InlineMenu::fromCommands($this->removeRows());
             $this->telegram->sendMessage($this->chatId, $message, false, null, null, $keyboard);
 
             return;
@@ -177,7 +177,7 @@ class SubstitutionAction extends PlayerAction
         }
 
         $message  .= "Els teus equips:";
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::fromCommands($rows);
         $this->telegram->sendMessage($this->chatId, $message, false, null, null, $keyboard);
     }
 
@@ -493,7 +493,7 @@ class SubstitutionAction extends PlayerAction
             $rows[] = $row;
         }
 
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::fromCommands($rows);
 
         $this->telegram->sendMessage($this->chatId, "Nou equip:", false, null, null, $keyboard);
     }

@@ -1,8 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/CommandAction.php');
-
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
+require_once(__DIR__ . '/InlineMenu.php');
 
 /**
  * Les normes del joc: /normes.
@@ -146,10 +145,8 @@ Interese apostar per equips amb mal resultat, si han guanyat el primer partit pe
      */
     private function showMenu(): void
     {
-        $keyboard = new ReplyKeyboardMarkup(
-            [['/normes bàsiques', '/normes accions']],
-            true,
-            true
+        $keyboard = InlineMenu::fromCommands(
+            [['/normes bàsiques', '/normes accions']]
         );
 
         $this->telegram->sendMessage(

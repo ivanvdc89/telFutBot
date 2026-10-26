@@ -39,7 +39,20 @@ class FakeBot extends BotApi
     ) {
         $keyboard = null;
         if ($replyMarkup !== null) {
-            $keyboard = json_decode($replyMarkup->toJson(), true)['keyboard'] ?? null;
+            $inline = json_decode($replyMarkup->toJson(), true)['inline_keyboard'] ?? null;
+
+            if ($inline !== null) {
+                // Per a les proves, "keyboard" és el comandament que executaria
+                // cada botó: així les comprovacions existents continuen dient el
+                // mateix que deien amb els teclats de resposta.
+                $keyboard = array_map(function ($row) {
+                    return array_map(function ($button) {
+                        $data = $button['callback_data'];
+
+                        return str_starts_with($data, 'c:') ? substr($data, 2) : $data;
+                    }, $row);
+                }, $inline);
+            }
         }
         $this->sent[] = ['text' => $text, 'keyboard' => $keyboard];
 
@@ -202,7 +215,7 @@ echo "\n--- /data pot CHL_3 ---\n";
 check(
     'quants jugadors té cada equip i qui són',
     $sent[0]['text'],
-    "Equips del pot CHL_3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
+    "Equips del pot Champions 3:\n2 Barça\n   - Ivan\n   - Marta\n\n1 Ajax\n   - Ivan Arrachina\n\n"
 );
 
 echo "\n--- /data pot amb números que no existeixen ---\n";
@@ -217,8 +230,8 @@ echo "\n--- /data players ---\n";
 [$sent] = runCommand(buildWorld(), '/data players');
 check('text', $sent[0]['text'], 'Jugadors participants:');
 check('botons de tres en tres, amb "all" al davant', $sent[0]['keyboard'], [
-    ['/data player all', '/data player Ivan', '/data player Marta'],
-    ['/data player Ivan Arrachina'],
+    ['dp:all', 'dp:7', 'dp:8'],
+    ['dp:9'],
 ]);
 
 // ---------- plantilles ----------

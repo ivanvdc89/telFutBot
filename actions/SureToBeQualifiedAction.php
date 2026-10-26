@@ -1,9 +1,9 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Acció #segurQuePasse (tipus sureToBeQualified).
@@ -172,7 +172,7 @@ class SureToBeQualifiedAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/segurQuePasse Borrar']], true, true)
+            InlineMenu::fromCommands([['/segurQuePasse Borrar']])
         );
     }
 
@@ -197,13 +197,17 @@ class SureToBeQualifiedAction extends ActionRowAction
             $rows[] = $row;
         }
 
+        // Sense equips no hi ha res a triar, i un teclat inline buit no és el
+        // mateix que un teclat de resposta buit: Telegram el rebutja.
+        $keyboard = InlineMenu::optional($rows);
+
         $this->telegram->sendMessage(
             $this->chatId,
             "#segurQuePasse activar amb quin equip:",
             false,
             null,
             null,
-            new ReplyKeyboardMarkup($rows, true, true)
+            $keyboard
         );
     }
 }

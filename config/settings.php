@@ -26,14 +26,53 @@ const RESERVED_PLAYER_NAMES = ['all'];
 /**
  * El teclat de /configuració.
  *
- * /nom sense argument no canvia res: torna a mostrar este mateix text, que és
- * on s'explica com es fa.
+ * /nom sense argument demana el nom amb ForceReply: el jugador només ha
+ * d'escriure'l, sense cap comandament.
  *
  * @return array Files de botons.
  */
 function settingsMenuRows(): array
 {
     return [['/nom', '/inici']];
+}
+
+/**
+ * El text que demana el nom.
+ *
+ * És una constant perquè el webhook ha de reconéixer la resposta: quan el
+ * jugador contesta a un missatge que porta este text, el que escriu és el nom.
+ */
+const NAME_PROMPT = "Escriu el teu nom i envia'l:";
+
+/**
+ * Si el text d'un missatge respost és una petició de nom.
+ */
+function isNamePrompt(string $text): bool
+{
+    return str_contains($text, NAME_PROMPT);
+}
+
+/**
+ * Els arguments de /nom per a un missatge que respon a una petició de nom.
+ *
+ * El nom pot tindre espais, així que el text sencer es parteix com ho faria el
+ * comandament escrit a mà.
+ *
+ * @return array<int, string>|null Null si el missatge respost no demanava el nom.
+ */
+function nameReplyArgs(string $text, string $repliedText): ?array
+{
+    if ($repliedText === '' || !isNamePrompt($repliedText)) {
+        return null;
+    }
+
+    // Un comandament escrit com a resposta no és cap nom: que el router el
+    // tracte com el que és.
+    if (str_starts_with($text, '/')) {
+        return null;
+    }
+
+    return array_merge(['/nom'], explode(' ', $text));
 }
 
 /**
@@ -46,10 +85,10 @@ function settingsText(?string $currentName): string
     $text = "Configuració\n\n";
 
     $text .= ($currentName === null || $currentName === '')
-        ? "Encara no tens nom. El fan servir els anuncis i /data players.\n"
+        ? "Encara no tens nom. El fan servir els anuncis i la llista de jugadors.\n"
         : "El teu nom: " . $currentName . "\n";
 
-    return $text . "\nPer canviar-lo, envia:\n/nom ElTeuNom";
+    return $text . "\nPer canviar-lo, toca \"Canviar el nom\".";
 }
 
 /**

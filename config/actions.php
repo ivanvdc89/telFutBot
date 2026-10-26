@@ -30,3 +30,20 @@ function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen): array
 
     return $rows;
 }
+
+/**
+ * El menú de /inici.
+ *
+ * És el mateix que estava escrit dins de basic.php. Viure ací el fa provable i,
+ * sobretot, permet que el botó "Inici" que acompanyen les pantalles de resultat
+ * òbriga exactament el mateix menú.
+ *
+ * @return array Files de botons.
+ */
+function startMenuRows(): array
+{
+    return [
+        ['/accions', '/data', '/equips'],
+        ['/normes', '/configuració'],
+    ];
+}

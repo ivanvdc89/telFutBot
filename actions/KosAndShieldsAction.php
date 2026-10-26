@@ -1,10 +1,11 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/../config/pots.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
+use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
 
 /**
  * Acció #kosAmbEscuts (tipus kosAndShields).
@@ -202,7 +203,7 @@ class KosAndShieldsAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/kos borrar', '/inici']], true, true)
+            InlineMenu::fromCommands([['/kos borrar', '/inici']])
         );
     }
 
@@ -261,7 +262,7 @@ class KosAndShieldsAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup($rows, true, true)
+            InlineMenu::fromCommands($rows)
         );
     }
 
@@ -311,18 +312,18 @@ class KosAndShieldsAction extends ActionRowAction
         $rows = $this->teamRows($this->teamsRepo->getTeamsByPot($globalPot), '/kos ko_vot ');
 
         if (count($rows) === 0) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potLabel($globalPot));
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potMenuLabel(potLabel($globalPot)));
 
             return;
         }
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Equips del pot " . potLabel($globalPot) . ":",
+            "Equips del pot " . potMenuLabel(potLabel($globalPot)) . ":",
             false,
             null,
             null,
-            new ReplyKeyboardMarkup($rows, true, true)
+            InlineMenu::fromCommands($rows)
         );
     }
 
@@ -425,13 +426,18 @@ class KosAndShieldsAction extends ActionRowAction
 
         $rows = $this->teamRows($teams, '/kos escut ');
 
+        // Un teclat inline buit no és el mateix que un teclat de resposta buit:
+        // Telegram no el vol. Si no queda cap equip per escudar, el missatge va
+        // sense botons.
+        $keyboard = InlineMenu::optional($rows);
+
         $this->telegram->sendMessage(
             $this->chatId,
             "Els teus equips per a posar escut:",
             false,
             null,
             null,
-            new ReplyKeyboardMarkup($rows, true, true)
+            $keyboard
         );
     }
 
@@ -446,7 +452,7 @@ class KosAndShieldsAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']], true, true)
+            InlineMenu::fromCommands([['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']])
         );
     }
 
@@ -461,7 +467,7 @@ class KosAndShieldsAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup($this->potRows('/kos ko_pot '), true, true)
+            InlineMenu::fromCommands($this->potRows('/kos ko_pot '))
         );
     }
 
@@ -489,9 +495,9 @@ class KosAndShieldsAction extends ActionRowAction
         return $rows;
     }
 
-    private function simpleKeyboard(): ReplyKeyboardMarkup
+    private function simpleKeyboard(): InlineKeyboardMarkup
     {
-        return new ReplyKeyboardMarkup([['/kos', '/inici']], true, true);
+        return InlineMenu::fromCommands([['/kos', '/inici']]);
     }
 
     private function hasMaxKos(array $data, int $maxVotes): bool

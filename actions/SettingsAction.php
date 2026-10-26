@@ -1,9 +1,10 @@
 <?php
 
 require_once(__DIR__ . '/PlayerAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/../config/settings.php');
 
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
+use TelegramBot\Api\Types\ForceReply;
 
 /**
  * Configuració del jugador: /configuració (estat) i /nom (posar-se el nom).
@@ -63,16 +64,16 @@ class SettingsAction extends PlayerAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup(settingsMenuRows(), true, true)
+            InlineMenu::fromCommands(settingsMenuRows())
         );
     }
 
     /**
      * /nom <nom>: desa el nom del jugador.
      *
-     * Sense argument no és cap error: es torna a mostrar la configuració, que és
-     * on s'explica com s'envia el nom. Aixina el botó /nom del teclat sempre fa
-     * alguna cosa útil.
+     * Sense argument demana el nom amb ForceReply, que fa que la resposta del
+     * jugador vinga enllaçada al missatge del bot: el webhook la reconeix i la
+     * converteix en /nom <nom>. Aixina no cal que ningú escriga un comandament.
      */
     private function setName(int $playerId): void
     {
@@ -80,7 +81,7 @@ class SettingsAction extends PlayerAction
         $current = $this->currentName($playerId);
 
         if ($name === '') {
-            $this->showSettings($playerId);
+            $this->askForName();
 
             return;
         }
@@ -119,18 +120,37 @@ class SettingsAction extends PlayerAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/configuració', '/inici']], true, true)
+            InlineMenu::fromCommands([['/configuració', '/inici']])
         );
     }
 
     /**
-     * Error de nom amb el recordatori de com es fa.
+     * Demana el nom amb ForceReply, perquè el jugador només haja d'escriure'l.
+     */
+    private function askForName(): void
+    {
+        $this->telegram->sendMessage(
+            $this->chatId,
+            NAME_PROMPT,
+            false,
+            null,
+            null,
+            new ForceReply(true, null, 'El teu nom')
+        );
+    }
+
+    /**
+     * Error de nom i una nova petició, per no haver de tornar a buscar el botó.
      */
     private function sendNameError(string $reason): void
     {
         $this->telegram->sendMessage(
             $this->chatId,
-            "ERROR, " . $reason . "\n\nEnvia /nom ElTeuNom"
+            "ERROR, " . $reason . "\n\n" . NAME_PROMPT,
+            false,
+            null,
+            null,
+            new ForceReply(true, null, 'El teu nom')
         );
     }
 
@@ -174,11 +194,11 @@ class SettingsAction extends PlayerAction
      */
     protected function sendNotRegistered(): void
     {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/equips', '/inici']]);
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Encara no ets al joc. Fes /equips per començar; després podràs definir el teu nom amb /nom.",
+            "Encara no ets al joc. Toca \"Equips\" per començar; després podràs definir el teu nom.",
             false,
             null,
             null,

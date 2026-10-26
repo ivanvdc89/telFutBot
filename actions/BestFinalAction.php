@@ -1,8 +1,7 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
-
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
+require_once(__DIR__ . '/InlineMenu.php');
 
 /**
  * Acció #millorFinal (tipus bestFinal).
@@ -133,7 +132,7 @@ class BestFinalAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/millorFinal borrar']], true, true)
+            InlineMenu::fromCommands([['/millorFinal borrar']])
         );
     }
 
@@ -148,7 +147,7 @@ class BestFinalAction extends ActionRowAction
             false,
             null,
             null,
-            new ReplyKeyboardMarkup([['/millorFinal CHL', '/millorFinal EUL', '/millorFinal COL']], true, true)
+            InlineMenu::fromCommands([['/millorFinal CHL', '/millorFinal EUL', '/millorFinal COL']])
         );
     }
 

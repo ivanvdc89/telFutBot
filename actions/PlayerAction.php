@@ -1,9 +1,9 @@
 <?php
 
 require_once(__DIR__ . '/CommandAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Base de les accions del bot que necessiten saber quin jugador hi ha darrere
@@ -88,11 +88,11 @@ abstract class PlayerAction extends CommandAction
      */
     protected function sendNotRegistered(): void
     {
-        $keyboard = new ReplyKeyboardMarkup([['/equips', '/inici']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/equips', '/inici']]);
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Encara no has triat cap equip. Fes /equips per començar.",
+            "Encara no has triat cap equip. Toca \"Equips\" per començar.",
             false,
             null,
             null,

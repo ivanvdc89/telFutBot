@@ -35,7 +35,20 @@ class FakeBot extends BotApi
     ) {
         $keyboard = null;
         if ($replyMarkup !== null) {
-            $keyboard = json_decode($replyMarkup->toJson(), true)['keyboard'] ?? null;
+            $inline = json_decode($replyMarkup->toJson(), true)['inline_keyboard'] ?? null;
+
+            if ($inline !== null) {
+                // Per a les proves, "keyboard" és el comandament que executaria
+                // cada botó: així les comprovacions existents continuen dient el
+                // mateix que deien amb els teclats de resposta.
+                $keyboard = array_map(function ($row) {
+                    return array_map(function ($button) {
+                        $data = $button['callback_data'];
+
+                        return str_starts_with($data, 'c:') ? substr($data, 2) : $data;
+                    }, $row);
+                }, $inline);
+            }
         }
         $this->sent[] = ['text' => $text, 'keyboard' => $keyboard];
 
@@ -281,7 +294,7 @@ $world = buildWorld();
 [$bot, $player] = $world;
 $player->players = [];
 [$sent] = runCommand($world, '/kos');
-check('text', $sent[0]['text'], 'Encara no has triat cap equip. Fes /equips per començar.');
+check('text', $sent[0]['text'], 'Encara no has triat cap equip. Toca "Equips" per començar.');
 check('teclat', $sent[0]['keyboard'], [['/equips', '/inici']]);
 
 echo "\n--- /kos: menú de pots i escuts ---\n";
@@ -302,7 +315,7 @@ check('a 9 punts del líder -> 1 vot', $action->updates[0]['data']['max'] ?? nul
 
 echo "\n--- /kos ko_pot CHL_3 ---\n";
 [$sent] = runCommand(buildWorld(), '/kos ko_pot CHL_3');
-check('text', $sent[0]['text'], 'Equips del pot CHL_3:');
+check('text', $sent[0]['text'], 'Equips del pot Champions 3:');
 check('teclat', $sent[0]['keyboard'], [['/kos ko_vot EquipA', '/kos ko_vot EquipB', '/kos ko_vot EquipC']]);
 
 echo "\n--- /kos ko_pot invàlid ---\n";
@@ -334,7 +347,7 @@ check('text', $sent[0]['text'], 'Els teus equips per a posar escut:');
 check('teclat', $sent[0]['keyboard'], [['/kos escut OwnedPot1']]);
 
 [$sent] = runCommand(buildWorld(['max' => 3, 'kos' => [], 'shields' => [101]]), '/kos escut CHL');
-check('l\'equip que ja té escut no s\'ofereix', $sent[0]['keyboard'], []);
+check('l\'equip que ja té escut no s\'ofereix', $sent[0]['keyboard'], null);
 
 echo "\n--- /kos escut OwnedPot1 ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/kos escut OwnedPot1');

@@ -1,10 +1,10 @@
 <?php
 
 require_once(__DIR__ . '/ActionRowAction.php');
+require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/../config/pots.php');
 
 use TelegramBot\Api\BotApi;
-use TelegramBot\Api\Types\ReplyKeyboardMarkup;
 
 /**
  * Acció #dobleORes (tipus doubleOrNothing).
@@ -141,7 +141,7 @@ class DoubleOrNothingAction extends ActionRowAction
             return;
         }
 
-        $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/dobleORes', '/inici']]);
         $this->telegram->sendMessage($this->chatId, "Vots esborrats", false, null, null, $keyboard);
     }
 
@@ -174,7 +174,7 @@ class DoubleOrNothingAction extends ActionRowAction
             return;
         }
 
-        $keyboard = new ReplyKeyboardMarkup([['/dobleORes', '/inici']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/dobleORes', '/inici']]);
         $this->telegram->sendMessage($this->chatId, "Vot guardat", false, null, null, $keyboard);
 
         $this->sendVotesList($data);
@@ -184,7 +184,7 @@ class DoubleOrNothingAction extends ActionRowAction
     {
         $this->sendVotesList($data);
 
-        $keyboard = new ReplyKeyboardMarkup([['/dobleORes borrar', '/inici']], true, true);
+        $keyboard = InlineMenu::fromCommands([['/dobleORes borrar', '/inici']]);
         $this->telegram->sendMessage($this->chatId, "Ja tens tots els vots fets", false, null, null, $keyboard);
     }
 
@@ -233,7 +233,7 @@ class DoubleOrNothingAction extends ActionRowAction
             $rows[] = $row;
         }
 
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::fromCommands($rows);
 
         $this->telegram->sendMessage($this->chatId, "Pots disponibles:", false, null, null, $keyboard);
     }
@@ -251,7 +251,7 @@ class DoubleOrNothingAction extends ActionRowAction
         $teams = $this->teamsRepo->getTeamsByPot($globalPot);
 
         if (count($teams) === 0) {
-            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potLabel($globalPot));
+            $this->telegram->sendMessage($this->chatId, "ERROR, no hi ha equips en el pot " . potMenuLabel(potLabel($globalPot)));
 
             return;
         }
@@ -272,11 +272,11 @@ class DoubleOrNothingAction extends ActionRowAction
             $rows[] = $row;
         }
 
-        $keyboard = new ReplyKeyboardMarkup($rows, true, true);
+        $keyboard = InlineMenu::fromCommands($rows);
 
         $this->telegram->sendMessage(
             $this->chatId,
-            "Equips del pot " . potLabel($globalPot) . ":",
+            "Equips del pot " . potMenuLabel(potLabel($globalPot)) . ":",
             false,
             null,
             null,
