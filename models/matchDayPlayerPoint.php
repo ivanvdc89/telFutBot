@@ -79,6 +79,40 @@ class MatchDayPlayerPoint extends Connection {
     }
 
     /**
+     * L'última fila calculada de cada jugador, indexada per player_id.
+     *
+     * És la foto més recent de cada jugador encara que s'haja saltat una
+     * jornada: la classificació per competició no pot agafar només les files de
+     * l'última jornada, perquè qui no hi ha jugat es quedaria sense punts.
+     *
+     * @return array<int, array> [player_id => fila de match_day_player_points]
+     */
+    public function getLatestTotalsByPlayer(): array
+    {
+        $connection = parent::connect();
+        parent::set_names();
+
+        $sql = "select p.*
+                from match_day_player_points p
+                inner join (
+                    select player_id, max(match_day) as match_day
+                    from match_day_player_points
+                    group by player_id
+                ) latest
+                  on latest.player_id = p.player_id
+                 and latest.match_day = p.match_day;";
+        $stmt = $connection->prepare($sql);
+        $stmt->execute();
+
+        $rows = [];
+        foreach ($stmt->fetchAll(pdo::FETCH_ASSOC) as $row) {
+            $rows[(int) $row['player_id']] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
      * L'acumulat d'un jugador que encara no ha jugat cap jornada.
      *
      * Porta els quatre totals a zero, perquè els scripts de càlcul els puguen

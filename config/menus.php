@@ -61,6 +61,8 @@ const MENU_LABELS = [
     '/data pots'          => 'Pots',
     '/data players'       => 'Jugadors',
     '/data player all'    => 'Tots els jugadors',
+    '/classificacio'      => 'Classificació general',
+    '/classificacio competicions' => 'Competicions',
     '/normes bàsiques'    => 'Normes bàsiques',
     '/normes accions'     => 'Normes de les accions',
     '/substitució'        => 'Fer un canvi',
@@ -103,6 +105,11 @@ function menuLabel(string $command): string
 {
     if (isset(MENU_LABELS[$command])) {
         return MENU_LABELS[$command];
+    }
+
+    // /classificacio CHL, EUL o COL: el botó és només la competició.
+    if (str_starts_with($command, '/classificacio ')) {
+        return substr($command, strlen('/classificacio '));
     }
 
     foreach (['/malDia ', '/socElMillor ', '/guanyarOMorir '] as $prefix) {

@@ -22,6 +22,7 @@ require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
 require_once("models/action.php");
+require_once("models/matchDayPlayerPoint.php");
 require_once("actions/Dispatcher.php");
 
 use TelegramBot\Api\BotApi;
@@ -191,6 +192,10 @@ class FakeAction extends Action
 {
 }
 
+class FakeMatchDayPlayerPoint extends MatchDayPlayerPoint
+{
+}
+
 const CHAT_ID = 555;
 
 function team(int $id, string $name, string $country, int $pot): array
@@ -234,6 +239,7 @@ function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false): 
         $team,
         new FakeSubstitution(),
         new FakeAction(),
+        new FakeMatchDayPlayerPoint(),
         2,
         15,
         $substitutionsOpen,
@@ -330,7 +336,10 @@ echo "\n--- /data ---\n";
 [$bot, , , $dispatcher] = buildWorld();
 $dispatcher->dispatch(['/data'], CHAT_ID);
 check('el menú de dades', $bot->sent[0]['text'], 'Data disponible:');
-check('amb els dos botons', $bot->sent[0]['keyboard'], [['/data pots', '/data players']]);
+check('amb els botons', $bot->sent[0]['keyboard'], [
+    ['/data pots', '/data players'],
+    ['/classificacio', '/classificacio competicions'],
+]);
 
 echo "\n--- un text que no és cap comandament ---\n";
 [$bot, , , $dispatcher] = buildWorld();

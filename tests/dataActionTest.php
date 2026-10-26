@@ -197,7 +197,10 @@ check('el pot 9 és de la Conference', POT_COMPETITIONS[9], 'COL');
 echo "\n--- /data ---\n";
 [$sent] = runCommand(buildWorld(), '/data');
 check('text', $sent[0]['text'], 'Data disponible:');
-check('teclat', $sent[0]['keyboard'], [['/data pots', '/data players']]);
+check('teclat', $sent[0]['keyboard'], [
+    ['/data pots', '/data players'],
+    ['/classificacio', '/classificacio competicions'],
+]);
 
 // ---------- pots ----------
 

@@ -4,6 +4,7 @@ require_once(__DIR__ . '/AddAction.php');
 require_once(__DIR__ . '/ActionsMenuAction.php');
 require_once(__DIR__ . '/BadDayAction.php');
 require_once(__DIR__ . '/BestFinalAction.php');
+require_once(__DIR__ . '/ClassificationAction.php');
 require_once(__DIR__ . '/DataAction.php');
 require_once(__DIR__ . '/DoubleOrNothingAction.php');
 require_once(__DIR__ . '/IAmTheBestAction.php');
@@ -36,6 +37,7 @@ final class Dispatcher
     private Team $teamsRepo;
     private Substitution $substitutionsRepo;
     private Action $actionsRepo;
+    private MatchDayPlayerPoint $pointsRepo;
     private int $matchDay;
     private int $lastMatchDayWithChanges;
     private bool $substitutionsOpen;
@@ -47,6 +49,7 @@ final class Dispatcher
         Team $teamsRepo,
         Substitution $substitutionsRepo,
         Action $actionsRepo,
+        MatchDayPlayerPoint $pointsRepo,
         int $matchDay,
         int $lastMatchDayWithChanges,
         bool $substitutionsOpen,
@@ -57,6 +60,7 @@ final class Dispatcher
         $this->teamsRepo               = $teamsRepo;
         $this->substitutionsRepo       = $substitutionsRepo;
         $this->actionsRepo             = $actionsRepo;
+        $this->pointsRepo              = $pointsRepo;
         $this->matchDay                = $matchDay;
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
         $this->substitutionsOpen       = $substitutionsOpen;
@@ -206,6 +210,18 @@ final class Dispatcher
                 $this->telegram,
                 $this->playersRepo,
                 $this->teamsRepo,
+                $chatId,
+                $args
+            ))->run();
+
+            return;
+        }
+
+        if (ClassificationAction::handlesCommand($command)) {
+            (new ClassificationAction(
+                $this->telegram,
+                $this->playersRepo,
+                $this->pointsRepo,
                 $chatId,
                 $args
             ))->run();

@@ -12,6 +12,7 @@ require_once("models/player.php");
 require_once("models/team.php");
 require_once("models/substitution.php");
 require_once("models/action.php");
+require_once("models/matchDayPlayerPoint.php");
 require_once("actions/Dispatcher.php");
 require_once("actions/CallbackRouter.php");
 require_once("actions/CallbackBot.php");
@@ -35,6 +36,7 @@ $playersRepo       = new Player();
 $substitutionsRepo = new Substitution();
 $teamsRepo         = new Team();
 $actionsRepo       = new Action();
+$pointsRepo        = new MatchDayPlayerPoint();
 
 $matchDay = currentMatchDay();
 
@@ -47,6 +49,7 @@ function makeDispatcher(
     Team $teamsRepo,
     Substitution $substitutionsRepo,
     Action $actionsRepo,
+    MatchDayPlayerPoint $pointsRepo,
     int $matchDay
 ): Dispatcher {
     return new Dispatcher(
@@ -55,6 +58,7 @@ function makeDispatcher(
         $teamsRepo,
         $substitutionsRepo,
         $actionsRepo,
+        $pointsRepo,
         $matchDay,
         LAST_MATCH_DAY_WITH_CHANGES,
         SUBSTITUTIONS_OPEN,
@@ -95,6 +99,7 @@ if (isset($update->callback_query)) {
             $teamsRepo,
             $substitutionsRepo,
             $actionsRepo,
+            $pointsRepo,
             $matchDay
         )->dispatch($args, $chatId);
     }
@@ -124,6 +129,7 @@ if (isset($update->message->text) && $update->message->chat->type === 'private')
         $teamsRepo,
         $substitutionsRepo,
         $actionsRepo,
+        $pointsRepo,
         $matchDay
     )->dispatch($args, $chatId);
 }
