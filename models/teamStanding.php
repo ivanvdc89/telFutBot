@@ -51,6 +51,29 @@ class TeamStanding extends Connection {
     }
 
     /**
+     * Els punts de cada equip a la seua competició, com a [team_id => punts].
+     *
+     * És el que decidix quins equips queden boicotejats a #kosAmbEscuts quan
+     * ningú no ha votat: la norma diu que aleshores queden bloquejats els
+     * millors de la classificació.
+     */
+    public function getPointsByTeam(): array
+    {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select team_id, points from team_standings;";
+        $sql=$connection->prepare($sql);
+        $sql->execute();
+
+        $points = [];
+        foreach ($sql->fetchAll(pdo::FETCH_ASSOC) as $row) {
+            $points[(int) $row['team_id']] = (int) $row['points'];
+        }
+
+        return $points;
+    }
+
+    /**
      * Reescriu la taula sencera amb les files passades.
      *
      * La classificació és un recanvi complet, no una actualització fila a fila:

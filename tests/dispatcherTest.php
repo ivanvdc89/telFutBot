@@ -210,7 +210,7 @@ function team(int $id, string $name, string $country, int $pot): array
 }
 
 /** @return array [bot, player, team, Dispatcher] */
-function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false): array
+function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false, string $kosActive = 'kosAndShields'): array
 {
     $bot    = new FakeBot();
     $player = new FakePlayer();
@@ -243,7 +243,8 @@ function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false): 
         2,
         15,
         $substitutionsOpen,
-        $actionsOpen
+        $actionsOpen,
+        $kosActive
     );
 
     return [$bot, $player, $team, $dispatcher];
@@ -294,10 +295,26 @@ echo "\n--- /accions amb les accions obertes ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, true);
 $dispatcher->dispatch(['/accions'], CHAT_ID);
 check(
-    'les tres accions i el doble o res',
+    'les tres accions, el doble o res i el boicot',
     $bot->sent[0]['keyboard'],
-    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/dobleORes']]
+    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/dobleORes'], ['/kos']]
 );
+
+echo "\n--- /accions amb el boicot per països ---\n";
+[$bot, , , $dispatcher] = buildWorld(false, true, 'kosPais');
+$dispatcher->dispatch(['/accions'], CHAT_ID);
+check('el botó és el del boicot actiu', $bot->sent[0]['keyboard'][2], ['/kosPais']);
+
+echo "\n--- un boicot que no està en joc no respon ---\n";
+[$bot, $player, , $dispatcher] = buildWorld(false, true, 'kosPais');
+$player->players[CHAT_ID] = ['id' => 7, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
+$dispatcher->dispatch(['/kos'], CHAT_ID);
+check('diu que no', $bot->sent[0]['text'], 'No disponible');
+
+[$bot, $player, , $dispatcher] = buildWorld(false, true, 'kosAndShields');
+$player->players[CHAT_ID] = ['id' => 7, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
+$dispatcher->dispatch(['/kosPots'], CHAT_ID);
+check('i el mateix amb els pots', $bot->sent[0]['text'], 'No disponible');
 
 echo "\n--- /accions sense res obert ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, false);

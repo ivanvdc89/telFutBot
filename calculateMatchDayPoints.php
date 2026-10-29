@@ -121,20 +121,72 @@ foreach ($actionsRepo->getActions($matchDay, 'doubleOrNothing') as $action) {
     }
 }
 
-$kosVoted = [];
-foreach ($actionsRepo->getActions($matchDay, 'kosAndShields') as $action) {
-    $actionData = json_decode($action['data'], true);
+// Només compta el boicot que està en joc (KOS_ACTIVE). Els tres guarden les
+// files amb el mateix format, però canvien què es vota i, per tant, quins
+// equips queden a 0 punts.
+$kosType = in_array(KOS_ACTIVE, ['kosAndShields', 'kosPais', 'kosPots'], true)
+    ? KOS_ACTIVE
+    : '';
 
-    foreach ($actionData['kos'] ?? [] as $teamId) {
-        $kosVoted[] = (int) $teamId;
+// Sense boicot actiu no es mira cap fila: les d'un altre tipus o d'una jornada
+// en què no toca no compten.
+$kosRows  = $kosType === '' ? [] : $actionsRepo->getActions($matchDay, $kosType);
+$kosVoted = [];
+$kosGroups = [];
+
+// Si el boicot estava obert (algú hi ha deixat la seua fila) i ningú no ha
+// votat, la norma diu que queden bloquejats els millors de la classificació.
+// Sense cap fila no es toca res: l'acció no estava en joc eixa jornada.
+$teamStandingPoints = count($kosRows) > 0 ? $standingsRepo->getPointsByTeam() : [];
+
+if ($kosType === 'kosAndShields') {
+    foreach ($kosRows as $action) {
+        $actionData = json_decode($action['data'], true);
+
+        foreach ($actionData['kos'] ?? [] as $teamId) {
+            $kosVoted[] = (int) $teamId;
+        }
     }
+} else {
+    // #kosPais i #kosPots: el vot és el país o el pot, i cada grup arrossega
+    // tots els seus equips. L'empat (i el boicot sense vots) el decidix la suma
+    // de punts dels equips del grup.
+    $groupKey  = $kosType === 'kosPais' ? 'paisos' : 'pots';
+    $groupVotes = [];
+
+    foreach ($kosRows as $action) {
+        $actionData = json_decode($action['data'], true);
+
+        foreach ($actionData[$groupKey] ?? [] as $vote) {
+            $groupVotes[] = $vote;
+        }
+    }
+
+    $groupTeams  = [];
+    $groupPoints = [];
+
+    foreach ($teamsRepo->getAllTeams() as $team) {
+        $teamId = (int) $team['id'];
+        $group  = $kosType === 'kosPais'
+            ? (string) $team['country']
+            : (string) (int) $team['pot'];
+
+        $groupTeams[$group][] = $teamId;
+        $groupPoints[$group]  = ($groupPoints[$group] ?? 0) + ($teamStandingPoints[$teamId] ?? 0);
+    }
+
+    $kosGroups[$groupKey] = [
+        'votes'  => $groupVotes,
+        'teams'  => $groupTeams,
+        'points' => $teamStandingPoints,
+    ];
 }
 
 [
     'nothingTeams' => $nothingTeams,
     'doubleTeams'  => $doubleTeams,
     'koTeams'      => $koTeams,
-] = matchDayVoteResults($doubleOrNothingVoted, $kosVoted, $teamCompetitions, $teamRankings);
+] = matchDayVoteResults($doubleOrNothingVoted, $kosVoted, $teamCompetitions, $teamRankings, $teamStandingPoints, $kosGroups);
 
 // Els equips que passen de ronda i el marge de gols de l'anada no es poden
 // deduir dels resultats de hui: són una dada de la jornada eliminatòria, i es
@@ -198,11 +250,11 @@ foreach ($players as $player) {
     }
 
     $shieldTeams = [];
-    $shieldRows  = $actionsRepo->getActionsByPlayerId($playerId, $matchDay, 'kosAndShields');
+    $shieldRows = $kosType === '' ? [] : $actionsRepo->getActionsByPlayerId($playerId, $matchDay, $kosType);
     if (count($shieldRows) > 0) {
-        $kosAndShieldsData = json_decode($shieldRows[0]['data'], true);
+        $kosData = json_decode($shieldRows[0]['data'], true);
 
-        foreach ($kosAndShieldsData['shields'] ?? [] as $teamId) {
+        foreach ($kosData['shields'] ?? [] as $teamId) {
             $shieldTeams[] = (int) $teamId;
         }
     }
@@ -245,6 +297,7 @@ foreach ($players as $player) {
             'nothingTeams'    => $nothingTeams,
             'doubleTeams'     => $doubleTeams,
             'koTeams'         => $koTeams,
+            'koType'          => $kosType === '' ? 'kosAmbEscuts' : $kosType,
             'classifiedTeams' => $classifiedTeams,
             'shields'         => $shieldTeams,
             'sureTeam'        => $sureToBeQualifiedTeam,

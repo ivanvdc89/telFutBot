@@ -243,13 +243,13 @@ function checkContains(string $label, ?string $haystack, string $needle): void
 }
 
 /** @return array [missatges enviats, repo d'accions] */
-function runCommand(array $world, string $text, bool $activated = true): array
+function runCommand(array $world, string $text, bool $activated = true, string $activeKos = 'kosAndShields'): array
 {
     [$bot, $player, $team, $action] = $world;
     $bot->sent = [];
     $args      = explode(' ', $text);
 
-    $handler = new KosAndShieldsAction($bot, $player, $team, $action, CHAT_ID, MATCH_DAY, $args, $activated);
+    $handler = new KosAndShieldsAction($bot, $player, $team, $action, CHAT_ID, MATCH_DAY, $args, $activated, $activeKos);
     $handler->run();
 
     return [$bot->sent, $action];
@@ -266,6 +266,11 @@ echo "--- l'acció no està activada ---\n";
 [$sent] = runCommand(buildWorld(), '/kos', false);
 check('un sol missatge', count($sent), 1);
 check('text', $sent[0]['text'], 'No disponible');
+
+echo "\n--- el boicot actiu és un altre ---\n";
+[$sent, $action] = runCommand(buildWorld(null), '/kos', true, 'kosPais');
+check('contesta que no', $sent[0]['text'], 'No disponible');
+check('i no crea cap fila', $action->added, []);
 
 echo "\n--- activada i sense fila: el bot la crea ---\n";
 // Abans calia que algú la sembrés a mà a la base de dades; si faltava, l'acció

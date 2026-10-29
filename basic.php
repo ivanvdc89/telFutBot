@@ -62,7 +62,8 @@ function makeDispatcher(
         $matchDay,
         LAST_MATCH_DAY_WITH_CHANGES,
         SUBSTITUTIONS_OPEN,
-        ACTIONS_OPEN
+        ACTIONS_OPEN,
+        KOS_ACTIVE
     );
 }
 

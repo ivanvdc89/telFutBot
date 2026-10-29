@@ -34,27 +34,39 @@ function check(string $label, $actual, $expected): void
 $SUBSTITUCIONS = ['/substitució'];
 $ACCIONS       = ['/malDia', '/socElMillor', '/guanyarOMorir'];
 $VOTACIO       = ['/dobleORes'];
+$KO            = ['/kos'];
 
 echo "--- abans del termini: només canvis ---\n";
-check('els canvis hi són i les accions no', actionsMenuRows(true, false), [$SUBSTITUCIONS]);
+check('els canvis hi són i les accions no', actionsMenuRows(true, false, 'kosAndShields'), [$SUBSTITUCIONS]);
 
 echo "\n--- el termini tancat i les accions encara no obertes ---\n";
 // És l'estona d'aplicar i publicar els canvis: no hi ha res a oferir.
-check('el menú queda buit', actionsMenuRows(false, false), []);
+check('el menú queda buit', actionsMenuRows(false, false, 'kosAndShields'), []);
 
 echo "\n--- després d'obrir les accions ---\n";
-check('les tres accions i /dobleORes hi són, i els canvis no', actionsMenuRows(false, true), [$ACCIONS, $VOTACIO]);
+check(
+    'les tres accions, /dobleORes i el boicot hi són, i els canvis no',
+    actionsMenuRows(false, true, 'kosAndShields'),
+    [$ACCIONS, $VOTACIO, $KO]
+);
 
 echo "\n--- les dues coses obertes alhora (no hauria de passar) ---\n";
-check('es mostren les tres files', actionsMenuRows(true, true), [$SUBSTITUCIONS, $ACCIONS, $VOTACIO]);
+check('es mostren les quatre files', actionsMenuRows(true, true, 'kosAndShields'), [$SUBSTITUCIONS, $ACCIONS, $VOTACIO, $KO]);
+
+echo "\n--- cada boicot té el seu botó, i només el que toca ---\n";
+check('el boicot per països', actionsMenuRows(false, true, 'kosPais'), [$ACCIONS, $VOTACIO, ['/kosPais']]);
+check('el boicot per pots', actionsMenuRows(false, true, 'kosPots'), [$ACCIONS, $VOTACIO, ['/kosPots']]);
+check('cap boicot esta jornada', actionsMenuRows(false, true, ''), [$ACCIONS, $VOTACIO]);
+check('un tipus que no és cap boicot', actionsMenuRows(false, true, 'foo'), [$ACCIONS, $VOTACIO]);
 
 echo "\n--- les accions surten amb el nom exacte dels comandaments ---\n";
 // Si un botó no coincidís amb el comandament del router, el jugador el polsaria
 // i no passaria res.
-$files = actionsMenuRows(false, true);
-check('les accions de competició són a la primera fila', count($files), 2);
+$files = actionsMenuRows(false, true, 'kosAndShields');
+check('les accions de competició són a la primera fila', count($files), 3);
 check('i són les tres accions', $files[0], ['/malDia', '/socElMillor', '/guanyarOMorir']);
-check('i la votació és a la segona', $files[1], ['/dobleORes']);
+check('la votació és a la segona', $files[1], ['/dobleORes']);
+check('i el boicot a la tercera', $files[2], ['/kos']);
 
 echo "\n";
 if ($failures === 0) {

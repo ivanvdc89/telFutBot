@@ -95,6 +95,71 @@ check('el pitjor classificat dels empatats queda fora', $kosTie['koTeams'], [5, 
 $many = matchDayVoteResults([], [1, 1, 2, 2, 3, 3, 4, 4, 5, 5], []);
 check('el boicot són els 4 primers', $many['koTeams'], [1, 2, 3, 4]);
 
+echo "\n--- #kosAmbEscuts sense vots: mana la classificació ---\n";
+// Sense cap vot, però amb la classificació carregada, la norma diu que queden
+// bloquejats els 4 equips amb més punts.
+$kosNoVotes = matchDayVoteResults([], [], $teamCompetitions, [], [5 => 9, 4 => 7, 20 => 5, 86 => 3, 10 => 1]);
+check('els 4 amb més punts', $kosNoVotes['koTeams'], [5, 4, 20, 86]);
+
+$kosPointsTie = matchDayVoteResults([], [], $teamCompetitions, [4 => 1, 5 => 2], [5 => 5, 4 => 5]);
+check('empat de punts: mana la posició', $kosPointsTie['koTeams'], [4, 5]);
+
+// Amb vots, la classificació no decidix res: només compta el que s'ha votat.
+$kosWithVotes = matchDayVoteResults([], [10], $teamCompetitions, [], [5 => 99, 10 => 0]);
+check('amb vots, només compten els vots', $kosWithVotes['koTeams'], [10]);
+
+echo "\n--- #kosPais: el país arrossega tots els seus equips ---\n";
+$pais = matchDayVoteResults([], [], $teamCompetitions, [], [], [
+    'paisos' => [
+        'votes'  => ['Spain', 'Spain', 'England'],
+        'teams'  => ['Spain' => [10, 4], 'England' => [86], 'Italy' => [5]],
+        'points' => ['Spain' => 12, 'England' => 9, 'Italy' => 3],
+    ],
+]);
+check('els 2 països més votats, amb tots els seus equips', $pais['koTeams'], [10, 4, 86]);
+
+echo "\n--- #kosPais: l'empat el decidix la suma de punts ---\n";
+$paisTie = matchDayVoteResults([], [], $teamCompetitions, [], [], [
+    'paisos' => [
+        'votes'  => ['Spain', 'England', 'Italy'],
+        'teams'  => ['Spain' => [10], 'England' => [86], 'Italy' => [4]],
+        'points' => ['Spain' => 9, 'England' => 5, 'Italy' => 5],
+    ],
+]);
+// Tres països empatats a 1 vot: entren els 2 de més punts. England i Italy
+// empaten a 5 i decideix el nom.
+check('mana la suma de punts', $paisTie['koTeams'], [10, 86]);
+
+echo "\n--- #kosPais sense vots: els 2 països amb més punts ---\n";
+$paisNoVotes = matchDayVoteResults([], [], $teamCompetitions, [], [], [
+    'paisos' => [
+        'votes'  => [],
+        'teams'  => ['Spain' => [10], 'England' => [86], 'Italy' => [4]],
+        'points' => ['Spain' => 3, 'England' => 9, 'Italy' => 5],
+    ],
+]);
+check('els de més punts', $paisNoVotes['koTeams'], [86, 4]);
+
+echo "\n--- #kosPots: el pot arrossega els seus equips ---\n";
+$pots = matchDayVoteResults([], [], $teamCompetitions, [], [], [
+    'pots' => [
+        'votes'  => [1, 1, 5],
+        'teams'  => ['1' => [10, 5], '5' => [86], '9' => [4]],
+        'points' => ['1' => 7, '5' => 2, '9' => 6],
+    ],
+]);
+check('els 2 pots més votats', $pots['koTeams'], [10, 5, 86]);
+
+// Un equip no s'ha de repetir si hi entra per dos camins.
+$repeated = matchDayVoteResults([], [10], $teamCompetitions, [], [], [
+    'paisos' => [
+        'votes'  => ['Spain'],
+        'teams'  => ['Spain' => [10]],
+        'points' => ['Spain' => 9],
+    ],
+]);
+check('sense duplicats', $repeated['koTeams'], [10]);
+
 // ------------------------------------------------------ els punts per equip
 
 // Tres equips del jugador, un per competició.
@@ -150,6 +215,9 @@ check('i els punts es doblen', $doubledWin['points']['COL'], 8);
 
 $koWin = matchDayTeamPoints($playerTeams, $resultsByTeam, ['koTeams' => [10]]);
 check('una victòria anul·lada pel KO també compta', $koWin['wins']['CHL'], 1);
+
+$koPais = matchDayTeamPoints($playerTeams, $resultsByTeam, ['koTeams' => [10], 'koType' => 'kosPais']);
+check('el resultat porta el tipus del boicot', $koPais['rows'][0]['action'], ['type' => 'kosPais', 'result' => 'KO']);
 
 echo "\n--- #malDia: el llindar es mira després de #dobleORes ---\n";
 check('5 punts a CHL -> OK', matchDayBadDayPoints(5, 'CHL'), ['points' => 9, 'result' => 'OK']);

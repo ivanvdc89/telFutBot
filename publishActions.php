@@ -49,6 +49,15 @@ $groupChatId = $group[0]['chat_id'];
 
 $allActions = $actionsRepo->getActionsByMatchDay($matchDay);
 
+// Només compta el boicot que està en joc (KOS_ACTIVE): si la jornada ha canviat
+// de boicot a mitges, les files de l'altre tipus no es publiquen, igual que no
+// es compten a calculateMatchDayPoints.
+$allActions = array_values(array_filter(
+    $allActions,
+    static fn(array $action): bool => !in_array($action['type'], ['kosAndShields', 'kosPais', 'kosPots'], true)
+        || $action['type'] === KOS_ACTIVE
+));
+
 if (count($allActions) === 0) {
     echo "No hi ha cap acció activada a la jornada $matchDay: no s'envia res.\n";
     exit;
@@ -65,9 +74,13 @@ foreach ($playersRepo->getAllPlayers() as $player) {
 
 $teamNames        = [];
 $teamCompetitions = [];
+$teamCountries    = [];
+$teamPots         = [];
 foreach ($teamsRepo->getAllTeams() as $team) {
     $teamNames[(int) $team['id']]        = (string) $team['name'];
     $teamCompetitions[(int) $team['id']] = (string) $team['competition'];
+    $teamCountries[(int) $team['id']]    = (string) $team['country'];
+    $teamPots[(int) $team['id']]         = (int) $team['pot'];
 }
 
 // Regla de posició: els vots que li toquen a cada jugador segons la
@@ -80,6 +93,10 @@ $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 // queda amb l'ordre en què s'ha votat.
 $teamRankings = $standingsRepo->getRankingsByTeam();
 
+// Punts de cada equip a la seua competició: si a #kosAmbEscuts no hi ha cap
+// vot però algú va obrir l'acció, el boicot són els millors classificats.
+$teamPoints = $standingsRepo->getPointsByTeam();
+
 $announcement = actionsAnnouncement(
     $allActions,
     $allowedVotes,
@@ -87,7 +104,10 @@ $announcement = actionsAnnouncement(
     $teamNames,
     $teamCompetitions,
     Player::MIN_VOTES,
-    $teamRankings
+    $teamRankings,
+    $teamPoints,
+    $teamCountries,
+    $teamPots
 );
 
 $message = actionsPublishText($matchDay, $announcement);

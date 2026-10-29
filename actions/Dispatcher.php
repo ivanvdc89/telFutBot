@@ -10,6 +10,8 @@ require_once(__DIR__ . '/DoubleOrNothingAction.php');
 require_once(__DIR__ . '/IAmTheBestAction.php');
 require_once(__DIR__ . '/InlineMenu.php');
 require_once(__DIR__ . '/KosAndShieldsAction.php');
+require_once(__DIR__ . '/KosPaisAction.php');
+require_once(__DIR__ . '/KosPotsAction.php');
 require_once(__DIR__ . '/RulesAction.php');
 require_once(__DIR__ . '/SettingsAction.php');
 require_once(__DIR__ . '/StartAction.php');
@@ -42,6 +44,7 @@ final class Dispatcher
     private int $lastMatchDayWithChanges;
     private bool $substitutionsOpen;
     private bool $actionsOpen;
+    private string $kosActive;
 
     public function __construct(
         BotApi $telegram,
@@ -53,7 +56,8 @@ final class Dispatcher
         int $matchDay,
         int $lastMatchDayWithChanges,
         bool $substitutionsOpen,
-        bool $actionsOpen
+        bool $actionsOpen,
+        string $kosActive
     ) {
         $this->telegram                = $telegram;
         $this->playersRepo             = $playersRepo;
@@ -65,6 +69,7 @@ final class Dispatcher
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
         $this->substitutionsOpen       = $substitutionsOpen;
         $this->actionsOpen             = $actionsOpen;
+        $this->kosActive               = $kosActive;
     }
 
     /**
@@ -107,8 +112,14 @@ final class Dispatcher
             return;
         }
 
-        if (KosAndShieldsAction::handlesCommand($command)) {
-            (new KosAndShieldsAction(
+        // Els tres boicots de KO tenen el mateix constructor; només respon el
+        // que està en joc (KOS_ACTIVE), i els altres contesten "No disponible".
+        foreach ([KosAndShieldsAction::class, KosPaisAction::class, KosPotsAction::class] as $kosAction) {
+            if (!$kosAction::handlesCommand($command)) {
+                continue;
+            }
+
+            (new $kosAction(
                 $this->telegram,
                 $this->playersRepo,
                 $this->teamsRepo,
@@ -116,7 +127,8 @@ final class Dispatcher
                 $chatId,
                 $this->matchDay,
                 $args,
-                $this->actionsOpen
+                $this->actionsOpen,
+                $this->kosActive
             ))->run();
 
             return;
@@ -271,7 +283,8 @@ final class Dispatcher
                 $chatId,
                 $args,
                 $this->substitutionsOpen,
-                $this->actionsOpen
+                $this->actionsOpen,
+                $this->kosActive
             ))->run();
 
             return;

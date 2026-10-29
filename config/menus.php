@@ -75,6 +75,10 @@ const MENU_LABELS = [
     '/dobleORes borrar'   => 'Esborrar els vots',
     '/kos'                => 'KO amb escuts',
     '/kos borrar'         => 'Esborrar vots i escuts',
+    '/kosPais'            => 'KO per països',
+    '/kosPais borrar'     => 'Esborrar vots i escuts',
+    '/kosPots'            => 'KO per pots',
+    '/kosPots borrar'     => 'Esborrar vots i escuts',
     '/segurQuePasse Borrar' => 'Borrar l\'aposta',
     '/millorFinal borrar' => 'Borrar el vot',
 ];
@@ -128,12 +132,15 @@ function menuLabel(string $command): string
         return 'Final ' . substr($command, strlen('/millorFinal '));
     }
 
-    if (str_starts_with($command, '/kos escut ')) {
-        return 'Escut ' . substr($command, strlen('/kos escut '));
+    // Els tres boicots tenen el mateix escut: "Escut CHL" o "Escut Arsenal".
+    foreach (['/kos escut ', '/kosPais escut ', '/kosPots escut '] as $prefix) {
+        if (str_starts_with($command, $prefix)) {
+            return 'Escut ' . substr($command, strlen($prefix));
+        }
     }
 
-    // Els tres menús que trien un pot.
-    foreach (['/data pot ', '/dobleORes pot ', '/kos ko_pot '] as $prefix) {
+    // Els menús que trien un pot.
+    foreach (['/data pot ', '/dobleORes pot ', '/kos ko_pot ', '/kosPots vot '] as $prefix) {
         if (str_starts_with($command, $prefix)) {
             return potMenuLabel(substr($command, strlen($prefix)));
         }
@@ -141,6 +148,10 @@ function menuLabel(string $command): string
 
     if (str_starts_with($command, '/kos ko_vot ')) {
         return 'KO: ' . substr($command, strlen('/kos ko_vot '));
+    }
+
+    if (str_starts_with($command, '/kosPais vot ')) {
+        return 'KO: ' . substr($command, strlen('/kosPais vot '));
     }
 
     // /out pot ser un equip o un forat buit (CHL_Pot_1).

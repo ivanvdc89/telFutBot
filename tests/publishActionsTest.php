@@ -39,6 +39,8 @@ check('tres', actionsJoinNames(['Arsenal', 'Roma', 'Ajax']), 'Arsenal, Roma i Aj
 echo "\n--- etiquetes ---\n";
 check('malDia', actionLabel('badDay'), '#malDia');
 check('kosAmbEscuts', actionLabel('kosAndShields'), '#kosAmbEscuts');
+check('kosPais', actionLabel('kosPais'), '#kosPais');
+check('kosPots', actionLabel('kosPots'), '#kosPots');
 check('un tipus desconegut es queda tal qual', actionLabel('foo'), 'foo');
 
 // ---------- recomptes ----------
@@ -58,6 +60,40 @@ check('el recompte', $kosTotals, [10 => 2, 86 => 2, 4 => 1, 82 => 1, 47 => 1, 57
 check('els 4 primers', actionsMostVotedTeams($kosTotals, 4), [10, 86, 4, 82]);
 check('amb menys vots que llocs', actionsMostVotedTeams(actionsVoteTotals([4]), 4), [4]);
 check('sense vots no hi ha ningú', actionsMostVotedTeams([], 4), []);
+
+echo "\n--- sense vots, el boicot són els millors de la classificació ---\n";
+$kosPointsByTeam = [10 => 9, 4 => 7, 86 => 5, 82 => 3, 39 => 1];
+check('els 4 amb més punts', actionsMostVotedTeams([], 4, [], $kosPointsByTeam), [10, 4, 86, 82]);
+check(
+    'empat de punts: mana la posició',
+    actionsMostVotedTeams([], 2, [39 => 1, 10 => 2], [10 => 9, 39 => 9]),
+    [39, 10]
+);
+check('sense classificació no s\'inventa res', actionsMostVotedTeams([], 4, [], []), []);
+
+echo "\n--- els grups més votats (#kosPais i #kosPots) ---\n";
+check('de més a menys', actionsMostVotedGroups(['Spain', 'Spain', 'England'], 2), ['Spain', 'England']);
+check(
+    'empat de vots: mana la suma de punts',
+    actionsMostVotedGroups(['Spain', 'England', 'Italy'], 2, ['Spain' => 5, 'England' => 9, 'Italy' => 9]),
+    ['England', 'Italy']
+);
+check(
+    'sense vots, els de més punts',
+    actionsMostVotedGroups([], 2, ['Spain' => 5, 'England' => 9, 'Italy' => 3]),
+    ['England', 'Spain']
+);
+check('sense vots ni punts, cap', actionsMostVotedGroups([], 2), []);
+check(
+    'els pots tornen com a text encara que el número siga enter',
+    actionsMostVotedGroups([], 2, ['1' => 7, '5' => 9, '9' => 3]),
+    ['5', '1']
+);
+check(
+    'els equips dels grups, sense repetir',
+    actionsGroupTeams(['Spain', 'England'], ['Spain' => [10, 4], 'England' => [4, 86]]),
+    [10, 4, 86]
+);
 
 echo "\n--- resultat de #dobleORes ---\n";
 $totals = actionsVoteTotals([10, 10, 4, 86]);
@@ -474,6 +510,117 @@ check(
     . "\n- Ivan: 1 vot de KO a Betis"
     . "\n\nEls 4 equips més votats (no sumen punts):"
     . "\n- Arsenal\n- Bayern\n- Roma\n- Ajax"
+);
+
+echo "\n--- #kosAmbEscuts sense vots: el boicot el decidix la classificació ---\n";
+$announcementKosNoVotes = actionsAnnouncement(
+    [['player_id' => 7, 'type' => 'kosAndShields', 'data' => json_encode(['max' => 4, 'kos' => [], 'shields' => []])]],
+    [],
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [],
+    [39 => 9, 86 => 7, 10 => 5, 82 => 3, 4 => 1]
+);
+check('els 4 millors', array_column($announcementKosNoVotes['kosAndShields']['boicot'], 'team'), ['Betis', 'Roma', 'Arsenal', 'Ajax']);
+check('i queda marcat', $announcementKosNoVotes['kosAndShields']['byStandings'], true);
+check(
+    'el text ho diu',
+    actionsPublishText(3, $announcementKosNoVotes),
+    "Accions de la jornada 3:\n\n#kosAmbEscuts\n\nEls 4 millors de la classificació (no sumen punts):"
+    . "\n- Betis\n- Roma\n- Arsenal\n- Ajax"
+);
+
+// Sense cap fila d'#kosAmbEscuts no hi ha boicot, encara que hi haja punts:
+// l'acció no estava en joc eixa jornada.
+$announcementKosNoRows = actionsAnnouncement([], [], $playerNames, $teamNames, $teamCompetitions, 1, [], [39 => 9]);
+check('sense fila no hi ha boicot', $announcementKosNoRows['kosAndShields']['boicot'], []);
+check('ni text', actionsPublishText(3, $announcementKosNoRows), '');
+
+echo "\n--- #kosPais: els vots i el boicot per país ---\n";
+$teamCountries = [10 => 'Spain', 4 => 'Germany', 86 => 'Italy', 82 => 'Netherlands', 39 => 'Spain'];
+$teamPots      = [10 => 1, 4 => 1, 86 => 5, 82 => 5, 39 => 9];
+$teamPoints    = [10 => 9, 4 => 7, 86 => 5, 82 => 3, 39 => 1];
+
+$announcementPais = actionsAnnouncement(
+    [
+        ['player_id' => 7, 'type' => 'kosPais', 'data' => json_encode(['max' => 4, 'paisos' => ['Spain', 'Italy'], 'shields' => [4]])],
+        ['player_id' => 8, 'type' => 'kosPais', 'data' => json_encode(['max' => 2, 'paisos' => ['Spain'], 'shields' => []])],
+    ],
+    [],
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [],
+    $teamPoints,
+    $teamCountries,
+    $teamPots
+);
+check('els vots', $announcementPais['kosPais']['vots'], [
+    ['player' => 'Ivan', 'team' => 'Spain'],
+    ['player' => 'Ivan', 'team' => 'Italy'],
+    ['player' => 'Marta', 'team' => 'Spain'],
+]);
+check('els escuts', $announcementPais['kosPais']['escuts'], [['player' => 'Ivan', 'team' => 'Bayern']]);
+check('els 2 països més votats', array_column($announcementPais['kosPais']['boicot'], 'grup'), ['Spain', 'Italy']);
+check(
+    'el text',
+    actionsPublishText(4, $announcementPais),
+    "Accions de la jornada 4:\n\n#kosPais"
+    . "\n- Ivan: 1 vot a Spain"
+    . "\n- Ivan: 1 vot a Italy"
+    . "\n- Marta: 1 vot a Spain"
+    . "\n- Ivan: 1 escut a Bayern"
+    . "\n\nEls 2 països més votats (no sumen punts):"
+    . "\n- Spain\n- Italy"
+);
+
+echo "\n--- #kosPais sense vots: mana la classificació ---\n";
+$announcementPaisZero = actionsAnnouncement(
+    [['player_id' => 7, 'type' => 'kosPais', 'data' => json_encode(['max' => 4, 'paisos' => [], 'shields' => []])]],
+    [],
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [],
+    $teamPoints,
+    $teamCountries,
+    $teamPots
+);
+check('queda marcat', $announcementPaisZero['kosPais']['byStandings'], true);
+check('els 2 amb més punts', array_column($announcementPaisZero['kosPais']['boicot'], 'grup'), ['Spain', 'Germany']);
+check(
+    'el text',
+    actionsPublishText(5, $announcementPaisZero),
+    "Accions de la jornada 5:\n\n#kosPais\n\nEls 2 països amb més punts (no sumen punts):"
+    . "\n- Spain\n- Germany"
+);
+
+echo "\n--- #kosPots: els vots i el boicot per pot ---\n";
+$announcementPots = actionsAnnouncement(
+    [['player_id' => 7, 'type' => 'kosPots', 'data' => json_encode(['max' => 4, 'pots' => [1, 1, 5], 'shields' => []])]],
+    [],
+    $playerNames,
+    $teamNames,
+    $teamCompetitions,
+    1,
+    [],
+    $teamPoints,
+    $teamCountries,
+    $teamPots
+);
+check('els 2 pots més votats', array_column($announcementPots['kosPots']['boicot'], 'grup'), ['CHL 1', 'EUL 1']);
+check(
+    'el text',
+    actionsPublishText(6, $announcementPots),
+    "Accions de la jornada 6:\n\n#kosPots"
+    . "\n- Ivan: 2 vots a CHL 1"
+    . "\n- Ivan: 1 vot a EUL 1"
+    . "\n\nEls 2 pots més votats (no sumen punts):"
+    . "\n- CHL 1\n- EUL 1"
 );
 
 echo "\n--- un #millorFinal amb una competició que no toca ---\n";

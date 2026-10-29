@@ -7,7 +7,7 @@ use TelegramBot\Api\BotApi;
 /**
  * Base de les accions que es desen a la taula actions, una fila per jugador i
  * jornada: #malDia, #socElMillor, #guanyarOMorir, #dobleORes, #kosAmbEscuts,
- * #segurQuePasse i #millorFinal.
+ * #kosPais, #kosPots, #segurQuePasse i #millorFinal.
  *
  * Afegeix a PlayerAction el repositori d'accions, l'interruptor de la fase i
  * les operacions que totes fan servir: llegir la fila del jugador, crear-la i

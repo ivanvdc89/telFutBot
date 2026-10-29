@@ -63,6 +63,12 @@ check('desactivar', menuLabel('/malDia Desactivar COL'), 'Desactivar COL');
 check('un KO porta el nom de l\'equip', menuLabel('/kos ko_vot RealMadrid'), 'KO: RealMadrid');
 check('un escut de competició', menuLabel('/kos escut EUL'), 'Escut EUL');
 check('un escut d\'equip', menuLabel('/kos escut OwnedPot1'), 'Escut OwnedPot1');
+check('el boicot per països', menuLabel('/kosPais'), 'KO per països');
+check('el boicot per pots', menuLabel('/kosPots'), 'KO per pots');
+check('un vot a un país', menuLabel('/kosPais vot Spain'), 'KO: Spain');
+check('un vot a un pot', menuLabel('/kosPots vot CHL_1'), 'CHL 1');
+check('un escut del boicot per països', menuLabel('/kosPais escut CHL'), 'Escut CHL');
+check('esborrar el boicot per pots', menuLabel('/kosPots borrar'), 'Esborrar vots i escuts');
 check('un forat buit', menuLabel('/out CHL_Pot_2'), 'CHL 2 (buit)');
 check('un equip que ix', menuLabel('/out RealMadrid'), 'RealMadrid');
 check('un equip que entra', menuLabel('/in EquipA'), 'EquipA');
@@ -87,6 +93,8 @@ $commands = [
     '/guanyarOMorir', '/dobleORes', '/dobleORes borrar', '/kos', '/kos borrar',
     '/malDia Activar CHL', '/dobleORes pot CHL_1', '/kos ko_pot COL_4',
     '/kos ko_vot RealMadrid', '/kos escut CHL', '/kos escut OwnedPot1',
+    '/kosPais', '/kosPais borrar', '/kosPais vot Spain', '/kosPais escut CHL',
+    '/kosPots', '/kosPots borrar', '/kosPots vot CHL_1', '/kosPots escut EUL',
     '/out CHL_Pot_1', '/out RealMadrid', '/in EquipA', '/add EquipA',
     '/passe OwnedPot1', '/millorFinal CHL', '/millorFinal borrar',
     '/segurQuePasse Borrar', '/data pot CHL_1',

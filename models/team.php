@@ -29,6 +29,27 @@ class Team extends Connection {
         return $sql->fetchAll(pdo::FETCH_ASSOC);
     }
 
+    /**
+     * Els països que tenen algun equip, sense repetir i en ordre alfabètic.
+     *
+     * És la llista de /kosPais: es vota el país, no l'equip.
+     *
+     * @return array<int, string>
+     */
+    public function getCountries(): array
+    {
+        $connection= parent::connect();
+        parent::set_names();
+        $sql="select distinct country from teams order by country;";
+        $sql=$connection->prepare($sql);
+        $sql->execute();
+
+        return array_map(
+            static fn(array $row): string => (string) $row['country'],
+            $sql->fetchAll(pdo::FETCH_ASSOC)
+        );
+    }
+
     public function getCountPlayerTeamsByPot($pot){
         $connection= parent::connect();
         parent::set_names();

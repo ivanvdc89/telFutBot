@@ -25,7 +25,9 @@
  *     separar mai.
  *   - #kosAmbEscuts: els KOS_BOICOT_TEAMS equips més votats no sumen punts,
  *     tret que el jugador els hi haja posat un escut. El tall dels quatre també
- *     desempata per classificació d'equips.
+ *     desempata per classificació d'equips. Si ningú no vota però l'acció
+ *     estava oberta, queden bloquejats els quatre equips amb més punts a la
+ *     classificació (per això cal passar-li $teamPoints).
  *   - #segurQuePasse: si l'equip apuntat es classifica, se suma l'aposta i el
  *     marge de gols de l'anada ($classifiedTeams).
  *   - #socElMillor: entre els qui l'activen, el màxim de cada competició rep
@@ -49,10 +51,15 @@ require_once(__DIR__ . '/publishActions.php');
  * @param array<int, int>    $kosVoted             ids d'equip votats a #kosAmbEscuts, un per vot
  * @param array<int, string> $teamCompetitions     [team_id => 'CHL'|'EUL'|'COL']
  * @param array<int, int>    $teamRankings         [team_id => posició] de team_standings, per desempatar
+ * @param array<int, int>    $teamPoints           [team_id => punts] de team_standings; si no hi ha vots, el boicot són els millors
+ * @param array<string, array{votes?: array<int, string|int>, teams?: array<string, array<int, int>>, points?: array<string, int>}> $kosGroups
+ *   Boicots per grup (#kosPais i #kosPots): per a 'paisos' i 'pots', els vots,
+ *   els equips de cada grup i la suma de punts de cada grup. Un boicot de 2
+ *   països o 2 pots es convertix en la llista d'equips que queden a 0 punts.
  *
  * @return array{nothingTeams: array<int, int>, doubleTeams: array<int, int>, koTeams: array<int, int>}
  */
-function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array $teamCompetitions, array $teamRankings = []): array
+function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array $teamCompetitions, array $teamRankings = [], array $teamPoints = [], array $kosGroups = []): array
 {
     $nothingTeams = [];
     $doubleTeams  = [];
@@ -70,10 +77,31 @@ function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array
         }
     }
 
+    $koTeams = array_map(
+        'intval',
+        actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings, $teamPoints)
+    );
+
+    // Els boicots per país o per pot: el grup més votat (o el de més punts si
+    // no hi ha vots) arrossega tots els seus equips.
+    foreach ($kosGroups as $group) {
+        $groups = actionsMostVotedGroups(
+            $group['votes'] ?? [],
+            KOS_BOICOT_GROUPS,
+            $group['points'] ?? []
+        );
+
+        foreach (actionsGroupTeams($groups, $group['teams'] ?? []) as $teamId) {
+            if (!in_array($teamId, $koTeams, true)) {
+                $koTeams[] = $teamId;
+            }
+        }
+    }
+
     return [
         'nothingTeams' => $nothingTeams,
         'doubleTeams'  => $doubleTeams,
-        'koTeams'      => array_map('intval', actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings)),
+        'koTeams'      => $koTeams,
     ];
 }
 
@@ -285,7 +313,8 @@ function matchDayBestFinalEffects(array $ranking, array $results): array
  * @param array             $actions       Les regles d'esta jornada i d'este jugador:
  *   - 'nothingTeams'    ids que queden a 0 per #dobleORes
  *   - 'doubleTeams'     ids que sumen doble per #dobleORes
- *   - 'koTeams'         ids boicotejats per #kosAmbEscuts
+ *   - 'koTeams'         ids boicotejats pel boicot de KO actiu
+ *   - 'koType'          tipus del boicot ('kosAndShields', 'kosPais' o 'kosPots'), per als resultats
  *   - 'classifiedTeams' [team_id => marge de gols de l'anada] de #segurQuePasse
  *   - 'shields'         ids dels equips protegits per este jugador
  *   - 'sureTeam'        l'equip apuntat a #segurQuePasse, o -1
@@ -304,6 +333,7 @@ function matchDayTeamPoints(array $playerTeams, array $resultsByTeam, array $act
     $nothingTeams    = $actions['nothingTeams'] ?? [];
     $doubleTeams     = $actions['doubleTeams'] ?? [];
     $koTeams         = $actions['koTeams'] ?? [];
+    $koType          = (string) ($actions['koType'] ?? 'kosAmbEscuts');
     $classifiedTeams = $actions['classifiedTeams'] ?? [];
     $shieldTeams     = $actions['shields'] ?? [];
     $sureTeam        = (int) ($actions['sureTeam'] ?? -1);
@@ -345,10 +375,10 @@ function matchDayTeamPoints(array $playerTeams, array $resultsByTeam, array $act
 
         if (in_array($teamId, $koTeams, true)) {
             if (in_array($teamId, $shieldTeams, true)) {
-                $action      = ['type' => 'kosAmbEscuts', 'result' => 'Escut'];
+                $action      = ['type' => $koType, 'result' => 'Escut'];
                 $totalPoints = $basePoints;
             } else {
-                $action      = ['type' => 'kosAmbEscuts', 'result' => 'KO'];
+                $action      = ['type' => $koType, 'result' => 'KO'];
                 $totalPoints = 0;
             }
         }

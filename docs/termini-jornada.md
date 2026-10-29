@@ -119,10 +119,23 @@ A `config/matchDay.php`:
 define('ACTIONS_OPEN', true);
 ```
 
-Ara `/accions` ofereix `/malDia`, `/socElMillor`, `/guanyarOMorir` i
-`/dobleORes`. Les altres comandes d'acció (`/kos`, `/segurQuePasse`,
-`/millorFinal`) no surten al menú, però també depenen d'este interruptor: amb
-les accions tancades responen "No disponible".
+Ara `/accions` ofereix `/malDia`, `/socElMillor`, `/guanyarOMorir`,
+`/dobleORes` i el boicot de KO que estiga en joc. Les altres comandes d'acció
+(`/segurQuePasse`, `/millorFinal`) no surten al menú, però també depenen d'este
+interruptor: amb les accions tancades responen "No disponible".
+
+### 4b. Triar el boicot de KO
+
+A `config/matchDay.php`:
+
+```php
+define('KOS_ACTIVE', 'kosPais');   // o 'kosAmbEscuts', 'kosPots', o ''
+```
+
+Els tres boicots (`#kosAmbEscuts`, `#kosPais` i `#kosPots`) són accions
+distintes, amb el seu comandament i el seu botó, però a cada jornada només n'hi
+ha un d'actiu: els altres dos responen "No disponible" i no es publiquen ni es
+compten. Amb la cadena buida no hi ha cap boicot eixa jornada.
 
 S'obre **després d'aplicar i publicar** els canvis, no abans: ningú no ha de
 triar una acció sobre una plantilla que encara ha de canviar.

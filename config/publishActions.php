@@ -1,5 +1,7 @@
 <?php
 
+require_once(__DIR__ . '/menus.php');
+
 /**
  * Tot el que publishActions.php fa amb les accions d'una jornada, tret de la
  * base de dades i Telegram:
@@ -17,7 +19,11 @@
  *   - #dobleORes: l'equip més votat de cada competició no suma cap punt i el
  *     segon suma doble.
  *   - #kosAmbEscuts: els KOS_BOICOT_TEAMS equips més votats no sumen punts,
- *     tret dels qui porten escut.
+ *     tret dels qui porten escut. Si ningú no vota però l'acció estava oberta,
+ *     el boicot el decidixen els equips amb més punts a la classificació.
+ *   - #kosPais i #kosPots: els KOS_BOICOT_GROUPS països o pots més votats, i
+ *     tots els seus equips queden a 0 punts. Si ningú no vota, els grups amb
+ *     més punts sumats. L'empat el decidix eixa suma.
  *   - #millorFinal: la final més votada dona +6 al guanyador, la segona +2, i
  *     la menys votada -2 al perdedor.
  *
@@ -43,6 +49,8 @@ const ACTION_PUBLISH_ORDER = [
     'winOrDie',
     'doubleOrNothing',
     'kosAndShields',
+    'kosPais',
+    'kosPots',
     'bestFinal',
     'sureToBeQualified',
 ];
@@ -56,6 +64,8 @@ const ACTION_PUBLISH_LABELS = [
     'winOrDie'          => '#guanyarOMorir',
     'doubleOrNothing'   => '#dobleORes',
     'kosAndShields'     => '#kosAmbEscuts',
+    'kosPais'           => '#kosPais',
+    'kosPots'           => '#kosPots',
     'bestFinal'         => '#millorFinal',
     'sureToBeQualified' => '#segurQuePasse',
 ];
@@ -67,9 +77,19 @@ const ACTION_COMPETITIONS = ['CHL', 'EUL', 'COL'];
 
 /**
  * Equips que queden a 0 punts per #kosAmbEscuts. La norma diu "els 4 més
- * votats", i és el mateix número que explica /normes accions.
+ * votats", i és el mateix número que explica /normes accions. Si no hi ha cap
+ * vot, són els 4 equips amb més punts a la classificació.
  */
 const KOS_BOICOT_TEAMS = 4;
+
+/**
+ * Països o pots que queden boicotejats a #kosPais i #kosPots. La norma diu "els
+ * 2 més votats", i és el mateix número que explica /normes accions.
+ *
+ * També és el nombre de grups que queden bloquejats si no hi ha cap vot: els de
+ * més punts sumats entre tots els seus equips.
+ */
+const KOS_BOICOT_GROUPS = 2;
 
 /**
  * Etiqueta d'un tipus d'acció.
@@ -181,12 +201,18 @@ function actionsSortVotesByStandings(array $votesByTeam, array $teamRankings): a
  * L'empat es resol per la classificació d'equips, igual que a #dobleORes: el
  * que decidix quin equip entra al boicot quan hi ha els mateixos vots al tall.
  *
+ * Si no hi ha cap vot, la norma de #kosAmbEscuts diu que queden boicotejats els
+ * millors de la classificació: per això, quan es passa $teamPoints, es torna
+ * els equips amb més punts. Sense punts (o sense vots i sense classificació)
+ * torna una llista buida, com abans.
+ *
  * @param array<int, int> $totals       [team_id => vots]
  * @param array<int, int> $teamRankings [team_id => posició], 1 és el primer
+ * @param array<int, int> $teamPoints   [team_id => punts a la seua competició]
  *
  * @return array<int, int> ids d'equip
  */
-function actionsMostVotedTeams(array $totals, int $howMany, array $teamRankings = []): array
+function actionsMostVotedTeams(array $totals, int $howMany, array $teamRankings = [], array $teamPoints = []): array
 {
     $teams = [];
 
@@ -200,7 +226,162 @@ function actionsMostVotedTeams(array $totals, int $howMany, array $teamRankings 
         }
     }
 
+    if (count($teams) === 0 && count($teamPoints) > 0) {
+        return actionsBestTeamsByPoints($teamPoints, $teamRankings, $howMany);
+    }
+
     return $teams;
+}
+
+/**
+ * Els equips amb més punts a la classificació, en ordre.
+ *
+ * És el boicot de #kosAmbEscuts quan ningú no ha votat. Els punts són els de la
+ * competició de cada equip (team_standings.points) i l'empat el decidix la
+ * posició a la classificació; si encara empaten, l'id, perquè el resultat no
+ * depenga de l'ordre en què la base de dades torna les files.
+ *
+ * @param array<int, int> $teamPoints   [team_id => punts a la seua competició]
+ * @param array<int, int> $teamRankings [team_id => posició], 1 és el primer
+ *
+ * @return array<int, int> ids d'equip
+ */
+function actionsBestTeamsByPoints(array $teamPoints, array $teamRankings, int $howMany): array
+{
+    $teamIds = array_keys($teamPoints);
+
+    usort(
+        $teamIds,
+        static function ($teamA, $teamB) use ($teamPoints, $teamRankings): int {
+            $byPoints = $teamPoints[$teamB] <=> $teamPoints[$teamA];
+
+            if ($byPoints !== 0) {
+                return $byPoints;
+            }
+
+            $rankA = $teamRankings[$teamA] ?? PHP_INT_MAX;
+            $rankB = $teamRankings[$teamB] ?? PHP_INT_MAX;
+
+            if ($rankA !== $rankB) {
+                return $rankA <=> $rankB;
+            }
+
+            return $teamA <=> $teamB;
+        }
+    );
+
+    return array_map('intval', array_slice($teamIds, 0, max(0, $howMany)));
+}
+
+/**
+ * Els grups (països o pots) més votats, en ordre.
+ *
+ * Un vot és un element de $votes amb la clau del grup (el nom del país o el
+ * número global del pot). L'empat el decidix la suma de punts dels equips del
+ * grup (team_standings); si encara empaten, la clau, perquè el resultat no
+ * depenga de l'ordre dels vots.
+ *
+ * Si no hi ha cap vot però es passen els punts, queden els grups amb més punts
+ * sumats: és el que fa #kosPais i #kosPots quan ningú no vota. Sense vots ni
+ * punts no hi ha cap grup.
+ *
+ * @param array<int, string|int> $votes       Un element per vot: país o pot
+ * @param array<string, int>     $groupPoints [grup => suma de punts dels seus equips]
+ *
+ * @return array<int, string> les claus dels grups, de més a menys
+ */
+function actionsMostVotedGroups(array $votes, int $howMany, array $groupPoints = []): array
+{
+    $totals = [];
+
+    foreach ($votes as $vote) {
+        $group = (string) $vote;
+
+        if ($group === '') {
+            continue;
+        }
+
+        $totals[$group] = ($totals[$group] ?? 0) + 1;
+    }
+
+    if (count($totals) === 0) {
+        return actionsBestGroupsByPoints($groupPoints, $howMany);
+    }
+
+    uksort(
+        $totals,
+        static function ($groupA, $groupB) use ($totals, $groupPoints): int {
+            $byVotes = $totals[$groupB] <=> $totals[$groupA];
+
+            if ($byVotes !== 0) {
+                return $byVotes;
+            }
+
+            $byPoints = ($groupPoints[$groupB] ?? 0) <=> ($groupPoints[$groupA] ?? 0);
+
+            if ($byPoints !== 0) {
+                return $byPoints;
+            }
+
+            // Ordre natural: 'CHL 2' abans de 'CHL 10'.
+            return strnatcmp((string) $groupA, (string) $groupB);
+        }
+    );
+
+    // array_keys() convertix les claus numèriques ('1') en enters; es tornen a
+    // text perquè el grup siga sempre una cadena, com el vot.
+    return array_map('strval', array_slice(array_keys($totals), 0, max(0, $howMany)));
+}
+
+/**
+ * Els grups amb més punts sumats, en ordre: el boicot sense vots.
+ *
+ * @param array<string, int> $groupPoints [grup => suma de punts dels seus equips]
+ *
+ * @return array<int, string> les claus dels grups, de més a menys
+ */
+function actionsBestGroupsByPoints(array $groupPoints, int $howMany): array
+{
+    $groups = array_keys($groupPoints);
+
+    usort(
+        $groups,
+        static function ($groupA, $groupB) use ($groupPoints): int {
+            $byPoints = $groupPoints[$groupB] <=> $groupPoints[$groupA];
+
+            return $byPoints !== 0 ? $byPoints : strnatcmp((string) $groupA, (string) $groupB);
+        }
+    );
+
+    return array_map('strval', array_slice($groups, 0, max(0, $howMany)));
+}
+
+/**
+ * Els equips d'uns grups (països o pots), sense repetir.
+ *
+ * És el que convertix un boicot de "2 països" o "2 pots" en la llista d'equips
+ * que queden a 0 punts.
+ *
+ * @param array<int, string>              $groups     Claus dels grups
+ * @param array<string, array<int, int>>  $groupTeams [grup => ids d'equip]
+ *
+ * @return array<int, int> ids d'equip
+ */
+function actionsGroupTeams(array $groups, array $groupTeams): array
+{
+    $teamIds = [];
+
+    foreach ($groups as $group) {
+        foreach ($groupTeams[$group] ?? [] as $teamId) {
+            $teamId = (int) $teamId;
+
+            if (!in_array($teamId, $teamIds, true)) {
+                $teamIds[] = $teamId;
+            }
+        }
+    }
+
+    return $teamIds;
 }
 
 /**
@@ -361,7 +542,18 @@ function actionsSectionText(string $type, array $data): string
             $lines[] = '- ' . $shield['player'] . ': 1 escut a ' . $shield['team'];
         }
 
-        $lines = array_merge($lines, actionsSubBlock(actionsKosBoicotText($data['boicot'] ?? [])));
+        $lines = array_merge($lines, actionsSubBlock(actionsKosBoicotText($data['boicot'] ?? [], (bool) ($data['byStandings'] ?? false))));
+    } elseif ($type === 'kosPais' || $type === 'kosPots') {
+        $lines = actionsVoteLines($data['vots'] ?? [], 'a');
+
+        foreach ($data['escuts'] ?? [] as $shield) {
+            $lines[] = '- ' . $shield['player'] . ': 1 escut a ' . $shield['team'];
+        }
+
+        $noun = $type === 'kosPais' ? 'països' : 'pots';
+        $lines = array_merge($lines, actionsSubBlock(
+            actionsKosGroupBoicotText($data['boicot'] ?? [], $noun, (bool) ($data['byStandings'] ?? false))
+        ));
     } elseif ($type === 'bestFinal') {
         foreach ($data['votes'] ?? [] as $vote) {
             $lines[] = '- ' . $vote['player'] . ': ' . actionsVotesText((int) $vote['votes'])
@@ -454,20 +646,25 @@ function actionsDoubleOrNothingText(array $result, array $totals = []): array
 }
 
 /**
- * El resum de #kosAmbEscuts: els més votats que queden a 0 punts, amb els
- * escuts que els salven.
+ * El resum de #kosAmbEscuts: els equips que queden a 0 punts, amb els escuts
+ * que els salven.
+ *
+ * Quan ningú no ha votat, els equips no són "els més votats" sinó els millors
+ * de la classificació, i la capçalera ho diu.
  *
  * @param array<int, array{team: string, shieldedBy: array<int, string>}> $boicot
+ * @param bool $byStandings Cert si el boicot s'ha decidit per la classificació
  *
  * @return array<int, string>
  */
-function actionsKosBoicotText(array $boicot): array
+function actionsKosBoicotText(array $boicot, bool $byStandings = false): array
 {
     if (count($boicot) === 0) {
         return [];
     }
 
-    $lines = ['Els ' . min(KOS_BOICOT_TEAMS, count($boicot)) . ' equips més votats (no sumen punts):'];
+    $how = $byStandings ? ' millors de la classificació' : ' equips més votats';
+    $lines = ['Els ' . min(KOS_BOICOT_TEAMS, count($boicot)) . $how . ' (no sumen punts):'];
 
     foreach ($boicot as $team) {
         $line = '- ' . $team['team'];
@@ -477,6 +674,35 @@ function actionsKosBoicotText(array $boicot): array
         }
 
         $lines[] = $line;
+    }
+
+    return $lines;
+}
+
+/**
+ * El resum de #kosPais i #kosPots: els països o pots que queden a 0 punts.
+ *
+ * L'equip no hi ix perquè el boicot és del grup sencer: qui vulga saber quins
+ * equips queden afectats els té a la llista de dalt (els vots) i a la de dalt
+ * de tot (els escuts).
+ *
+ * @param array<int, array{grup: string}> $boicot
+ * @param string $noun 'països' o 'pots'
+ * @param bool   $byStandings Cert si el boicot s'ha decidit per la classificació
+ *
+ * @return array<int, string>
+ */
+function actionsKosGroupBoicotText(array $boicot, string $noun, bool $byStandings = false): array
+{
+    if (count($boicot) === 0) {
+        return [];
+    }
+
+    $how   = $byStandings ? ' amb més punts' : ' més votats';
+    $lines = ['Els ' . min(KOS_BOICOT_GROUPS, count($boicot)) . ' ' . $noun . $how . ' (no sumen punts):'];
+
+    foreach ($boicot as $group) {
+        $lines[] = '- ' . $group['grup'];
     }
 
     return $lines;
@@ -533,6 +759,9 @@ function actionsTeamName(array $teamNames, int $teamId): string
  * @param array<int, string> $teamCompetitions [team_id => 'CHL'|'EUL'|'COL']
  * @param int                $minVotes         Vots de la regla de posició per a les files velles
  * @param array<int, int>    $teamRankings     [team_id => posició] de team_standings, per desempatar
+ * @param array<int, int>    $teamPoints       [team_id => punts] de team_standings
+ * @param array<int, string> $teamCountries    [team_id => país] per al boicot de #kosPais
+ * @param array<int, int>    $teamPots         [team_id => pot global] per al boicot de #kosPots
  */
 function actionsAnnouncement(
     array $actionRows,
@@ -541,7 +770,10 @@ function actionsAnnouncement(
     array $teamNames,
     array $teamCompetitions,
     int $minVotes,
-    array $teamRankings = []
+    array $teamRankings = [],
+    array $teamPoints = [],
+    array $teamCountries = [],
+    array $teamPots = []
 ): array {
     $announcement = [
         'badDay'            => [],
@@ -549,13 +781,16 @@ function actionsAnnouncement(
         'winOrDie'          => [],
         'sureToBeQualified' => [],
         'doubleOrNothing'   => ['votes' => [], 'result' => [], 'totals' => []],
-        'kosAndShields'     => ['kos' => [], 'shields' => [], 'boicot' => []],
+        'kosAndShields'     => ['kos' => [], 'shields' => [], 'boicot' => [], 'byStandings' => false],
+        'kosPais'           => ['vots' => [], 'escuts' => [], 'boicot' => [], 'byStandings' => false],
+        'kosPots'           => ['vots' => [], 'escuts' => [], 'boicot' => [], 'byStandings' => false],
         'bestFinal'         => ['votes' => [], 'ranking' => []],
     ];
 
     $doubleOrNothingVoted = [];   // ids d'equip votats, un element per vot
-    $kosVoted             = [];
+    $kosVotes             = ['kosAndShields' => [], 'kosPais' => [], 'kosPots' => []];
     $kosShieldedBy        = [];   // [team_id => [noms dels qui l'han protegit]]
+    $kosRowSeen           = ['kosAndShields' => false, 'kosPais' => false, 'kosPots' => false];
     $bestFinalVotes       = [];   // [competició => vots]
 
     foreach ($actionRows as $action) {
@@ -579,14 +814,31 @@ function actionsAnnouncement(
             continue;
         }
 
-        if ($type === 'kosAndShields') {
-            foreach ($data['kos'] ?? [] as $teamId) {
-                $teamId = (int) $teamId;
+        // Els tres boicots comparteixen la fila (vots + escuts), però cada un
+        // guarda els vots en una clau pròpia: equips, països o pots.
+        if (isset($kosVotes[$type])) {
+            $kosRowSeen[$type] = true;
+            $voteKey           = $type === 'kosAndShields' ? 'kos' : ($type === 'kosPais' ? 'paisos' : 'pots');
+            $listKey           = $type === 'kosAndShields' ? 'kos' : 'vots';
+            $shieldKey         = $type === 'kosAndShields' ? 'shields' : 'escuts';
 
-                $kosVoted[]                             = $teamId;
-                $announcement['kosAndShields']['kos'][] = [
+            foreach ($data[$voteKey] ?? [] as $vote) {
+                if ($type === 'kosPots') {
+                    $vote    = (int) $vote;
+                    $display = potMenuLabel(potLabel($vote));
+                } elseif ($type === 'kosPais') {
+                    $vote    = (string) $vote;
+                    $display = $vote;
+                } else {
+                    $vote    = (int) $vote;
+                    $display = actionsTeamName($teamNames, $vote);
+                }
+
+                $kosVotes[$type][] = $vote;
+
+                $announcement[$type][$listKey][] = [
                     'player' => $name,
-                    'team'   => actionsTeamName($teamNames, $teamId),
+                    'team'   => $display,
                 ];
             }
 
@@ -597,7 +849,7 @@ function actionsAnnouncement(
                     $kosShieldedBy[$teamId][] = $name;
                 }
 
-                $announcement['kosAndShields']['shields'][] = [
+                $announcement[$type][$shieldKey][] = [
                     'player' => $name,
                     'team'   => actionsTeamName($teamNames, $teamId),
                 ];
@@ -683,12 +935,70 @@ function actionsAnnouncement(
     }
 
     // El boicot de #kosAmbEscuts: els més votats, amb els escuts que els salven.
-    foreach (actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings) as $teamId) {
+    // Si ningú no ha votat però l'acció estava oberta (hi ha alguna fila), el
+    // boicot el decidixen els millors de la classificació.
+    $kosByStandings = $kosRowSeen['kosAndShields']
+        && count($kosVotes['kosAndShields']) === 0
+        && count($teamPoints) > 0;
+
+    foreach (actionsMostVotedTeams(actionsVoteTotals($kosVotes['kosAndShields']), KOS_BOICOT_TEAMS, $teamRankings, $kosByStandings ? $teamPoints : []) as $teamId) {
         $announcement['kosAndShields']['boicot'][] = [
             'team'       => actionsTeamName($teamNames, $teamId),
             'shieldedBy' => $kosShieldedBy[$teamId] ?? [],
         ];
     }
+
+    $announcement['kosAndShields']['byStandings'] = $kosByStandings;
+
+    // El boicot de #kosPais: cada país suma els punts de tots els seus equips, i
+    // eixa suma decidix l'empat i, si no hi ha vots, quins dos països queden.
+    $paisPoints = [];
+
+    foreach ($teamNames as $teamId => $teamName) {
+        $country = $teamCountries[(int) $teamId] ?? '';
+
+        if ($country === '') {
+            continue;
+        }
+
+        $paisPoints[$country] = ($paisPoints[$country] ?? 0) + ($teamPoints[(int) $teamId] ?? 0);
+    }
+
+    $kosPaisPoints   = $kosRowSeen['kosPais'] ? $paisPoints : [];
+    $paisByStandings = $kosRowSeen['kosPais']
+        && count($kosVotes['kosPais']) === 0
+        && count($paisPoints) > 0;
+
+    foreach (actionsMostVotedGroups($kosVotes['kosPais'], KOS_BOICOT_GROUPS, $kosPaisPoints) as $pais) {
+        $announcement['kosPais']['boicot'][] = ['grup' => $pais];
+    }
+
+    $announcement['kosPais']['byStandings'] = $paisByStandings;
+
+    // El boicot de #kosPots: igual, però el grup és el pot global i es mostra
+    // amb l'etiqueta de la competició (CHL 1, EUL 3...).
+    $potPoints = [];
+
+    foreach ($teamNames as $teamId => $teamName) {
+        $pot = (string) ($teamPots[(int) $teamId] ?? '');
+
+        if ($pot === '' || (int) $pot <= 0) {
+            continue;
+        }
+
+        $potPoints[$pot] = ($potPoints[$pot] ?? 0) + ($teamPoints[(int) $teamId] ?? 0);
+    }
+
+    $kosPotsPoints   = $kosRowSeen['kosPots'] ? $potPoints : [];
+    $potsByStandings = $kosRowSeen['kosPots']
+        && count($kosVotes['kosPots']) === 0
+        && count($potPoints) > 0;
+
+    foreach (actionsMostVotedGroups($kosVotes['kosPots'], KOS_BOICOT_GROUPS, $kosPotsPoints) as $pot) {
+        $announcement['kosPots']['boicot'][] = ['grup' => potMenuLabel(potLabel((int) $pot))];
+    }
+
+    $announcement['kosPots']['byStandings'] = $potsByStandings;
 
     // El rànquing de #millorFinal.
     if (count($bestFinalVotes) > 0) {
@@ -710,7 +1020,12 @@ function actionsAnnouncement(
  *                         'result' => ['CHL' => ['top' => ['Arsenal'], 'second' => ['Roma']], ...]]
  *   - 'kosAndShields': ['kos' => [['player' => .., 'team' => ..], ...],
  *                       'shields' => [['player' => .., 'team' => ..], ...],
- *                       'boicot' => [['team' => 'Bayern', 'shieldedBy' => ['Ivan']], ...]]
+ *                       'boicot' => [['team' => 'Bayern', 'shieldedBy' => ['Ivan']], ...],
+ *                       'byStandings' => false]
+ *   - 'kosPais', 'kosPots': ['vots' => [['player' => .., 'team' => 'Spain'], ...],
+ *                            'escuts' => [['player' => .., 'team' => ..], ...],
+ *                            'boicot' => [['grup' => 'Spain'], ...],
+ *                            'byStandings' => false]
  *   - 'bestFinal': ['votes' => [['player' => .., 'competition' => 'CHL', 'votes' => 4], ...],
  *                   'ranking' => ['CHL' => 7, 'EUL' => 4, 'COL' => 0]]
  */

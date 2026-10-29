@@ -260,7 +260,8 @@ l'equip haguera canviat. Cal executar abans `applySubstitutions.php` (o traure
 les files pendents amb `/substitució remove`).
 
 I és on es paguen les accions: `#malDia`, `#socElMillor` i `#guanyarOMorir` cada
-jornada, `#dobleORes` i `#kosAmbEscuts` amb els vots de la jornada,
+jornada, `#dobleORes` i el boicot de KO actiu (`#kosAmbEscuts`, `#kosPais` o
+`#kosPots`) amb els vots de la jornada,
 `#segurQuePasse` a les eliminatòries (amb el marge de gols de l'anada posat a mà)
 i `#millorFinal` a la jornada de les finals (la 18), amb el rànquing de vots que
 també publica `publishActions.php`.

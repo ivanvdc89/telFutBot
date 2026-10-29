@@ -80,6 +80,21 @@ define('LAST_MATCH_DAY_WITH_CHANGES', 15);
 define('SUBSTITUTIONS_OPEN', false);
 define('ACTIONS_OPEN', true);
 
+/**
+ * Quin dels tres boicots de KO està en joc: 'kosAmbEscuts' (per equips),
+ * 'kosPais' (per països), 'kosPots' (per pots), o '' si eixa jornada no n'hi ha
+ * cap.
+ *
+ * Els tres boicots no conviuen mai: a cada jornada només n'hi ha un d'actiu, i
+ * eixe és el que ix al menú /accions i l'únic que respon. Els altres dos
+ * contesten "No disponible". El càlcul de punts i la publicació només apliquen
+ * el boicot actiu, encara que hi haja files velles d'un altre tipus.
+ *
+ * El mou l'administrador a mà, com ACTIONS_OPEN. Si una jornada no ha de tindre
+ * cap boicot, es deixa la cadena buida.
+ */
+define('KOS_ACTIVE', 'kosPais');
+
 function currentMatchDay(): int
 {
     if (PHP_SAPI !== 'cli') {
