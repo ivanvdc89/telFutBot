@@ -165,7 +165,8 @@ function standingsAtGap(int $gap): array
 function buildWorld(
     ?array $actionData = ['max' => 3, 'teams' => []],
     bool $activated = true,
-    ?array $standings = null
+    ?array $standings = null,
+    bool $dobleActive = true
 ): array {
     $bot    = new FakeBot();
     $player = new FakePlayer();
@@ -198,7 +199,7 @@ function buildWorld(
         ]];
     }
 
-    return [$bot, $player, $team, $action, $activated];
+    return [$bot, $player, $team, $action, $activated, $dobleActive];
 }
 
 // ---------- harness ----------
@@ -222,11 +223,11 @@ function check(string $label, $actual, $expected): void
 /** @return array [missatges enviats, repo d'accions] */
 function runCommand(array $world, string $text): array
 {
-    [$bot, $player, $team, $action, $activated] = $world;
+    [$bot, $player, $team, $action, $activated, $dobleActive] = $world;
     $bot->sent = [];
     $args      = explode(' ', $text);
 
-    $handler = new DoubleOrNothingAction($bot, $player, $team, $action, CHAT_ID, MATCH_DAY, $args, $activated);
+    $handler = new DoubleOrNothingAction($bot, $player, $team, $action, CHAT_ID, MATCH_DAY, $args, $activated, $dobleActive);
     $handler->run();
 
     return [$bot->sent, $action];
@@ -256,6 +257,11 @@ echo "--- l'acció no està activada ---\n";
 [$sent] = runCommand(buildWorld(['max' => 3, 'teams' => []], false), '/dobleORes');
 check('un sol missatge', count($sent), 1);
 check('text', $sent[0]['text'], 'No disponible');
+
+echo "\n--- les accions estan obertes, però esta jornada no es juga ---\n";
+[$sent, $action] = runCommand(buildWorld(null, true, null, false), '/dobleORes');
+check('contesta que no', $sent[0]['text'], 'No disponible');
+check('i no crea cap fila', $action->added, []);
 
 echo "\n--- activada i sense fila: el bot la crea ---\n";
 // Abans calia que algú la sembrés a mà a la base de dades; si faltava, l'acció

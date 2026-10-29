@@ -30,9 +30,15 @@ class Team extends Connection {
     }
 
     /**
-     * Els països que tenen algun equip, sense repetir i en ordre alfabètic.
+     * Els països que tenen algun equip, sense repetir i ordenats per la suma de
+     * punts dels seus equips a la classificació (de més a menys).
      *
-     * És la llista de /kosPais: es vota el país, no l'equip.
+     * És la llista de /kosPais: es vota el país, no l'equip, i els primers
+     * botons són els països que més punts han fet, que és el que ajuda a triar.
+     * Si dos països sumen el mateix, mana el nom.
+     *
+     * La classificació (team_standings) és una taula derivada: si encara no té
+     * dades, tots els països sumen 0 i l'ordre queda alfabètic.
      *
      * @return array<int, string>
      */
@@ -40,7 +46,11 @@ class Team extends Connection {
     {
         $connection= parent::connect();
         parent::set_names();
-        $sql="select distinct country from teams order by country;";
+        $sql="select t.country, coalesce(sum(s.points), 0) as total
+              from teams t
+              left join team_standings s on s.team_id = t.id
+              group by t.country
+              order by total desc, t.country asc;";
         $sql=$connection->prepare($sql);
         $sql->execute();
 

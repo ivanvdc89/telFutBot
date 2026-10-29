@@ -18,7 +18,7 @@ class ActionsMenuAction extends CommandAction
 {
     private bool $substitutionsOpen;
     private bool $actionsOpen;
-    private string $kosActive;
+    private string $votacioActiva;
 
     public function __construct(
         BotApi $telegram,
@@ -26,13 +26,13 @@ class ActionsMenuAction extends CommandAction
         array $args,
         bool $substitutionsOpen,
         bool $actionsOpen,
-        string $kosActive
+        string $votacioActiva
     ) {
         parent::__construct($telegram, $chatId, $args);
 
         $this->substitutionsOpen = $substitutionsOpen;
         $this->actionsOpen       = $actionsOpen;
-        $this->kosActive         = $kosActive;
+        $this->votacioActiva     = $votacioActiva;
     }
 
     protected static function commands(): array
@@ -42,7 +42,7 @@ class ActionsMenuAction extends CommandAction
 
     public function run(): void
     {
-        $rows = actionsMenuRows($this->substitutionsOpen, $this->actionsOpen, $this->kosActive);
+        $rows = actionsMenuRows($this->substitutionsOpen, $this->actionsOpen, $this->votacioActiva);
 
         if (count($rows) === 0) {
             // Passa a l'estona d'aplicar i publicar els canvis. Cal llevar el

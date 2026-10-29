@@ -124,18 +124,25 @@ Ara `/accions` ofereix `/malDia`, `/socElMillor`, `/guanyarOMorir`,
 (`/segurQuePasse`, `/millorFinal`) no surten al menú, però també depenen d'este
 interruptor: amb les accions tancades responen "No disponible".
 
-### 4b. Triar el boicot de KO
+### 4b. Triar la votació de la jornada
 
 A `config/matchDay.php`:
 
 ```php
-define('KOS_ACTIVE', 'kosPais');   // o 'kosAmbEscuts', 'kosPots', o ''
+define('VOTACIO_ACTIVA', 'kosPais');   // o 'doubleOrNothing', 'kosAndShields', 'kosPots', o ''
 ```
 
-Els tres boicots (`#kosAmbEscuts`, `#kosPais` i `#kosPots`) són accions
-distintes, amb el seu comandament i el seu botó, però a cada jornada només n'hi
-ha un d'actiu: els altres dos responen "No disponible" i no es publiquen ni es
-compten. Amb la cadena buida no hi ha cap boicot eixa jornada.
+Cada jornada es juga **una sola votació**: o `#dobleORes` (`doubleOrNothing`) o
+un dels tres boicots de KO (`#kosAmbEscuts`, `#kosPais`, `#kosPots`). Mai dues
+alhora. La votació activa és la que ix al menú `/accions`, l'única que respon i
+l'única que es publica i es compta; les altres contesten "No disponible" i les
+seues files, si n'hi ha, s'ignoren. Els valors són els `type` de la taula
+`actions`; amb la cadena buida no hi ha cap votació eixa jornada (per exemple,
+abans de començar la temporada).
+
+El valor es valida en carregar `config/matchDay.php`: si no és cap d'estos,
+el bot i els scripts s'aturen amb un error, perquè una errata no deixe la
+jornada sense votació.
 
 S'obre **després d'aplicar i publicar** els canvis, no abans: ningú no ha de
 triar una acció sobre una plantilla que encara ha de canviar.

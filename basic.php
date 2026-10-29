@@ -63,7 +63,7 @@ function makeDispatcher(
         LAST_MATCH_DAY_WITH_CHANGES,
         SUBSTITUTIONS_OPEN,
         ACTIONS_OPEN,
-        KOS_ACTIVE
+        votacioActiva()
     );
 }
 

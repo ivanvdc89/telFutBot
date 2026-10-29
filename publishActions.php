@@ -49,13 +49,22 @@ $groupChatId = $group[0]['chat_id'];
 
 $allActions = $actionsRepo->getActionsByMatchDay($matchDay);
 
-// Només compta el boicot que està en joc (KOS_ACTIVE): si la jornada ha canviat
-// de boicot a mitges, les files de l'altre tipus no es publiquen, igual que no
-// es compten a calculateMatchDayPoints.
+// Només es publica la votació que es juga esta jornada (VOTACIO_ACTIVA): les
+// files d'un altre tipus no ixen, igual que no es compten a
+// calculateMatchDayPoints.
+$votacioActiva = votacioActiva();
+
 $allActions = array_values(array_filter(
     $allActions,
-    static fn(array $action): bool => !in_array($action['type'], ['kosAndShields', 'kosPais', 'kosPots'], true)
-        || $action['type'] === KOS_ACTIVE
+    static function (array $action) use ($votacioActiva): bool {
+        $votacions = ['kosAndShields', 'kosPais', 'kosPots', 'doubleOrNothing'];
+
+        if (in_array($action['type'], $votacions, true)) {
+            return $action['type'] === $votacioActiva;
+        }
+
+        return true;
+    }
 ));
 
 if (count($allActions) === 0) {

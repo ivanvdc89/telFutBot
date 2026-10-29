@@ -93,12 +93,12 @@ class FakeTeam extends Team
     }
 
     /**
-     * Els països de la temporada, com els torna la consulta de veritat: sense
-     * repetir i en ordre alfabètic.
+     * Els països de la temporada, com els torna la consulta de veritat: per la
+     * suma de punts dels seus equips i, si empaten, pel nom.
      */
     public function getCountries(): array
     {
-        return ['Bosnia and Herzegovina', 'France', 'Germany', 'Italy', 'Spain'];
+        return ['Spain', 'Germany', 'France', 'Italy', 'Bosnia and Herzegovina'];
     }
 }
 
@@ -246,12 +246,15 @@ echo "\n--- /kosPais: els països i els escuts ---\n";
 [$sent] = runCommand(buildWorld(), '/kosPais');
 check('text', $sent[0]['text'], 'Països disponibles:');
 check('tres files de botons', count($sent[0]['keyboard']), 3);
-check('els països de tres en tres', $sent[0]['keyboard'][0], [
-    '/kosPais vot Bosnia and Herzegovina',
-    '/kosPais vot France',
+check('els països de tres en tres, els de més punts primer', $sent[0]['keyboard'][0], [
+    '/kosPais vot Spain',
     '/kosPais vot Germany',
+    '/kosPais vot France',
 ]);
-check('els que queden', $sent[0]['keyboard'][1], ['/kosPais vot Italy', '/kosPais vot Spain']);
+check('els que queden', $sent[0]['keyboard'][1], [
+    '/kosPais vot Italy',
+    '/kosPais vot Bosnia and Herzegovina',
+]);
 check('i els escuts', $sent[0]['keyboard'][2], [
     '/kosPais escut CHL',
     '/kosPais escut EUL',

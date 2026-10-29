@@ -210,7 +210,11 @@ function team(int $id, string $name, string $country, int $pot): array
 }
 
 /** @return array [bot, player, team, Dispatcher] */
-function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false, string $kosActive = 'kosAndShields'): array
+function buildWorld(
+    bool $substitutionsOpen = true,
+    bool $actionsOpen = false,
+    string $votacioActiva = 'kosPais'
+): array
 {
     $bot    = new FakeBot();
     $player = new FakePlayer();
@@ -244,7 +248,7 @@ function buildWorld(bool $substitutionsOpen = true, bool $actionsOpen = false, s
         15,
         $substitutionsOpen,
         $actionsOpen,
-        $kosActive
+        $votacioActiva
     );
 
     return [$bot, $player, $team, $dispatcher];
@@ -295,15 +299,24 @@ echo "\n--- /accions amb les accions obertes ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, true);
 $dispatcher->dispatch(['/accions'], CHAT_ID);
 check(
-    'les tres accions, el doble o res i el boicot',
+    'les tres accions i el boicot de la jornada',
     $bot->sent[0]['keyboard'],
-    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/dobleORes'], ['/kos']]
+    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/kosPais']]
+);
+
+echo "\n--- /accions en la jornada de #dobleORes ---\n";
+[$bot, , , $dispatcher] = buildWorld(false, true, 'doubleOrNothing');
+$dispatcher->dispatch(['/accions'], CHAT_ID);
+check(
+    'el doble o res i cap boicot',
+    $bot->sent[0]['keyboard'],
+    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/dobleORes']]
 );
 
 echo "\n--- /accions amb el boicot per països ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, true, 'kosPais');
 $dispatcher->dispatch(['/accions'], CHAT_ID);
-check('el botó és el del boicot actiu', $bot->sent[0]['keyboard'][2], ['/kosPais']);
+check('el botó és el del boicot actiu', $bot->sent[0]['keyboard'][1], ['/kosPais']);
 
 echo "\n--- un boicot que no està en joc no respon ---\n";
 [$bot, $player, , $dispatcher] = buildWorld(false, true, 'kosPais');
@@ -315,6 +328,18 @@ check('diu que no', $bot->sent[0]['text'], 'No disponible');
 $player->players[CHAT_ID] = ['id' => 7, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
 $dispatcher->dispatch(['/kosPots'], CHAT_ID);
 check('i el mateix amb els pots', $bot->sent[0]['text'], 'No disponible');
+
+echo "\n--- una jornada de KO: #dobleORes no respon ---\n";
+[$bot, $player, , $dispatcher] = buildWorld(false, true, 'kosPais');
+$player->players[CHAT_ID] = ['id' => 7, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
+$dispatcher->dispatch(['/dobleORes'], CHAT_ID);
+check('diu que no', $bot->sent[0]['text'], 'No disponible');
+
+echo "\n--- una jornada de #dobleORes: els KOs no responen ---\n";
+[$bot, $player, , $dispatcher] = buildWorld(false, true, 'doubleOrNothing');
+$player->players[CHAT_ID] = ['id' => 7, 'chat_id' => CHAT_ID, 'name' => 'Tester'];
+$dispatcher->dispatch(['/kosPais'], CHAT_ID);
+check('diu que no', $bot->sent[0]['text'], 'No disponible');
 
 echo "\n--- /accions sense res obert ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, false);

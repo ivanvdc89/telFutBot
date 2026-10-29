@@ -81,19 +81,23 @@ define('SUBSTITUTIONS_OPEN', true);
 define('ACTIONS_OPEN', false);
 
 /**
- * Quin dels tres boicots de KO està en joc: 'kosAmbEscuts' (per equips),
- * 'kosPais' (per països), 'kosPots' (per pots), o '' si eixa jornada no n'hi ha
- * cap.
+ * Quina votació està en joc esta jornada: 'doubleOrNothing' (#dobleORes),
+ * 'kosAndShields' (#kosAmbEscuts), 'kosPais', 'kosPots' o '' (cap).
  *
- * Els tres boicots no conviuen mai: a cada jornada només n'hi ha un d'actiu, i
- * eixe és el que ix al menú /accions i l'únic que respon. Els altres dos
- * contesten "No disponible". El càlcul de punts i la publicació només apliquen
- * el boicot actiu, encara que hi haja files velles d'un altre tipus.
+ * Els valors són els de la columna `type` de la taula actions, com el que
+ * desen les accions.
  *
- * El mou l'administrador a mà, com ACTIONS_OPEN. Si una jornada no ha de tindre
- * cap boicot, es deixa la cadena buida.
+ * Les quatre votacions (#dobleORes i els tres boicots de KO) són accions
+ * distintes, amb el seu comandament i el seu botó, però a cada jornada només
+ * n'hi ha UNA d'activa: mai dues alhora. Eixa és la que ix al menú /accions,
+ * l'única que respon i l'única que es publica i es compta. Amb la cadena buida
+ * no hi ha cap votació (per exemple, abans de començar la temporada).
+ *
+ * El mou l'administrador a mà, com ACTIONS_OPEN. El valor es valida en carregar
+ * este fitxer: una errata atura el bot i els scripts abans que deixen una
+ * jornada sense votació.
  */
-define('KOS_ACTIVE', 'kosPais');
+define('VOTACIO_ACTIVA', 'kosPais');
 
 function currentMatchDay(): int
 {
@@ -133,3 +137,29 @@ function matchDayFromArguments(array $arguments): int
 
     return CURRENT_MATCH_DAY;
 }
+
+/**
+ * Valors que pot prendre VOTACIO_ACTIVA.
+ */
+const VOTACIONS = ['doubleOrNothing', 'kosAndShields', 'kosPais', 'kosPots', ''];
+
+/**
+ * El valor de VOTACIO_ACTIVA, comprovat.
+ *
+ * @throws RuntimeException Si el valor no és cap de les votacions.
+ */
+function votacioActiva(): string
+{
+    if (!in_array(VOTACIO_ACTIVA, VOTACIONS, true)) {
+        throw new RuntimeException(
+            "VOTACIO_ACTIVA no és cap votació: '" . VOTACIO_ACTIVA
+            . "' (ha de ser 'doubleOrNothing', 'kosAndShields', 'kosPais', 'kosPots' o '')"
+        );
+    }
+
+    return VOTACIO_ACTIVA;
+}
+
+// Comprovar-ho en carregar el fitxer: val més no arrancar que fer una jornada
+// amb una votació que no existeix.
+votacioActiva();

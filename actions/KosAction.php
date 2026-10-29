@@ -24,7 +24,7 @@ use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
  * els vots (voteKey), com es mostra un vot (voteText), quins botons té el menú
  * (menuRows) i com es valida i desa un vot (registerVote). La resta viu ací.
  *
- * NOMÉS UN BOICOT RESPON. KOS_ACTIVE (config/matchDay.php) diu quin està en joc
+ * NOMÉS UN BOICOT RESPON. VOTACIO_ACTIVA (config/matchDay.php) diu quin està en joc
  * eixa jornada, i els altres dos contesten "No disponible": així el jugador no
  * pot votar en un boicot que no toca.
  *
@@ -43,7 +43,7 @@ abstract class KosAction extends ActionRowAction
     protected Team $teamsRepo;
 
     /**
-     * Quin boicot està en joc esta jornada (el valor de KOS_ACTIVE).
+     * Quin boicot està en joc esta jornada (el valor de VOTACIO_ACTIVA).
      */
     private string $activeKos;
 

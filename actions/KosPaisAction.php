@@ -18,6 +18,9 @@ require_once(__DIR__ . '/KosAction.php');
  * {max, paisos:["Spain", ...], shields:[teamId, ...]}: el país es desa pel nom
  * perquè és la dada que hi ha a teams.country i així l'anunci i els punts no
  * hagen de traduir res.
+ *
+ * El menú llista els països amb més punts sumats primer (Team::getCountries()),
+ * perquè a l'hora de votar es veja de seguida quins són els forts.
  */
 class KosPaisAction extends KosAction
 {

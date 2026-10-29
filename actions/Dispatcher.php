@@ -44,7 +44,7 @@ final class Dispatcher
     private int $lastMatchDayWithChanges;
     private bool $substitutionsOpen;
     private bool $actionsOpen;
-    private string $kosActive;
+    private string $votacioActiva;
 
     public function __construct(
         BotApi $telegram,
@@ -57,7 +57,7 @@ final class Dispatcher
         int $lastMatchDayWithChanges,
         bool $substitutionsOpen,
         bool $actionsOpen,
-        string $kosActive
+        string $votacioActiva
     ) {
         $this->telegram                = $telegram;
         $this->playersRepo             = $playersRepo;
@@ -69,7 +69,7 @@ final class Dispatcher
         $this->lastMatchDayWithChanges = $lastMatchDayWithChanges;
         $this->substitutionsOpen       = $substitutionsOpen;
         $this->actionsOpen             = $actionsOpen;
-        $this->kosActive               = $kosActive;
+        $this->votacioActiva           = $votacioActiva;
     }
 
     /**
@@ -106,14 +106,15 @@ final class Dispatcher
                 $chatId,
                 $this->matchDay,
                 $args,
-                $this->actionsOpen
+                $this->actionsOpen,
+                $this->votacioActiva === 'doubleOrNothing'
             ))->run();
 
             return;
         }
 
         // Els tres boicots de KO tenen el mateix constructor; només respon el
-        // que està en joc (KOS_ACTIVE), i els altres contesten "No disponible".
+        // que està en joc (VOTACIO_ACTIVA), i els altres contesten "No disponible".
         foreach ([KosAndShieldsAction::class, KosPaisAction::class, KosPotsAction::class] as $kosAction) {
             if (!$kosAction::handlesCommand($command)) {
                 continue;
@@ -128,7 +129,7 @@ final class Dispatcher
                 $this->matchDay,
                 $args,
                 $this->actionsOpen,
-                $this->kosActive
+                $this->votacioActiva
             ))->run();
 
             return;
@@ -284,7 +285,7 @@ final class Dispatcher
                 $args,
                 $this->substitutionsOpen,
                 $this->actionsOpen,
-                $this->kosActive
+                $this->votacioActiva
             ))->run();
 
             return;

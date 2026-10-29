@@ -9,17 +9,16 @@
  * La idea és que NO hi haja cap llista escrita a mà: tancar una fase la treu
  * del menú tota sola, i obrir-la la hi torna a posar.
  *
- * /dobleORes i el boicot de KO que està en joc ixen al menú; els altres dos
- * boicots no, perquè no es poden votar eixa jornada. /segurQuePasse i
- * /millorFinal només tenen efecte en fases concretes i es continuen escrivint a
- * mà.
+ * La votació que es juga (VOTACIO_ACTIVA) ix al menú: #dobleORes o el boicot
+ * de KO que toque, mai els dos alhora. /segurQuePasse i /millorFinal només
+ * tenen efecte en fases concretes i es continuen escrivint a mà.
  *
- * @param string $kosActive Quin boicot de KO està en joc (KOS_ACTIVE), o '' si
- *                          eixa jornada no n'hi ha cap.
+ * @param string $votacioActiva Quina votació es juga (VOTACIO_ACTIVA): el
+ *                              boicot de KO o #dobleORes, o '' si no n'hi ha cap.
  *
  * @return array Files de botons, buit si no hi ha res disponible.
  */
-function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen, string $kosActive): array
+function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen, string $votacioActiva): array
 {
     $rows = [];
 
@@ -28,8 +27,13 @@ function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen, string $kos
     }
 
     if ($actionsOpen) {
-        $rows[]     = ['/malDia', '/socElMillor', '/guanyarOMorir'];
-        $kosCommand = kosCommand($kosActive);
+        $rows[] = ['/malDia', '/socElMillor', '/guanyarOMorir'];
+
+        if ($votacioActiva === 'doubleOrNothing') {
+            $rows[] = ['/dobleORes'];
+        }
+
+        $kosCommand = kosCommand($votacioActiva);
 
         if ($kosCommand !== '') {
             $rows[] = [$kosCommand];
@@ -42,7 +46,7 @@ function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen, string $kos
 /**
  * El comandament del boicot de KO que toca, a partir del seu tipus.
  *
- * El tipus és el de la taula actions (KOS_ACTIVE); el comandament és el que el
+ * El tipus és el de la taula actions (VOTACIO_ACTIVA); el comandament és el que el
  * jugador escriu o el botó que polsa. Els tres boicots són accions distintes i
  * tenen el seu propi botó: no hi ha un /kos amb maneres.
  *

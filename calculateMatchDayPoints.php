@@ -112,20 +112,25 @@ foreach ($teamsRepo->getAllTeams() as $team) {
 // publishActions.php, perquè l'anunci i els punts no es puguen separar.
 $teamRankings = $standingsRepo->getRankingsByTeam();
 
-$doubleOrNothingVoted = [];
-foreach ($actionsRepo->getActions($matchDay, 'doubleOrNothing') as $action) {
-    $actionData = json_decode($action['data'], true);
+// Només compta la votació que es juga esta jornada (VOTACIO_ACTIVA): les files
+// d'una jornada en què no toca no s'apliquen.
+$votacioActiva = votacioActiva();
 
-    foreach ($actionData['teams'] ?? [] as $teamId) {
-        $doubleOrNothingVoted[] = (int) $teamId;
+$doubleOrNothingVoted = [];
+if ($votacioActiva === 'doubleOrNothing') {
+    foreach ($actionsRepo->getActions($matchDay, 'doubleOrNothing') as $action) {
+        $actionData = json_decode($action['data'], true);
+
+        foreach ($actionData['teams'] ?? [] as $teamId) {
+            $doubleOrNothingVoted[] = (int) $teamId;
+        }
     }
 }
 
-// Només compta el boicot que està en joc (KOS_ACTIVE). Els tres guarden les
-// files amb el mateix format, però canvien què es vota i, per tant, quins
-// equips queden a 0 punts.
-$kosType = in_array(KOS_ACTIVE, ['kosAndShields', 'kosPais', 'kosPots'], true)
-    ? KOS_ACTIVE
+// Els tres boicots guarden les files amb el mateix format, però canvien què es
+// vota i, per tant, quins equips queden a 0 punts.
+$kosType = in_array($votacioActiva, ['kosAndShields', 'kosPais', 'kosPots'], true)
+    ? $votacioActiva
     : '';
 
 // Sense boicot actiu no es mira cap fila: les d'un altre tipus o d'una jornada

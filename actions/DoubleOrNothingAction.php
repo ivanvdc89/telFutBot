@@ -39,6 +39,11 @@ class DoubleOrNothingAction extends ActionRowAction
 
     private Team $teamsRepo;
 
+    /**
+     * Si la votació de #dobleORes es juga esta jornada (VOTACIO_ACTIVA).
+     */
+    private bool $dobleOrNothingActive;
+
     public function __construct(
         BotApi $telegram,
         Player $playersRepo,
@@ -47,11 +52,13 @@ class DoubleOrNothingAction extends ActionRowAction
         int $chatId,
         int $matchDay,
         array $args,
-        bool $actionsActivated
+        bool $actionsActivated,
+        bool $dobleOrNothingActive
     ) {
         parent::__construct($telegram, $playersRepo, $actionsRepo, $chatId, $matchDay, $args, $actionsActivated);
 
-        $this->teamsRepo = $teamsRepo;
+        $this->teamsRepo            = $teamsRepo;
+        $this->dobleOrNothingActive = $dobleOrNothingActive;
     }
 
     protected static function commands(): array
@@ -66,7 +73,7 @@ class DoubleOrNothingAction extends ActionRowAction
 
     protected function handle(int $playerId): void
     {
-        if (!$this->actionsActivated) {
+        if (!$this->actionsActivated || !$this->dobleOrNothingActive) {
             $this->sendNotAvailable();
 
             return;
