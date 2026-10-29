@@ -1,6 +1,6 @@
 <?php
 // Prova funcional de RulesAction (/normes) amb dobles, sense Telegram.
-// Cobreix el menú, les quatre fotos i les set normes d'acció. Els textos no es
+// Cobreix el menú, les quatre fotos i les nou normes d'acció. Els textos no es
 // repeteixen aquí: es comprova que hi siguin tots, en ordre i sencers, que és
 // el que es pot trencar en moure'ls de basic.php.
 // S'executa des de l'arrel del projecte: php tests/rulesActionTest.php
@@ -139,19 +139,20 @@ check('cap missatge de text', $bot->sent, []);
 
 echo "\n--- /normes accions ---\n";
 $bot = runCommand('/normes accions');
-check('set missatges, un per norma', count($bot->sent), 7);
+check('nou missatges, un per norma', count($bot->sent), 9);
 
 $labels = [];
 foreach ($bot->sent as $message) {
     preg_match('/^Norma (#\w+):/', $message['text'], $matches);
     $labels[] = $matches[1] ?? '(sense etiqueta)';
 }
-check('les set normes, en ordre', $labels, [
-    '#malDia', '#socElMillor', '#guanyarOMorir',
-    '#dobleORes', '#kosAmbEscuts', '#millorFinal', '#segurQuePasse',
+check('les nou normes, en ordre', $labels, [
+    '#malDia', '#socElMillor', '#guanyarOMorir', '#dobleORes',
+    '#kosPais', '#kosPots', '#kosAmbEscuts',
+    '#millorFinal', '#segurQuePasse',
 ]);
-check('tots els textos són sencers', count(array_filter($bot->sent, fn($m) => strlen($m['text']) > 200)), 7);
-check('cap amb teclat', array_column($bot->sent, 'keyboard'), array_fill(0, 7, null));
+check('tots els textos són sencers', count(array_filter($bot->sent, fn($m) => strlen($m['text']) > 200)), 9);
+check('cap amb teclat', array_column($bot->sent, 'keyboard'), array_fill(0, 9, null));
 check('cap foto', $bot->photos, []);
 
 // ---------- subcomandaments ----------

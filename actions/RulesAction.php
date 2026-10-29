@@ -83,28 +83,30 @@ Exemples, si t'actives el #guanyarOMorir en Champions:
 -Depenent dels punts en la general tenim més vots o menys. 1 vot per al primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots.",
 
         "Norma #kosPais:
--Hi ha una votació per a boicotejar equips, tots els equips dels 2 paisos més votats no sumaran punts independenment del resultat del seu partit.
--Tots els vots de boicot valen igual. Se pot donar més d'un vot a un país. Si hi ha empat entre paisos, el que més punts té en la classificació serà el país boicotejat.
--Depenent de la nostra posició tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4.
--Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre.
--Amb només un escut l'equip ja està totalment protegit i sumarà punts.
--No cal posar més d'un escut al mateix equip.",
+-Hi ha una votació per a boicotejar països: tots els equips dels 2 països més votats no sumaran punts independenment del resultat del seu partit.
+-El boicot és sobre 2 països en total, no 1 per competició.
+-Tots els vots de boicot valen igual. Es pot donar més d'un vot a un país. Si hi ha empat entre països, queda davant el país amb més punts sumats entre tots els seus equips a la classificació.
+-Si ningú no fa cap vot, queden boicotejats els 2 països amb més punts sumats entre tots els seus equips.
+-Depenent de la nostra posició tenim més vots o menys. 1 vot per al primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots.
+-Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre. Com a màxim 4 escuts.
+-Amb només un escut l'equip ja està totalment protegit i sumarà punts. No es pot posar més d'un escut al mateix equip.",
 
         "Norma #kosPots:
-        -Hi ha una votació per a boicotejar pots, tots els equips dels 2 pots més votats no sumaran punts independenment del resultat del seu partit.
--Tots els vots de boicot valen igual. És possible donar més d'un vot a un pot. Si hi ha empat entre pots, el que més punts té en la classificació serà el pot boicotejat.
--Depenent de la nostra posició tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4.
--Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre.
--Amb només un escut l'equip ja està totalment protegit i sumarà punts.
--No cal posar més d'un escut al mateix equip.",
+-Hi ha una votació per a boicotejar pots: tots els equips dels 2 pots més votats no sumaran punts independenment del resultat del seu partit.
+-El boicot és sobre 2 pots en total, no 1 per competició.
+-Tots els vots de boicot valen igual. Es pot donar més d'un vot a un pot. Si hi ha empat entre pots, queda davant el pot amb més punts sumats entre tots els seus equips a la classificació.
+-Si ningú no fa cap vot, queden boicotejats els 2 pots amb més punts sumats entre tots els seus equips.
+-Depenent de la nostra posició tenim més vots o menys. 1 vot per al primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots.
+-Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre. Com a màxim 4 escuts.
+-Amb només un escut l'equip ja està totalment protegit i sumarà punts. No es pot posar més d'un escut al mateix equip.",
 
-        "Norma #4kosAmbEscuts:
--Hi ha una votació per a boicotejar equips, els 4 més votats no sumaran punts independenment del resultat del seu partit.
--Tots els vots de boicot valen igual. Se pot donar més d'un vot a un equip. Si hi ha empat entre equips, el que ha està millor en la classificació serà l'equip boicotejat.
--Depenent de la nostra posició tenim més vots o menys. 1 vot el primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4.
--Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre.
--Amb només un escut l'equip ja està totalment protegit i sumarà punts.
--No cal posar més d'un escut al mateix equip.",
+        "Norma #kosAmbEscuts:
+-Hi ha una votació per a boicotejar equips: els 4 equips més votats no sumaran punts independenment del resultat del seu partit.
+-El boicot és sobre 4 equips en total, no 1 per competició.
+-Tots els vots de boicot valen igual. Es pot donar més d'un vot a un equip. Si hi ha empat entre equips, queda davant l'equip que està millor en la classificació.
+-Depenent de la nostra posició tenim més vots o menys. 1 vot per al primer i després cada 10 punts de diferència el jugador té un vot més. Com a màxim 4 vots.
+-Per a protegir-se del boicot se usen escuts. Cada escut protegeix un dels teus equips del boicot i per a tu sumarà igual que sempre. Com a màxim 4 escuts.
+-Amb només un escut l'equip ja està totalment protegit i sumarà punts. No es pot posar més d'un escut al mateix equip.",
 
         "Norma #millorFinal:
 -Només té efectes per a les finals.
