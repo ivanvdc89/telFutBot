@@ -303,17 +303,46 @@ abstract class KosAction extends ActionRowAction
      */
     protected function sendMenu(array $data, int $maxVotes): void
     {
-        $rows   = $this->menuRows($data, $maxVotes);
-        $rows[] = $this->shieldRows();
-
         $this->telegram->sendMessage(
             $this->chatId,
             $this->menuTitle(),
             false,
             null,
             null,
-            InlineMenu::fromCommands($rows)
+            $this->menuKeyboard($data, $maxVotes)
         );
+    }
+
+    /**
+     * El teclat del menú: les files de menuRows() i, davall, els escuts.
+     *
+     * És un ganxo perquè #kosPais hi afegix la paginació; els altres dos boicots
+     * no el toquen.
+     */
+    protected function menuKeyboard(array $data, int $maxVotes): InlineKeyboardMarkup
+    {
+        $rows   = $this->menuRows($data, $maxVotes);
+        $rows[] = $this->shieldRows();
+
+        return InlineMenu::fromCommands($rows);
+    }
+
+    /**
+     * Els botons ja construïts d'una llista de comandaments.
+     *
+     * @param array<int, string> $commands
+     *
+     * @return array<int, array{text: string, callback_data: string}>
+     */
+    protected function buttonsFor(array $commands): array
+    {
+        $buttons = [];
+
+        foreach ($commands as $command) {
+            $buttons[] = InlineMenu::button(menuLabel($command), commandCallbackData($command));
+        }
+
+        return $buttons;
     }
 
     /**
@@ -457,7 +486,7 @@ abstract class KosAction extends ActionRowAction
             false,
             null,
             null,
-            InlineMenu::fromCommands($this->menuRows($data, $maxVotes))
+            $this->menuKeyboard($data, $maxVotes)
         );
     }
 

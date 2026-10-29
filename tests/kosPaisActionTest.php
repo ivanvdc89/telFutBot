@@ -92,13 +92,16 @@ class FakeTeam extends Team
         return isset($this->teamsById[$teamId]) ? [$this->teamsById[$teamId]] : [];
     }
 
+    /** @var array<int, string> */
+    public array $countries = ['Spain', 'Germany', 'France', 'Italy', 'Bosnia and Herzegovina'];
+
     /**
      * Els països de la temporada, com els torna la consulta de veritat: per la
      * suma de punts dels seus equips i, si empaten, pel nom.
      */
     public function getCountries(): array
     {
-        return ['Spain', 'Germany', 'France', 'Italy', 'Bosnia and Herzegovina'];
+        return $this->countries;
     }
 }
 
@@ -220,6 +223,19 @@ function runCommand(array $world, string $text): array
     return [$bot->sent, $action];
 }
 
+/**
+ * Un món amb tants països com calga (per a la paginació).
+ *
+ * @param array<int, string> $countries
+ */
+function worldWithCountries(array $countries): array
+{
+    $world = buildWorld();
+    $world[2]->countries = $countries;
+
+    return $world;
+}
+
 // ---------- escenaris ----------
 
 echo "--- l'acció no està activada ---\n";
@@ -331,6 +347,57 @@ $world = buildWorld();
 $player->players = [];
 [$sent] = runCommand($world, '/kosPais');
 check('text', $sent[0]['text'], 'Encara no has triat cap equip. Toca "Equips" per començar.');
+
+echo "\n--- paginació: 30 països, 3 pàgines de 12 ---\n";
+$manyCountries = [];
+for ($i = 1; $i <= 30; $i++) {
+    $manyCountries[] = sprintf('Pais%02d', $i);
+}
+
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais');
+check('títol amb la pàgina', $sent[0]['text'], 'Països disponibles (pàgina 1 de 3):');
+check('quatre files de països i la de navegació i la d\'escuts', count($sent[0]['keyboard']), 6);
+check('la primera fila', $sent[0]['keyboard'][0], ['/kosPais vot Pais01', '/kosPais vot Pais02', '/kosPais vot Pais03']);
+check('la quarta fila acaba la pàgina', $sent[0]['keyboard'][3], ['/kosPais vot Pais10', '/kosPais vot Pais11', '/kosPais vot Pais12']);
+check('sense Anterior a la primera pàgina', $sent[0]['keyboard'][4], ['/kosPais paisos 2']);
+check('i els escuts a l\'última', $sent[0]['keyboard'][5], [
+    '/kosPais escut CHL',
+    '/kosPais escut EUL',
+    '/kosPais escut COL',
+    '/kosPais',
+]);
+
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 2');
+check('la segona pàgina', $sent[0]['text'], 'Països disponibles (pàgina 2 de 3):');
+check('comença on tocava', $sent[0]['keyboard'][0], ['/kosPais vot Pais13', '/kosPais vot Pais14', '/kosPais vot Pais15']);
+check('amb Anterior i Següent', $sent[0]['keyboard'][4], ['/kosPais paisos 1', '/kosPais paisos 3']);
+
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 3');
+check('la tercera pàgina', $sent[0]['text'], 'Països disponibles (pàgina 3 de 3):');
+check('té sis països', count($sent[0]['keyboard']), 4);
+check('sense Següent a l\'última pàgina', $sent[0]['keyboard'][2], ['/kosPais paisos 2']);
+
+echo "\n--- una pàgina fora de rang es queda dins ---\n";
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 99');
+check('la 99 és l\'última', $sent[0]['text'], 'Països disponibles (pàgina 3 de 3):');
+
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 0');
+check('la 0 és la primera', $sent[0]['text'], 'Països disponibles (pàgina 1 de 3):');
+
+[$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos');
+check('sense número, la primera', $sent[0]['text'], 'Països disponibles (pàgina 1 de 3):');
+
+echo "\n--- i es pot votar un país de qualsevol pàgina ---\n";
+[$sent, $action] = runCommand(worldWithCountries($manyCountries), '/kosPais vot Pais25');
+check('el vot es desa', $action->updates, [[
+    'id'   => 43,
+    'data' => ['max' => 3, 'paisos' => ['Pais25'], 'shields' => []],
+]]);
+
+echo "\n--- amb pocs països no hi ha navegació ---\n";
+[$sent] = runCommand(buildWorld(), '/kosPais');
+check('títol sense pàgina', $sent[0]['text'], 'Països disponibles:');
+check('tres files', count($sent[0]['keyboard']), 3);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /kosPais', KosPaisAction::handlesCommand('/kosPais'), true);
