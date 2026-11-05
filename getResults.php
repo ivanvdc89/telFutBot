@@ -35,6 +35,14 @@
  * apareix un equip exclòs només s'hi desa el rival, perquè els seus punts només
  * depenen del resultat. Això no és cap error i no atura res.
  *
+ * LA CÒPIA LOCAL
+ *
+ * La pàgina es desa a files/cache/ i es reutilitza durant una hora. Si la còpia
+ * no té cap partit d'esta jornada, l'script la torna a descarregar una vegada
+ * abans de dir que no hi ha res: una còpia d'abans que es publicassen els
+ * resultats no ha de fer creure que la jornada encara no s'ha jugat. Si la
+ * descàrrega falla, s'usa la còpia i la capçalera diu de quan és.
+ *
  * SI UN EQUIP NO ES RESOL
  *
  * Un equip que no és exclòs i que no es reconeix sí que és un problema. L'script
@@ -80,6 +88,48 @@ Opcions:
 Sense jornada, s'usa CURRENT_MATCH_DAY de config/matchDay.php.
 
 TEXT);
+}
+
+/** "fa 3 h 5 min", per als missatges de la còpia local. */
+function humanAge(int $seconds): string
+{
+    $seconds = max(0, $seconds);
+
+    if ($seconds < 60) {
+        return "fa menys d'un minut";
+    }
+
+    if ($seconds < 3600) {
+        return 'fa ' . intdiv($seconds, 60) . ' min';
+    }
+
+    if ($seconds >= 86400) {
+        $days  = intdiv($seconds, 86400);
+        $hours = intdiv($seconds % 86400, 3600);
+
+        return 'fa ' . $days . ($days === 1 ? ' dia' : ' dies') . ($hours === 0 ? '' : " $hours h");
+    }
+
+    $hours   = intdiv($seconds, 3600);
+    $minutes = intdiv($seconds % 3600, 60);
+
+    return 'fa ' . $hours . ' h' . ($minutes === 0 ? '' : " $minutes min");
+}
+
+/**
+ * Descripció curta de l'origen de la pàgina, per a la capçalera.
+ *
+ * @param array{fromCache:bool, cacheAge:?int, error:?string} $page
+ */
+function describePage(array $page): string
+{
+    $text = $page['fromCache'] ? 'còpia local ' . humanAge($page['cacheAge'] ?? 0) : 'descarregada ara';
+
+    if ($page['error'] !== null) {
+        $text .= " (no s'ha pogut descarregar: {$page['error']})";
+    }
+
+    return $text;
 }
 
 // ---------------------------------------------------------------- arguments
@@ -156,13 +206,16 @@ if ($options['source'] !== null && !is_file($options['source'])) {
 
 // ------------------------------------------------------------------- dades
 
+$fromUrl = false;
+
 try {
     if ($options['source'] !== null) {
         $source = KassiesaResultsSource::fromFile($options['source']);
         $origin = $options['source'];
     } else {
-        $source = KassiesaResultsSource::fromUrl(resultsSourceUrl(), resultsCachePath(), $options['refresh']);
-        $origin = resultsSourceUrl();
+        $source  = KassiesaResultsSource::fromUrl(resultsSourceUrl(), resultsCachePath(), $options['refresh']);
+        $origin  = resultsSourceUrl();
+        $fromUrl = true;
     }
 } catch (RuntimeException $e) {
     fwrite(STDERR, $e->getMessage() . "\n");
@@ -190,11 +243,47 @@ if (!$resultsRepo->hasGoalColumns()) {
 
 $plan = $planner->plan($competitions, $matchDay);
 
+// La còpia local pot ser d'abans que es publicassen els resultats, i aleshores
+// es diria "cap partit publicat" amb la jornada ja jugada. Si alguna competició
+// s'ha quedat sense partits i la pàgina venia de la còpia, es torna a descarregar
+// una vegada i es torna a planificar. Amb --refresh o --source no cal: ja s'ha
+// llegit el que tocava.
+$reloaded     = false;
+$missingFirst = $plan['empty'];
+
+if ($fromUrl && !$options['refresh'] && $missingFirst !== []) {
+    try {
+        $retried = KassiesaResultsSource::fromUrl(resultsSourceUrl(), resultsCachePath(), true);
+        $planner = new ResultsPlanner($retried, $resolver, array_keys(RESULTS_EXCLUDED_COUNTRIES));
+        $plan    = $planner->plan($competitions, $matchDay);
+
+        // Si la descàrrega ha fallat, fetch() ha tornat a la còpia local: no
+        // s'ha de dir que s'ha descarregat res.
+        $source   = $retried;
+        $reloaded = !($retried->page()['fromCache'] ?? true);
+    } catch (RuntimeException $e) {
+        fwrite(STDERR, "Avís: " . $e->getMessage() . "\n");
+    }
+}
+
 $planned        = $plan['rows'];
 $problems       = $plan['problems'];
 $withoutMatches = $plan['empty'];
 
-echo "Jornada $matchDay · font: $origin\n\n";
+$page = $source->page();
+
+echo "Jornada $matchDay · font: $origin";
+if ($page !== null) {
+    echo ' · ' . describePage($page);
+}
+echo "\n";
+
+if ($reloaded && $plan['matches'] !== []) {
+    echo "La còpia local no tenia partits d'esta jornada (" . implode(', ', $missingFirst)
+        . "): s'ha tornat a descarregar la pàgina.\n";
+}
+
+echo "\n";
 
 // ------------------------------------------------------------------ informe
 
@@ -241,6 +330,11 @@ foreach ($plan['simulated'] as $competition) {
 
 foreach ($withoutMatches as $competition) {
     echo sprintf("%-3s cap partit publicat encara per a esta jornada.\n", $competition);
+}
+
+if ($withoutMatches !== [] && $page !== null && $page['fromCache']) {
+    echo "\nLa pàgina és una còpia local de " . humanAge($page['cacheAge'] ?? 0) . ".\n";
+    echo "Si els partits ja s'han jugat, torna-la a descarregar: php getResults.php --refresh\n";
 }
 
 if ($excludedCount > 0) {

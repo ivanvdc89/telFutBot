@@ -93,8 +93,15 @@ php getResults.php --source=files/cache/kassiesa-2027.html
 ```
 
 La pàgina es desa a `files/cache/` i es reutilitza durant una hora, aixina que
-executar l'script diverses vegades no castiga el lloc. Si la xarxa falla, s'usa
-la còpia local encara que sigui antiga.
+executar l'script diverses vegades no castiga el lloc. La capçalera diu si s'ha
+descarregat ara o si és una còpia local i de quan és.
+
+**Una còpia antiga no ha de fer creure que la jornada no s'ha jugat.** Si alguna
+competició es queda sense partits, `getResults.php` torna a descarregar la
+pàgina una vegada (ignorant la còpia) i torna a calcular el pla abans de dir que
+no hi ha res. I si el que baixa no pareix la pàgina de partits —un 404, un error
+del servidor, un repte anti-bots— no es pren per una jornada sense resultats:
+s'avisa, i si n'hi ha s'usa la còpia local encara que siga antiga.
 
 `team_results` té una clau única `(team_id, match_day, competition)` i
 **l'escriptura és només un `INSERT`**: els resultats no s'actualitzen mai. Si la

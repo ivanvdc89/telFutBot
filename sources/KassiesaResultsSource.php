@@ -35,6 +35,9 @@ class KassiesaResultsSource implements ResultsSource
      */
     private array $rounds;
 
+    /** D'on ha eixit la pàgina, si venia de la xarxa. */
+    private ?array $page = null;
+
     private function __construct(array $rounds)
     {
         $this->rounds = $rounds;
@@ -63,26 +66,117 @@ class KassiesaResultsSource implements ResultsSource
      */
     public static function fromUrl(string $url, string $cachePath, bool $refresh = false, int $ttl = 3600): self
     {
-        return self::fromHtml(self::download($url, $cachePath, $refresh, $ttl));
+        $page = self::fetch($url, $cachePath, $refresh, $ttl);
+
+        $source       = new self(self::parse($page['html']));
+        $source->page = [
+            'fromCache' => $page['fromCache'],
+            'cacheAge'  => $page['cacheAge'],
+            'error'     => $page['error'],
+        ];
+
+        return $source;
+    }
+
+    /**
+     * D'on ha eixit la pàgina, per poder-ho dir als missatges.
+     *
+     * @return array{fromCache:bool, cacheAge:?int, error:?string}|null
+     *         Null si la font no és la xarxa (per exemple, un fitxer amb --source).
+     */
+    public function page(): ?array
+    {
+        return $this->page;
     }
 
     /**
      * Contingut de la pàgina, amb còpia local.
      *
      * Si la xarxa falla i hi ha una còpia antiga, s'hi cau: una jornada amb dades
-     * d'ahir és millor que no poder treballar, i el fitxer porta la data.
+     * d'ahir és millor que no poder treballar, i el fitxer porta la data. Però
+     * l'origen es torna a qui crida, perquè "no hi ha cap partit" i "la còpia
+     * local és d'abans que es publicassen" no es poden confondre.
+     *
+     * @return array{html:string, fromCache:bool, cacheAge:?int, error:?string}
      */
-    public static function download(string $url, string $cachePath, bool $refresh = false, int $ttl = 3600): string
+    public static function fetch(string $url, string $cachePath, bool $refresh = false, int $ttl = 3600): array
     {
-        $fresh = is_file($cachePath) && (time() - filemtime($cachePath)) < $ttl;
+        $age = self::cacheAge($cachePath);
 
-        if (!$refresh && $fresh) {
+        if (!$refresh && self::cacheIsFresh($age, $ttl)) {
             $cached = file_get_contents($cachePath);
-            if ($cached !== false && $cached !== '') {
-                return $cached;
+
+            if ($cached !== false && self::looksLikeMatchesPage($cached)) {
+                return ['html' => $cached, 'fromCache' => true, 'cacheAge' => $age, 'error' => null];
             }
         }
 
+        [$html, $error] = self::download($url);
+
+        // Un 404, un error del servidor o un repte anti-bots no són resultats: si
+        // es parsejaren, getResults.php diria "cap partit publicat" i ningú no
+        // sabria que el problema és la descàrrega.
+        if ($html === null || !self::looksLikeMatchesPage($html)) {
+            $reason = $error ?? 'la resposta no pareix la pàgina de partits';
+
+            if ($age !== null) {
+                $cached = file_get_contents($cachePath);
+
+                if ($cached !== false && self::looksLikeMatchesPage($cached)) {
+                    return ['html' => $cached, 'fromCache' => true, 'cacheAge' => $age, 'error' => $reason];
+                }
+            }
+
+            throw new RuntimeException("No s'ha pogut descarregar $url: $reason");
+        }
+
+        self::store($cachePath, $html);
+
+        return ['html' => $html, 'fromCache' => false, 'cacheAge' => 0, 'error' => null];
+    }
+
+    /**
+     * Segons des de l'última escriptura de la còpia local, o null si no n'hi ha.
+     *
+     * Pot ser negatiu si la data de modificació és al futur (rellotge desajustat
+     * o un fitxer copiat amb la data d'origen).
+     */
+    public static function cacheAge(string $path): ?int
+    {
+        $mtime = is_file($path) ? @filemtime($path) : false;
+
+        return $mtime === false ? null : time() - $mtime;
+    }
+
+    /**
+     * Cert si la còpia local es pot fer servir tal qual.
+     *
+     * Una data de modificació al futur no compta com a fresca: si no, la còpia
+     * es quedaria per sempre i la pàgina no es tornaria a descarregar mai.
+     */
+    public static function cacheIsFresh(?int $age, int $ttl): bool
+    {
+        return $age !== null && $age >= 0 && $age < $ttl;
+    }
+
+    /**
+     * Cert si el text pareix la pàgina de partits de kassiesa.
+     *
+     * Servix per a no prendre una pàgina d'error o un repte anti-bots per una
+     * jornada sense partits.
+     */
+    public static function looksLikeMatchesPage(string $html): bool
+    {
+        return str_contains($html, 'cupheader') && str_contains($html, 'class="t1"');
+    }
+
+    /**
+     * Descarrega la pàgina. Torna [html, error]; l'html és null si ha fallat.
+     *
+     * @return array{0:?string, 1:?string}
+     */
+    private static function download(string $url): array
+    {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
@@ -92,34 +186,43 @@ class KassiesaResultsSource implements ResultsSource
             CURLOPT_USERAGENT      => 'telFutBot getResults (https://kassiesa.net)',
             CURLOPT_FAILONERROR    => true,
         ]);
-        $html = curl_exec($ch);
+        $html  = curl_exec($ch);
         $error = curl_error($ch);
         curl_close($ch);
 
         if ($html === false || $html === '') {
-            if (is_file($cachePath)) {
-                fwrite(STDERR, "Avís: no s'ha pogut descarregar $url ($error); s'usa la còpia local.\n");
-
-                return (string) file_get_contents($cachePath);
-            }
-
-            throw new RuntimeException("No s'ha pogut descarregar $url: $error");
+            return [null, $error !== '' ? $error : 'resposta buida'];
         }
 
+        return [(string) $html, null];
+    }
+
+    /** Desa la pàgina a la còpia local, sense deixar mai un fitxer a mitges. */
+    private static function store(string $cachePath, string $html): void
+    {
         $dir = dirname($cachePath);
+
         if (!is_dir($dir)) {
             @mkdir($dir, 0775, true);
         }
-        if (is_dir($dir) && is_writable($dir)) {
-            // Escriptura atòmica: si dos processos coincideixen, mai no es llegeix
-            // un fitxer a mig escriure.
-            $tmp = $cachePath . '.' . getmypid() . '.tmp';
-            if (file_put_contents($tmp, $html) !== false) {
-                @rename($tmp, $cachePath);
-            }
+
+        if (!is_dir($dir) || !is_writable($dir)) {
+            return;
         }
 
-        return $html;
+        $tmp = $cachePath . '.' . getmypid() . '.tmp';
+
+        // Escriptura atòmica: si dos processos coincideixen, mai no es llegeix un
+        // fitxer a mig escriure.
+        if (@file_put_contents($tmp, $html) === false) {
+            @unlink($tmp);
+
+            return;
+        }
+
+        if (!@rename($tmp, $cachePath)) {
+            @unlink($tmp);
+        }
     }
 
     public function getMatches(string $competition, int $matchDay): array

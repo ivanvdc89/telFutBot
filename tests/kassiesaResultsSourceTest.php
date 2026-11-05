@@ -12,7 +12,10 @@
  *   - els partits sense resultat no existeixen (una jornada futura dona llista
  *     buida, no partits 0-0);
  *   - les tandes de penals no reparteixen punts i s'ignoren;
- *   - les competicions no es barregen.
+ *   - les competicions no es barregen;
+ *   - la còpia local només es dóna per bona si és fresca i pareix la pàgina de
+ *     partits: una pàgina d'error no s'ha de confondre amb una jornada sense
+ *     resultats.
  *
  *   php tests/kassiesaResultsSourceTest.php
  */
@@ -216,6 +219,41 @@ echo "\n--- files que no són partits ---\n";
 $all = $source->getMatches('CHL', 1);
 check('el primer partit té el país del local', $all[0]['home_country'], 'Arm');
 check('i el del visitant', $all[0]['away_country'], 'Cze');
+
+// --------------------------------------------------- còpia local i descàrrega
+
+echo "\n--- la còpia local i les pàgines que no són de partits ---\n";
+check('una pàgina de partits es reconeix', KassiesaResultsSource::looksLikeMatchesPage($html), true);
+check('un repte anti-bots no', KassiesaResultsSource::looksLikeMatchesPage('<html><body>Just a moment...</body></html>'), false);
+check('una resposta buida no', KassiesaResultsSource::looksLikeMatchesPage(''), false);
+
+check('una còpia de fa res és fresca', KassiesaResultsSource::cacheIsFresh(0, 3600), true);
+check('una còpia de fa una hora i mitja no', KassiesaResultsSource::cacheIsFresh(5400, 3600), false);
+check('una còpia amb data futura tampoc no', KassiesaResultsSource::cacheIsFresh(-60, 3600), false);
+check('i sense còpia tampoc', KassiesaResultsSource::cacheIsFresh(null, 3600), false);
+
+$cache = sys_get_temp_dir() . '/kassiesa-test-' . getmypid() . '.html';
+check('sense fitxer no hi ha edat', KassiesaResultsSource::cacheAge($cache), null);
+file_put_contents($cache, $html);
+$age = KassiesaResultsSource::cacheAge($cache);
+check('una còpia que acaba d\'escriure\'s té edat zero', $age !== null && $age <= 2, true);
+touch($cache, time() + 3600);
+check('amb la data al futur, l\'edat és negativa', KassiesaResultsSource::cacheAge($cache) < 0, true);
+touch($cache, time());
+
+// fetch() no ha de tocar la xarxa si la còpia és fresca: la URL no existix i el
+// domini .invalid no es resol mai.
+$page = KassiesaResultsSource::fetch('https://no-existix.invalid/match2027.html', $cache, false, 3600);
+check('fetch usa la còpia fresca', $page['fromCache'], true);
+check('sense error de descàrrega', $page['error'], null);
+check('i en torna el contingut', $page['html'] === $html, true);
+check(
+    'fromUrl ho recorda',
+    KassiesaResultsSource::fromUrl('https://no-existix.invalid/match2027.html', $cache, false, 3600)->page()['fromCache'],
+    true
+);
+
+unlink($cache);
 
 echo "\n";
 if ($failures === 0) {
