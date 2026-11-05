@@ -51,7 +51,7 @@ require_once(__DIR__ . '/publishActions.php');
  * @param array<int, int>    $kosVoted             ids d'equip votats a #kosAmbEscuts, un per vot
  * @param array<int, string> $teamCompetitions     [team_id => 'CHL'|'EUL'|'COL']
  * @param array<int, int>    $teamRankings         [team_id => posició] de team_standings, per desempatar
- * @param array<int, int>    $teamPoints           [team_id => punts] de team_standings; si no hi ha vots, el boicot són els millors
+ * @param array<int, int>    $teamPoints           [team_id => punts] de team_standings; si #kosAmbEscuts no té vots, el boicot són els millors. Amb un boicot per grup (#kosPais/#kosPots) s'ignora: els equips ixen de $kosGroups
  * @param array<string, array{votes?: array<int, string|int>, teams?: array<string, array<int, int>>, points?: array<string, int>}> $kosGroups
  *   Boicots per grup (#kosPais i #kosPots): per a 'paisos' i 'pots', els vots,
  *   els equips de cada grup i la suma de punts de cada grup. Un boicot de 2
@@ -77,9 +77,19 @@ function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array
         }
     }
 
+    // El recurs de "sense vots, els millors de la classificació" és només de
+    // #kosAmbEscuts. Si hi ha un boicot per país o per pot, els equips que queden
+    // a 0 ixen dels seus grups i els punts de la classificació només desempaten
+    // dins del grup (matchDayKosGroup()). Passar-los també ací afegiria al
+    // boicot quatre equips que no toquen.
     $koTeams = array_map(
         'intval',
-        actionsMostVotedTeams(actionsVoteTotals($kosVoted), KOS_BOICOT_TEAMS, $teamRankings, $teamPoints)
+        actionsMostVotedTeams(
+            actionsVoteTotals($kosVoted),
+            KOS_BOICOT_TEAMS,
+            $teamRankings,
+            count($kosGroups) > 0 ? [] : $teamPoints
+        )
     );
 
     // Els boicots per país o per pot: el grup més votat (o el de més punts si
@@ -102,6 +112,48 @@ function matchDayVoteResults(array $doubleOrNothingVoted, array $kosVoted, array
         'nothingTeams' => $nothingTeams,
         'doubleTeams'  => $doubleTeams,
         'koTeams'      => $koTeams,
+    ];
+}
+
+/**
+ * Els grups d'un boicot de #kosPais o #kosPots, a punt per a
+ * matchDayVoteResults().
+ *
+ * Cada vot és un país o un pot, i cada grup arrossega tots els seus equips. La
+ * suma de punts dels equips del grup és el que desempata els vots empatats i el
+ * que decidix quins dos grups queden si no ha votat ningú. Es calcula ací i no
+ * al script perquè és càlcul pur i aixina es pot provar sense base de dades.
+ *
+ * @param string                 $kosType    'kosPais' o 'kosPots'
+ * @param array<int, string|int> $votes      Un element per vot
+ * @param array<int, array>      $teams      Files de getAllTeams(): id, country i pot
+ * @param array<int, int>        $teamPoints [team_id => punts] de team_standings
+ *
+ * @return array<string, array{votes: array<int, string|int>, teams: array<string, array<int, int>>, points: array<string, int>}>
+ *   La clau és 'paisos' o 'pots', com la del JSON de l'acció.
+ */
+function matchDayKosGroup(string $kosType, array $votes, array $teams, array $teamPoints): array
+{
+    $groupKey    = $kosType === 'kosPais' ? 'paisos' : 'pots';
+    $groupTeams  = [];
+    $groupPoints = [];
+
+    foreach ($teams as $team) {
+        $teamId = (int) $team['id'];
+        $group  = $kosType === 'kosPais'
+            ? (string) $team['country']
+            : (string) (int) $team['pot'];
+
+        $groupTeams[$group][] = $teamId;
+        $groupPoints[$group]  = ($groupPoints[$group] ?? 0) + ($teamPoints[$teamId] ?? 0);
+    }
+
+    return [
+        $groupKey => [
+            'votes'  => $votes,
+            'teams'  => $groupTeams,
+            'points' => $groupPoints,
+        ],
     ];
 }
 

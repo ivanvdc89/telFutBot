@@ -140,6 +140,60 @@ $paisNoVotes = matchDayVoteResults([], [], $teamCompetitions, [], [], [
 ]);
 check('els de més punts', $paisNoVotes['koTeams'], [86, 4]);
 
+echo "\n--- #kosPais: el boicot per grup no arrossega els millors de la classificació ---\n";
+// El cas de la jornada 4: Spain guanya la votació i England hi entra segona. La
+// classificació té punts (10, 4, 86 i 5 són els quatre millors), però eixos
+// punts només poden desempatar dins dels grups. Si es passaren també com si
+// foren el boicot de #kosAmbEscuts, s'hi afegiria el 5 i quedaria a 0 de més.
+$paisTeams = [
+    ['id' => 10, 'country' => 'Spain',   'pot' => 1],
+    ['id' => 4,  'country' => 'Spain',   'pot' => 5],
+    ['id' => 86, 'country' => 'England', 'pot' => 5],
+    ['id' => 5,  'country' => 'Italy',   'pot' => 3],
+    ['id' => 20, 'country' => 'Germany', 'pot' => 6],
+];
+$paisStandingPoints = [10 => 9, 4 => 7, 86 => 5, 5 => 5, 20 => 3];
+$paisGroup = matchDayKosGroup('kosPais', ['Spain', 'Spain', 'England'], $paisTeams, $paisStandingPoints);
+
+check('la suma de punts de cada país', $paisGroup['paisos']['points'], [
+    'Spain'   => 16,
+    'England' => 5,
+    'Italy'   => 5,
+    'Germany' => 3,
+]);
+check(
+    'només queden a 0 els equips dels 2 països',
+    matchDayVoteResults([], [], $teamCompetitions, [], $paisStandingPoints, $paisGroup)['koTeams'],
+    [10, 4, 86]
+);
+
+echo "\n--- #kosPais: l'empat de vots es desempata amb els punts del grup ---\n";
+// Tres països amb un vot: Spain suma 9 punts, England 5 i Italy 3. Per punts
+// passen Spain i England. Si els punts del grup no hi arribaren, l'empat es
+// resoldria pel nom i passarien England i Italy.
+$paisTieGroup = matchDayKosGroup('kosPais', ['Spain', 'England', 'Italy'], $paisTeams, [
+    10 => 3,
+    4  => 6,
+    86 => 5,
+    5  => 3,
+]);
+check(
+    'els 2 de més punts, no els primers per nom',
+    matchDayVoteResults([], [], $teamCompetitions, [], [], $paisTieGroup)['koTeams'],
+    [10, 4, 86]
+);
+
+echo "\n--- #kosPots: també agrupa i suma els punts del pot ---\n";
+$potsTeams = [
+    ['id' => 10, 'country' => 'Spain',   'pot' => 1],
+    ['id' => 5,  'country' => 'Italy',   'pot' => 1],
+    ['id' => 86, 'country' => 'England', 'pot' => 5],
+];
+$potsGroup = matchDayKosGroup('kosPots', [1, 5], $potsTeams, [10 => 3, 5 => 6, 86 => 2]);
+check('els equips de cada pot', $potsGroup['pots']['teams'], ['1' => [10, 5], '5' => [86]]);
+check('i la suma de punts', $potsGroup['pots']['points'], ['1' => 9, '5' => 2]);
+check('el boicot arreplega tots els equips', matchDayVoteResults([], [], $teamCompetitions, [], [], $potsGroup)['koTeams'], [10, 5, 86]);
+
 echo "\n--- #kosPots: el pot arrossega els seus equips ---\n";
 $pots = matchDayVoteResults([], [], $teamCompetitions, [], [], [
     'pots' => [

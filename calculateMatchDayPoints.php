@@ -102,8 +102,10 @@ if ($matchDayPlayerPointRepo->matchDayHasPoints($matchDay)
 // han de vore la mateixa general, que és la d'abans d'esta jornada.
 $allowedVotes = $playersRepo->getAllowedVotesByPlayer();
 
+$allTeams = $teamsRepo->getAllTeams();
+
 $teamCompetitions = [];
-foreach ($teamsRepo->getAllTeams() as $team) {
+foreach ($allTeams as $team) {
     $teamCompetitions[(int) $team['id']] = (string) $team['competition'];
 }
 
@@ -139,9 +141,10 @@ $kosRows  = $kosType === '' ? [] : $actionsRepo->getActions($matchDay, $kosType)
 $kosVoted = [];
 $kosGroups = [];
 
-// Si el boicot estava obert (algú hi ha deixat la seua fila) i ningú no ha
+// Si #kosAmbEscuts estava obert (algú hi ha deixat la seua fila) i ningú no ha
 // votat, la norma diu que queden bloquejats els millors de la classificació.
-// Sense cap fila no es toca res: l'acció no estava en joc eixa jornada.
+// Sense cap fila no es toca res: l'acció no estava en joc eixa jornada. (#kosPais
+// i #kosPots tenen la seua pròpia regla sense vots: els grups amb més punts.)
 $teamStandingPoints = count($kosRows) > 0 ? $standingsRepo->getPointsByTeam() : [];
 
 if ($kosType === 'kosAndShields') {
@@ -152,11 +155,11 @@ if ($kosType === 'kosAndShields') {
             $kosVoted[] = (int) $teamId;
         }
     }
-} else {
+} elseif ($kosType !== '') {
     // #kosPais i #kosPots: el vot és el país o el pot, i cada grup arrossega
     // tots els seus equips. L'empat (i el boicot sense vots) el decidix la suma
-    // de punts dels equips del grup.
-    $groupKey  = $kosType === 'kosPais' ? 'paisos' : 'pots';
+    // de punts dels equips del grup, que calcula matchDayKosGroup().
+    $groupKey   = $kosType === 'kosPais' ? 'paisos' : 'pots';
     $groupVotes = [];
 
     foreach ($kosRows as $action) {
@@ -167,26 +170,17 @@ if ($kosType === 'kosAndShields') {
         }
     }
 
-    $groupTeams  = [];
-    $groupPoints = [];
-
-    foreach ($teamsRepo->getAllTeams() as $team) {
-        $teamId = (int) $team['id'];
-        $group  = $kosType === 'kosPais'
-            ? (string) $team['country']
-            : (string) (int) $team['pot'];
-
-        $groupTeams[$group][] = $teamId;
-        $groupPoints[$group]  = ($groupPoints[$group] ?? 0) + ($teamStandingPoints[$teamId] ?? 0);
+    // Sense cap fila l'acció no estava en joc i no hi ha boicot: no s'ha de
+    // confondre amb "l'acció estava oberta i ningú no hi va votar".
+    if (count($kosRows) > 0) {
+        $kosGroups = matchDayKosGroup($kosType, $groupVotes, $allTeams, $teamStandingPoints);
     }
-
-    $kosGroups[$groupKey] = [
-        'votes'  => $groupVotes,
-        'teams'  => $groupTeams,
-        'points' => $teamStandingPoints,
-    ];
 }
 
+// $teamStandingPoints només servix de boicot quan #kosAmbEscuts no té vots. Amb
+// un boicot per país o per pot, matchDayVoteResults() l'ignora i els equips
+// ixen de $kosGroups; si no, afegiria al boicot els quatre millors de la
+// classificació.
 [
     'nothingTeams' => $nothingTeams,
     'doubleTeams'  => $doubleTeams,
