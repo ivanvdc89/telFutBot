@@ -103,6 +103,16 @@ no hi ha res. I si el que baixa no pareix la pàgina de partits —un 404, un er
 del servidor, un repte anti-bots— no es pren per una jornada sense resultats:
 s'avisa, i si n'hi ha s'usa la còpia local encara que siga antiga.
 
+Quan això passa, el missatge diu el codi HTTP, el tipus de resposta i l'URL
+final, en desa el cos a `files/cache/kassiesa-2027.rejected.html` i n'ensenya
+l'inici. Amb això se sap si el problema és la xarxa del servidor, un blocatge o
+un canvi en la pàgina. Mentrestant es pot descarregar la pàgina des d'un altre
+lloc, pujar-la al servidor i passar-la amb `--source`:
+
+```
+php getResults.php --source=files/cache/partits.html
+```
+
 `team_results` té una clau única `(team_id, match_day, competition)` i
 **l'escriptura és només un `INSERT`**: els resultats no s'actualitzen mai. Si la
 jornada ja té files, `getResults.php` les detecta abans d'escriure res, diu quins

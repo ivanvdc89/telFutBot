@@ -224,6 +224,11 @@ check('i el del visitant', $all[0]['away_country'], 'Cze');
 
 echo "\n--- la còpia local i les pàgines que no són de partits ---\n";
 check('una pàgina de partits es reconeix', KassiesaResultsSource::looksLikeMatchesPage($html), true);
+check(
+    'i també si canvia la classe de la taula',
+    KassiesaResultsSource::looksLikeMatchesPage(str_replace('class="t1"', 'class="t1 matches"', $html)),
+    true
+);
 check('un repte anti-bots no', KassiesaResultsSource::looksLikeMatchesPage('<html><body>Just a moment...</body></html>'), false);
 check('una resposta buida no', KassiesaResultsSource::looksLikeMatchesPage(''), false);
 
@@ -246,6 +251,7 @@ touch($cache, time());
 $page = KassiesaResultsSource::fetch('https://no-existix.invalid/match2027.html', $cache, false, 3600);
 check('fetch usa la còpia fresca', $page['fromCache'], true);
 check('sense error de descàrrega', $page['error'], null);
+check('i sense detall', $page['detail'], null);
 check('i en torna el contingut', $page['html'] === $html, true);
 check(
     'fromUrl ho recorda',

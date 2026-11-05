@@ -213,12 +213,18 @@ try {
         $source = KassiesaResultsSource::fromFile($options['source']);
         $origin = $options['source'];
     } else {
+        $fromUrl = true;
         $source  = KassiesaResultsSource::fromUrl(resultsSourceUrl(), resultsCachePath(), $options['refresh']);
         $origin  = resultsSourceUrl();
-        $fromUrl = true;
     }
 } catch (RuntimeException $e) {
     fwrite(STDERR, $e->getMessage() . "\n");
+
+    if ($fromUrl) {
+        fwrite(STDERR, "\nSi el servidor no pot arribar a kassiesa, descarrega la pàgina des d'un altre\n");
+        fwrite(STDERR, "lloc, puja-la al servidor i passa-la amb --source=fitxer.html (docs/results.md).\n");
+    }
+
     exit(1);
 }
 
@@ -262,7 +268,9 @@ if ($fromUrl && !$options['refresh'] && $missingFirst !== []) {
         $source   = $retried;
         $reloaded = !($retried->page()['fromCache'] ?? true);
     } catch (RuntimeException $e) {
-        fwrite(STDERR, "Avís: " . $e->getMessage() . "\n");
+        // La còpia local es queda com a font: el detall diu per què no s'ha
+        // pogut tornar a descarregar.
+        fwrite(STDERR, $e->getMessage() . "\n");
     }
 }
 
@@ -277,6 +285,10 @@ if ($page !== null) {
     echo ' · ' . describePage($page);
 }
 echo "\n";
+
+if ($page !== null && $page['detail'] !== null) {
+    echo "\n" . $page['detail'] . "\n";
+}
 
 if ($reloaded && $plan['matches'] !== []) {
     echo "La còpia local no tenia partits d'esta jornada (" . implode(', ', $missingFirst)

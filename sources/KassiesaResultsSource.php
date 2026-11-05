@@ -56,6 +56,16 @@ class KassiesaResultsSource implements ResultsSource
             throw new RuntimeException("No s'ha pogut llegir el fitxer de resultats: $path");
         }
 
+        // Un fitxer que no és la pàgina de partits (una descàrrega que ha eixit
+        // malament, un repte anti-bots...) no s'ha de confondre amb una jornada
+        // sense resultats.
+        if (!self::looksLikeMatchesPage($html)) {
+            throw new RuntimeException(
+                "El fitxer $path no pareix la pàgina de partits de kassiesa "
+                . "(no hi ha cap capçalera de competició)."
+            );
+        }
+
         return self::fromHtml($html);
     }
 
@@ -73,6 +83,7 @@ class KassiesaResultsSource implements ResultsSource
             'fromCache' => $page['fromCache'],
             'cacheAge'  => $page['cacheAge'],
             'error'     => $page['error'],
+            'detail'    => $page['detail'],
         ];
 
         return $source;
@@ -81,7 +92,7 @@ class KassiesaResultsSource implements ResultsSource
     /**
      * D'on ha eixit la pàgina, per poder-ho dir als missatges.
      *
-     * @return array{fromCache:bool, cacheAge:?int, error:?string}|null
+     * @return array{fromCache:bool, cacheAge:?int, error:?string, detail:?string}|null
      *         Null si la font no és la xarxa (per exemple, un fitxer amb --source).
      */
     public function page(): ?array
@@ -97,7 +108,7 @@ class KassiesaResultsSource implements ResultsSource
      * l'origen es torna a qui crida, perquè "no hi ha cap partit" i "la còpia
      * local és d'abans que es publicassen" no es poden confondre.
      *
-     * @return array{html:string, fromCache:bool, cacheAge:?int, error:?string}
+     * @return array{html:string, fromCache:bool, cacheAge:?int, error:?string, detail:?string}
      */
     public static function fetch(string $url, string $cachePath, bool $refresh = false, int $ttl = 3600): array
     {
@@ -107,32 +118,49 @@ class KassiesaResultsSource implements ResultsSource
             $cached = file_get_contents($cachePath);
 
             if ($cached !== false && self::looksLikeMatchesPage($cached)) {
-                return ['html' => $cached, 'fromCache' => true, 'cacheAge' => $age, 'error' => null];
+                return self::pageResult($cached, true, $age);
             }
         }
 
-        [$html, $error] = self::download($url);
+        $response = self::download($url);
 
         // Un 404, un error del servidor o un repte anti-bots no són resultats: si
         // es parsejaren, getResults.php diria "cap partit publicat" i ningú no
-        // sabria que el problema és la descàrrega.
-        if ($html === null || !self::looksLikeMatchesPage($html)) {
-            $reason = $error ?? 'la resposta no pareix la pàgina de partits';
+        // sabria que el problema és la descàrrega. Per això, quan la resposta no
+        // és la pàgina de partits, se'n desa el cos i un extracte.
+        if ($response['html'] === null || !self::looksLikeMatchesPage($response['html'])) {
+            $detail = self::rejectionDetail($url, $response, $cachePath);
 
             if ($age !== null) {
                 $cached = file_get_contents($cachePath);
 
                 if ($cached !== false && self::looksLikeMatchesPage($cached)) {
-                    return ['html' => $cached, 'fromCache' => true, 'cacheAge' => $age, 'error' => $reason];
+                    return self::pageResult($cached, true, $age, self::shortReason($response), $detail);
                 }
             }
 
-            throw new RuntimeException("No s'ha pogut descarregar $url: $reason");
+            throw new RuntimeException($detail);
         }
 
-        self::store($cachePath, $html);
+        self::store($cachePath, $response['html']);
 
-        return ['html' => $html, 'fromCache' => false, 'cacheAge' => 0, 'error' => null];
+        return self::pageResult($response['html'], false, 0);
+    }
+
+    /**
+     * Resultat de fetch(), amb una forma comuna.
+     *
+     * @return array{html:string, fromCache:bool, cacheAge:?int, error:?string, detail:?string}
+     */
+    private static function pageResult(string $html, bool $fromCache, ?int $age, ?string $error = null, ?string $detail = null): array
+    {
+        return [
+            'html'      => $html,
+            'fromCache' => $fromCache,
+            'cacheAge'  => $age,
+            'error'     => $error,
+            'detail'    => $detail,
+        ];
     }
 
     /**
@@ -162,18 +190,26 @@ class KassiesaResultsSource implements ResultsSource
     /**
      * Cert si el text pareix la pàgina de partits de kassiesa.
      *
+     * Es mira la capçalera de competició, que és el que busca el parser. No es
+     * mira la classe de la taula: si kassiesa hi afegeix una classe o canvia les
+     * cometes, la pàgina continua servint i no s'ha de rebutjar.
+     *
      * Servix per a no prendre una pàgina d'error o un repte anti-bots per una
      * jornada sense partits.
      */
     public static function looksLikeMatchesPage(string $html): bool
     {
-        return str_contains($html, 'cupheader') && str_contains($html, 'class="t1"');
+        return str_contains($html, 'cupheader');
     }
 
     /**
-     * Descarrega la pàgina. Torna [html, error]; l'html és null si ha fallat.
+     * Descarrega la pàgina.
      *
-     * @return array{0:?string, 1:?string}
+     * Torna el cos (null si ha fallat) i les dades de la resposta, que són les
+     * que permeten entendre per què no servix: codi HTTP, tipus de contingut i
+     * URL final.
+     *
+     * @return array{html:?string, error:?string, status:int, contentType:string, url:string}
      */
     private static function download(string $url): array
     {
@@ -185,16 +221,87 @@ class KassiesaResultsSource implements ResultsSource
             CURLOPT_CONNECTTIMEOUT => 10,
             CURLOPT_USERAGENT      => 'telFutBot getResults (https://kassiesa.net)',
             CURLOPT_FAILONERROR    => true,
+            // Que curl negocie i descomprimisca: si el servidor comprimira la
+            // resposta sense que li ho demanàrem, el cos seria binari.
+            CURLOPT_ACCEPT_ENCODING => '',
         ]);
         $html  = curl_exec($ch);
         $error = curl_error($ch);
+
+        $response = [
+            'html'        => $html === false || $html === '' ? null : (string) $html,
+            'error'       => $error !== '' ? $error : ($html === false || $html === '' ? 'resposta buida' : null),
+            'status'      => (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE),
+            'contentType' => (string) curl_getinfo($ch, CURLINFO_CONTENT_TYPE),
+            'url'         => (string) curl_getinfo($ch, CURLINFO_EFFECTIVE_URL),
+        ];
+
         curl_close($ch);
 
-        if ($html === false || $html === '') {
-            return [null, $error !== '' ? $error : 'resposta buida'];
+        return $response;
+    }
+
+    /** Motiu curt, per posar-lo en una línia de capçalera. */
+    private static function shortReason(array $response): string
+    {
+        $reason = $response['error'] ?? 'la resposta no pareix la pàgina de partits';
+
+        if ($response['html'] !== null) {
+            $reason .= sprintf(' (HTTP %d, %d bytes)', $response['status'], strlen($response['html']));
         }
 
-        return [(string) $html, null];
+        return $reason;
+    }
+
+    /**
+     * Explica què ha arribat i en desa el cos, per poder-ho revisar.
+     *
+     * Sense vore la resposta no es pot saber si el problema és un error del
+     * servidor, un repte anti-bots o un canvi en la pàgina.
+     *
+     * @param array{html:?string, error:?string, status:int, contentType:string, url:string} $response
+     */
+    private static function rejectionDetail(string $url, array $response, string $cachePath): string
+    {
+        $lines = [
+            "No s'ha pogut descarregar $url",
+            '  ' . ($response['error'] ?? 'la resposta no pareix la pàgina de partits'),
+        ];
+
+        if ($response['html'] === null) {
+            return implode("\n", $lines);
+        }
+
+        $lines[] = sprintf(
+            '  HTTP %d · %s · %d bytes · final: %s',
+            $response['status'],
+            $response['contentType'] !== '' ? $response['contentType'] : 'sense tipus',
+            strlen($response['html']),
+            $response['url'] !== '' ? $response['url'] : $url
+        );
+
+        $rejected = preg_replace('/\.html$/', '', $cachePath) . '.rejected.html';
+        self::store($rejected, $response['html']);
+
+        if (is_file($rejected)) {
+            $lines[] = "  Resposta desada a $rejected";
+        }
+
+        $snippet = self::snippet($response['html']);
+
+        if ($snippet !== '') {
+            $lines[] = "  Comença així: $snippet";
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /** Extracte d'una pàgina en una sola línia, per als missatges d'error. */
+    private static function snippet(string $html, int $length = 240): string
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $html));
+
+        return strlen($text) > $length ? substr($text, 0, $length) . '...' : $text;
     }
 
     /** Desa la pàgina a la còpia local, sense deixar mai un fitxer a mitges. */
