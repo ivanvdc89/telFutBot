@@ -61,10 +61,13 @@ check('el pot global antic també', menuLabel('/data pot 5'), 'EUL 1');
 check('activar', menuLabel('/malDia Activar CHL'), 'Activar CHL');
 check('desactivar', menuLabel('/malDia Desactivar COL'), 'Desactivar COL');
 check('un KO porta el nom de l\'equip', menuLabel('/kos ko_vot RealMadrid'), 'KO: RealMadrid');
+check('el botó d\'escuts del KO', menuLabel('/kos escut'), 'Posar escuts');
 check('un escut de competició', menuLabel('/kos escut EUL'), 'Escut EUL');
 check('un escut d\'equip', menuLabel('/kos escut OwnedPot1'), 'Escut OwnedPot1');
 check('el boicot per països', menuLabel('/kosPais'), 'KO per països');
+check('el botó d\'escuts del boicot per països', menuLabel('/kosPais escut'), 'Posar escuts');
 check('el boicot per pots', menuLabel('/kosPots'), 'KO per pots');
+check('el botó d\'escuts del boicot per pots', menuLabel('/kosPots escut'), 'Posar escuts');
 check('un vot a un país', menuLabel('/kosPais vot Spain'), 'KO: Spain');
 check('un vot a un pot', menuLabel('/kosPots vot CHL_1'), 'CHL 1');
 check('un escut del boicot per països', menuLabel('/kosPais escut CHL'), 'Escut CHL');
@@ -90,11 +93,14 @@ $commands = [
     '/classificacio competicions',
     '/normes bàsiques', '/normes accions',
     '/substitució', '/substitució remove', '/malDia', '/socElMillor',
-    '/guanyarOMorir', '/dobleORes', '/dobleORes borrar', '/kos', '/kos borrar',
+    '/guanyarOMorir', '/dobleORes', '/dobleORes borrar', '/kos', '/kos escut',
+    '/kos borrar',
     '/malDia Activar CHL', '/dobleORes pot CHL_1', '/kos ko_pot COL_4',
     '/kos ko_vot RealMadrid', '/kos escut CHL', '/kos escut OwnedPot1',
-    '/kosPais', '/kosPais borrar', '/kosPais vot Spain', '/kosPais escut CHL',
-    '/kosPots', '/kosPots borrar', '/kosPots vot CHL_1', '/kosPots escut EUL',
+    '/kosPais', '/kosPais escut', '/kosPais borrar', '/kosPais vot Spain',
+    '/kosPais escut CHL',
+    '/kosPots', '/kosPots escut', '/kosPots borrar', '/kosPots vot CHL_1',
+    '/kosPots escut EUL',
     '/out CHL_Pot_1', '/out RealMadrid', '/in EquipA', '/add EquipA',
     '/passe OwnedPot1', '/millorFinal CHL', '/millorFinal borrar',
     '/segurQuePasse Borrar', '/data pot CHL_1',
@@ -179,6 +185,8 @@ $player->playersById = [
 check('un equip', CallbackRouter::toArgs('c:/add RealMadrid', $player), ['/add', 'RealMadrid']);
 check('un pot', CallbackRouter::toArgs('c:/data pot CHL_1', $player), ['/data', 'pot', 'CHL_1']);
 check('una norma amb espai', CallbackRouter::toArgs('c:/normes bàsiques', $player), ['/normes', 'bàsiques']);
+check('els escuts del boicot', CallbackRouter::toArgs('c:/kosPais escut', $player), ['/kosPais', 'escut']);
+check('una competició d\'escut', CallbackRouter::toArgs('c:/kosPais escut CHL', $player), ['/kosPais', 'escut', 'CHL']);
 check('tots els jugadors', CallbackRouter::toArgs('dp:all', $player), ['/data', 'player', 'all']);
 check('un jugador pel nom', CallbackRouter::toArgs('dp:7', $player), ['/data', 'player', 'Ivan Arrachina']);
 check('un jugador sense nom no fa res', CallbackRouter::toArgs('dp:8', $player), null);

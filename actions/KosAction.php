@@ -16,9 +16,14 @@ use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
  * màxim de vots i d'escuts que surt de la classificació general, la llista de
  * vots, els escuts i l'esborrat— i només canvien què es vota:
  *
- *     /kos       ko_pot CHL_1   ->  ko_vot EQUIP    escut CHL / escut EQUIP
- *     /kosPais   vot Spain                            escut CHL / escut EQUIP
- *     /kosPots   vot CHL_1                            escut CHL / escut EQUIP
+ *     /kos       ko_pot CHL_1 -> ko_vot EQUIP     /kos escut [CHL|EQUIP]
+ *     /kosPais   vot Spain                        /kosPais escut [CHL|EQUIP]
+ *     /kosPots   vot CHL_1                        /kosPots escut [CHL|EQUIP]
+ *
+ * Els vots i els escuts són dos camins separats, i per això el menú /accions
+ * oferix dos botons: el del boicot (vots) i el dels escuts. Sense argument,
+ * /kos, /kosPais i /kosPots mostren només què es pot votar, i el subcomandament
+ * 'escut' mostra només les competicions on es poden posar escuts.
  *
  * El que és propi de cada boicot són els ganxos: la clau del JSON on es desen
  * els vots (voteKey), com es mostra un vot (voteText), quins botons té el menú
@@ -299,7 +304,7 @@ abstract class KosAction extends ActionRowAction
     }
 
     /**
-     * Menú inicial: què es pot votar i competicions per escudar.
+     * Menú inicial: què es pot votar.
      */
     protected function sendMenu(array $data, int $maxVotes): void
     {
@@ -314,39 +319,37 @@ abstract class KosAction extends ActionRowAction
     }
 
     /**
-     * El teclat del menú: les files de menuRows() i, davall, els escuts.
+     * Menú d'escuts: les competicions on es pot protegir un equip.
      *
-     * És un ganxo perquè #kosPais hi afegix la paginació; els altres dos boicots
-     * no el toquen.
+     * És el camí del botó "Posar escuts" de /accions (/kos escut, /kosPais escut
+     * o /kosPots escut). L'últim botó torna al menú de vots del mateix boicot.
+     */
+    protected function sendShieldMenu(): void
+    {
+        $this->telegram->sendMessage(
+            $this->chatId,
+            "Competicions per a posar escuts:",
+            false,
+            null,
+            null,
+            InlineMenu::fromCommands([$this->shieldRows()])
+        );
+    }
+
+    /**
+     * El teclat del menú de vots: les files de menuRows().
+     *
+     * Els escuts no hi són: tenen el seu propi botó a /accions i el seu propi
+     * menú (/kos escut). És un ganxo perquè #kosPais hi afegix la paginació; els
+     * altres dos boicots no el toquen.
      */
     protected function menuKeyboard(array $data, int $maxVotes): InlineKeyboardMarkup
     {
-        $rows   = $this->menuRows($data, $maxVotes);
-        $rows[] = $this->shieldRows();
-
-        return InlineMenu::fromCommands($rows);
+        return InlineMenu::fromCommands($this->menuRows($data, $maxVotes));
     }
 
     /**
-     * Els botons ja construïts d'una llista de comandaments.
-     *
-     * @param array<int, string> $commands
-     *
-     * @return array<int, array{text: string, callback_data: string}>
-     */
-    protected function buttonsFor(array $commands): array
-    {
-        $buttons = [];
-
-        foreach ($commands as $command) {
-            $buttons[] = InlineMenu::button(menuLabel($command), commandCallbackData($command));
-        }
-
-        return $buttons;
-    }
-
-    /**
-     * Els botons d'escut, sempre els mateixos tres i la tornada al menú.
+     * Els botons d'escut, sempre els mateixos tres i la tornada al menú de vots.
      *
      * @return array<int, string>
      */
@@ -378,8 +381,8 @@ abstract class KosAction extends ActionRowAction
     }
 
     /**
-     * Escuts: la competició demana la llista d'equips propis, i un equip hi
-     * posa l'escut.
+     * Escuts: sense argument, les competicions; amb una competició, la llista
+     * d'equips propis; amb un equip, l'escut queda posat.
      */
     private function chooseShield(int $playerId, int $actionId, array $data, int $maxVotes): void
     {
@@ -398,7 +401,7 @@ abstract class KosAction extends ActionRowAction
         }
 
         if ($target === '') {
-            $this->sendMenu($data, $maxVotes);
+            $this->sendShieldMenu();
 
             return;
         }

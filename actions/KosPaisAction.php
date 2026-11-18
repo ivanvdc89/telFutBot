@@ -10,9 +10,10 @@ use TelegramBot\Api\Types\Inline\InlineKeyboardMarkup;
  * És la votació de boicot per països: els equips dels 2 països més votats no
  * sumen punts, i cada escut protegeix un dels equips propis del boicot.
  *
- *     /kosPais               menú de països i d'escuts
+ *     /kosPais               menú de països
  *     /kosPais paisos 2      la segona pàgina de països
  *     /kosPais vot Spain     registra un vot de KO a un país
+ *     /kosPais escut         el menú de competicions per a posar escuts
  *     /kosPais escut CHL     els teus equips d'aquella competició per escudar
  *     /kosPais escut EQUIP   posa un escut a l'equip
  *     /kosPais borrar        esborra tots els vots i escuts
@@ -101,7 +102,9 @@ class KosPaisAction extends KosAction
     }
 
     /**
-     * El teclat de la pàgina: països, navegació i escuts.
+     * El teclat de la pàgina: països i navegació.
+     *
+     * Els escuts tenen un botó propi a /accions i no es mesclen amb els vots.
      */
     protected function menuKeyboard(array $data, int $maxVotes): InlineKeyboardMarkup
     {
@@ -112,7 +115,7 @@ class KosPaisAction extends KosAction
             $keyboard = InlineMenu::appendRow($keyboard, $nav);
         }
 
-        return InlineMenu::appendRow($keyboard, $this->buttonsFor($this->shieldRows()));
+        return $keyboard;
     }
 
     /**

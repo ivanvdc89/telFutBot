@@ -258,10 +258,10 @@ check('ha creat la fila amb el màxim i les llistes buides', $action->added, [[
 ]]);
 check('i mostra el menú', $sent[0]['text'], 'Països disponibles:');
 
-echo "\n--- /kosPais: els països i els escuts ---\n";
+echo "\n--- /kosPais: els països ---\n";
 [$sent] = runCommand(buildWorld(), '/kosPais');
 check('text', $sent[0]['text'], 'Països disponibles:');
-check('tres files de botons', count($sent[0]['keyboard']), 3);
+check('dues files de botons', count($sent[0]['keyboard']), 2);
 check('els països de tres en tres, els de més punts primer', $sent[0]['keyboard'][0], [
     '/kosPais vot Spain',
     '/kosPais vot Germany',
@@ -271,12 +271,12 @@ check('els que queden', $sent[0]['keyboard'][1], [
     '/kosPais vot Italy',
     '/kosPais vot Bosnia and Herzegovina',
 ]);
-check('i els escuts', $sent[0]['keyboard'][2], [
-    '/kosPais escut CHL',
-    '/kosPais escut EUL',
-    '/kosPais escut COL',
-    '/kosPais',
-]);
+check('els escuts no es mesclen amb els vots', in_array('/kosPais escut CHL', array_merge(...$sent[0]['keyboard']), true), false);
+
+echo "\n--- /kosPais escut: menú d'escuts, separat dels vots ---\n";
+[$sent] = runCommand(buildWorld(), '/kosPais escut');
+check('text', $sent[0]['text'], 'Competicions per a posar escuts:');
+check('teclat', $sent[0]['keyboard'], [['/kosPais escut CHL', '/kosPais escut EUL', '/kosPais escut COL', '/kosPais']]);
 
 echo "\n--- /kosPais vot Spain ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/kosPais vot Spain');
@@ -356,16 +356,11 @@ for ($i = 1; $i <= 30; $i++) {
 
 [$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais');
 check('títol amb la pàgina', $sent[0]['text'], 'Països disponibles (pàgina 1 de 3):');
-check('quatre files de països i la de navegació i la d\'escuts', count($sent[0]['keyboard']), 6);
+check('quatre files de països i la de navegació', count($sent[0]['keyboard']), 5);
 check('la primera fila', $sent[0]['keyboard'][0], ['/kosPais vot Pais01', '/kosPais vot Pais02', '/kosPais vot Pais03']);
 check('la quarta fila acaba la pàgina', $sent[0]['keyboard'][3], ['/kosPais vot Pais10', '/kosPais vot Pais11', '/kosPais vot Pais12']);
 check('sense Anterior a la primera pàgina', $sent[0]['keyboard'][4], ['/kosPais paisos 2']);
-check('i els escuts a l\'última', $sent[0]['keyboard'][5], [
-    '/kosPais escut CHL',
-    '/kosPais escut EUL',
-    '/kosPais escut COL',
-    '/kosPais',
-]);
+check('i cap botó d\'escuts', in_array('/kosPais escut CHL', array_merge(...$sent[0]['keyboard']), true), false);
 
 [$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 2');
 check('la segona pàgina', $sent[0]['text'], 'Països disponibles (pàgina 2 de 3):');
@@ -374,7 +369,7 @@ check('amb Anterior i Següent', $sent[0]['keyboard'][4], ['/kosPais paisos 1', 
 
 [$sent] = runCommand(worldWithCountries($manyCountries), '/kosPais paisos 3');
 check('la tercera pàgina', $sent[0]['text'], 'Països disponibles (pàgina 3 de 3):');
-check('té sis països', count($sent[0]['keyboard']), 4);
+check('té sis països', count($sent[0]['keyboard']), 3);
 check('sense Següent a l\'última pàgina', $sent[0]['keyboard'][2], ['/kosPais paisos 2']);
 
 echo "\n--- una pàgina fora de rang es queda dins ---\n";
@@ -397,7 +392,7 @@ check('el vot es desa', $action->updates, [[
 echo "\n--- amb pocs països no hi ha navegació ---\n";
 [$sent] = runCommand(buildWorld(), '/kosPais');
 check('títol sense pàgina', $sent[0]['text'], 'Països disponibles:');
-check('tres files', count($sent[0]['keyboard']), 3);
+check('dues files', count($sent[0]['keyboard']), 2);
 
 echo "\n--- el router discrimina bé ---\n";
 check('agafa /kosPais', KosPaisAction::handlesCommand('/kosPais'), true);

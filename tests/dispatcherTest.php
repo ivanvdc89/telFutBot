@@ -299,9 +299,9 @@ echo "\n--- /accions amb les accions obertes ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, true);
 $dispatcher->dispatch(['/accions'], CHAT_ID);
 check(
-    'les tres accions i el boicot de la jornada',
+    'les tres accions i els dos botons del boicot de la jornada',
     $bot->sent[0]['keyboard'],
-    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/kosPais']]
+    [['/malDia', '/socElMillor', '/guanyarOMorir'], ['/kosPais', '/kosPais escut']]
 );
 
 echo "\n--- /accions en la jornada de #dobleORes ---\n";
@@ -316,7 +316,7 @@ check(
 echo "\n--- /accions amb el boicot per països ---\n";
 [$bot, , , $dispatcher] = buildWorld(false, true, 'kosPais');
 $dispatcher->dispatch(['/accions'], CHAT_ID);
-check('el botó és el del boicot actiu', $bot->sent[0]['keyboard'][1], ['/kosPais']);
+check('els botons són els del boicot actiu', $bot->sent[0]['keyboard'][1], ['/kosPais', '/kosPais escut']);
 
 echo "\n--- un boicot que no està en joc no respon ---\n";
 [$bot, $player, , $dispatcher] = buildWorld(false, true, 'kosPais');

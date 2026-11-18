@@ -8,8 +8,9 @@ require_once(__DIR__ . '/KosAction.php');
  * És la votació de boicot per pots: els equips dels 2 pots més votats no sumen
  * punts, i cada escut protegeix un dels equips propis del boicot.
  *
- *     /kosPots             menú de pots i d'escuts
+ *     /kosPots             menú de pots
  *     /kosPots vot CHL_1   registra un vot de KO a un pot
+ *     /kosPots escut       el menú de competicions per a posar escuts
  *     /kosPots escut CHL   els teus equips d'aquella competició per escudar
  *     /kosPots escut EQUIP posa un escut a l'equip
  *     /kosPots borrar      esborra tots els vots i escuts

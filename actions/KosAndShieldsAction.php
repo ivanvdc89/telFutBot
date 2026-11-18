@@ -9,9 +9,10 @@ require_once(__DIR__ . '/../config/pots.php');
  * És la votació de boicot per equips: els 4 equips més votats no sumen punts, i
  * cada escut protegeix un dels equips propis del boicot.
  *
- *     /kos                    menú de pots i d'escuts
+ *     /kos                    menú de pots
  *     /kos ko_pot CHL_1       equips d'aquell pot per votar-hi en contra
  *     /kos ko_vot EQUIP       registra un vot de KO
+ *     /kos escut              el menú de competicions per a posar escuts
  *     /kos escut CHL          els teus equips d'aquella competició per escudar
  *     /kos escut EQUIP        posa un escut a l'equip
  *     /kos borrar             esborra tots els vots i escuts

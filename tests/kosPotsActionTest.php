@@ -233,22 +233,22 @@ check('ha creat la fila amb el màxim i les llistes buides', $action->added, [[
 ]]);
 check('i mostra el menú', $sent[0]['text'], 'Pots disponibles:');
 
-echo "\n--- /kosPots: els pots i els escuts ---\n";
+echo "\n--- /kosPots: els pots ---\n";
 [$sent] = runCommand(buildWorld(), '/kosPots');
 check('text', $sent[0]['text'], 'Pots disponibles:');
-check('quatre files de botons', count($sent[0]['keyboard']), 4);
+check('tres files de botons', count($sent[0]['keyboard']), 3);
 check('els pots de quatre en quatre', $sent[0]['keyboard'][0], [
     '/kosPots vot CHL_1',
     '/kosPots vot CHL_2',
     '/kosPots vot CHL_3',
     '/kosPots vot CHL_4',
 ]);
-check('l\'última fila és la dels escuts', $sent[0]['keyboard'][3], [
-    '/kosPots escut CHL',
-    '/kosPots escut EUL',
-    '/kosPots escut COL',
-    '/kosPots',
-]);
+check('els escuts no es mesclen amb els vots', in_array('/kosPots escut CHL', array_merge(...$sent[0]['keyboard']), true), false);
+
+echo "\n--- /kosPots escut: menú d'escuts, separat dels vots ---\n";
+[$sent] = runCommand(buildWorld(), '/kosPots escut');
+check('text', $sent[0]['text'], 'Competicions per a posar escuts:');
+check('teclat', $sent[0]['keyboard'], [['/kosPots escut CHL', '/kosPots escut EUL', '/kosPots escut COL', '/kosPots']]);
 
 echo "\n--- /kosPots vot CHL_1 ---\n";
 [$sent, $action] = runCommand(buildWorld(), '/kosPots vot CHL_1');

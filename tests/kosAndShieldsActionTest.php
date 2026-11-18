@@ -283,7 +283,7 @@ check('ha creat la fila amb el màxim i les llistes buides', $action->added, [[
     'data'     => ['max' => 3, 'kos' => [], 'shields' => []],
 ]]);
 check('i mostra el menú', $sent[0]['text'], 'Pots disponibles:');
-check('amb les 4 files de botons', count($sent[0]['keyboard']), 4);
+check('amb les 3 files de botons', count($sent[0]['keyboard']), 3);
 check('sense dependre de cap fila prèvia', $action->updates, []);
 
 echo "\n  i el jugador ja hi pot votar de seguida\n";
@@ -302,13 +302,18 @@ $player->players = [];
 check('text', $sent[0]['text'], 'Encara no has triat cap equip. Toca "Equips" per començar.');
 check('teclat', $sent[0]['keyboard'], [['/equips', '/inici']]);
 
-echo "\n--- /kos: menú de pots i escuts ---\n";
+echo "\n--- /kos: menú de pots ---\n";
 [$sent, $action] = runCommand(buildWorld(['kos' => [], 'shields' => []]), '/kos');
 check('un sol missatge (el max ja hi és)', count($sent), 1);
 check('text', $sent[0]['text'], 'Pots disponibles:');
-check('4 files de botons', count($sent[0]['keyboard']), 4);
+check('3 files de botons (12 pots)', count($sent[0]['keyboard']), 3);
 check('primera fila', $sent[0]['keyboard'][0], ['/kos ko_pot CHL_1', '/kos ko_pot CHL_2', '/kos ko_pot CHL_3', '/kos ko_pot CHL_4']);
-check('última fila', $sent[0]['keyboard'][3], ['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']);
+check('els escuts no es mesclen amb els vots', in_array('/kos escut CHL', flatKeyboard($sent[0]['keyboard']), true), false);
+
+echo "\n--- /kos escut: menú d'escuts, separat dels vots ---\n";
+[$sent] = runCommand(buildWorld(['kos' => [], 'shields' => []]), '/kos escut');
+check('text', $sent[0]['text'], 'Competicions per a posar escuts:');
+check('teclat', $sent[0]['keyboard'], [['/kos escut CHL', '/kos escut EUL', '/kos escut COL', '/kos']]);
 
 echo "\n  el màxim de vots surt de la classificació general\n";
 [$sent, $action] = runCommand(buildWorld(['kos' => [], 'shields' => []]), '/kos');

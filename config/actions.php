@@ -13,6 +13,10 @@
  * de KO que toque, mai els dos alhora. /segurQuePasse i /millorFinal només
  * tenen efecte en fases concretes i es continuen escrivint a mà.
  *
+ * El boicot de KO ix amb DOS botons: el de votar i el de posar escuts. Com que
+ * només hi ha un boicot actiu cada jornada, els dos botons no poden entrar en
+ * conflicte: els dos apunten al mateix boicot, el de VOTACIO_ACTIVA.
+ *
  * @param string $votacioActiva Quina votació es juga (VOTACIO_ACTIVA): el
  *                              boicot de KO o #dobleORes, o '' si no n'hi ha cap.
  *
@@ -33,10 +37,11 @@ function actionsMenuRows(bool $substitutionsOpen, bool $actionsOpen, string $vot
             $rows[] = ['/dobleORes'];
         }
 
-        $kosCommand = kosCommand($votacioActiva);
+        $kosCommand       = kosCommand($votacioActiva);
+        $kosShieldCommand = kosShieldCommand($votacioActiva);
 
-        if ($kosCommand !== '') {
-            $rows[] = [$kosCommand];
+        if ($kosCommand !== '' && $kosShieldCommand !== '') {
+            $rows[] = [$kosCommand, $kosShieldCommand];
         }
     }
 
@@ -58,6 +63,25 @@ function kosCommand(string $kosActive): string
         'kosAndShields' => '/kos',
         'kosPais'       => '/kosPais',
         'kosPots'       => '/kosPots',
+        default         => '',
+    };
+}
+
+/**
+ * El comandament dels escuts del boicot de KO que toca.
+ *
+ * Els escuts es guarden a la fila del boicot actiu, no en una de pròpia, aixina
+ * que el botó no pot ser un comandament fix: ha d'anar al boicot de
+ * VOTACIO_ACTIVA. Com que només n'hi ha un cada jornada, no cal cap conflicte.
+ *
+ * @return string El comandament, o cadena buida si el tipus no és cap boicot.
+ */
+function kosShieldCommand(string $kosActive): string
+{
+    return match ($kosActive) {
+        'kosAndShields' => '/kos escut',
+        'kosPais'       => '/kosPais escut',
+        'kosPots'       => '/kosPots escut',
         default         => '',
     };
 }
