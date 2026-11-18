@@ -35,7 +35,7 @@
  * (El bot no ho pot sobreescriure mai: per web sempre s'usa la constant.)
  */
 
-define('CURRENT_MATCH_DAY', 4);
+define('CURRENT_MATCH_DAY', 5);
 
 /**
  * Darrera jornada en què es poden fer canvis d'equips.
@@ -97,7 +97,7 @@ define('ACTIONS_OPEN', false);
  * este fitxer: una errata atura el bot i els scripts abans que deixen una
  * jornada sense votació.
  */
-define('VOTACIO_ACTIVA', 'kosPais');
+define('VOTACIO_ACTIVA', 'kosPots');
 
 function currentMatchDay(): int
 {
